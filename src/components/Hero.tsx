@@ -1,24 +1,23 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ParallaxStars } from "./ParallaxStars";
 
 export default function Hero() {
     return (
         <section className="relative h-screen flex items-center justify-center overflow-hidden bg-gray-900">
-            {/* Background Layer: User Image + Parallax Stars */}
+            {/* Background Layer: Cleaner presentation of ma.jpeg */}
             <div className="absolute inset-0 z-0">
-                <div
-                    className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[10s] scale-105"
+                <motion.div
+                    initial={{ scale: 1.1 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 5, ease: "easeOut" }}
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                     style={{
                         backgroundImage: "url('/ma.jpeg')",
                     }}
-                >
-                    {/* Parallax Stars overlaying the image for depth */}
-                    <ParallaxStars speed={0.3} className="opacity-40" />
-                </div>
-                {/* Premium Overlay: Gradient and Blur */}
-                <div className="absolute inset-0 bg-gradient-to-b from-gray-900/60 via-primary-950/40 to-gray-900/80 backdrop-blur-[2px]"></div>
+                />
+                {/* Deep atmosphere overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/20 to-gray-900/90 backdrop-blur-[1px]"></div>
             </div>
 
             {/* Content */}
@@ -26,66 +25,49 @@ export default function Hero() {
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    transition={{ duration: 1, ease: "easeOut" }}
                 >
-                    <motion.h1
-                        className="text-5xl md:text-8xl font-bold text-white mb-6 tracking-tight"
-                        initial={{ scale: 0.95 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 1.2, ease: "easeOut" }}
-                    >
-                        Find Your Path to <span className="text-primary-300 drop-shadow-[0_0_15px_rgba(72,168,184,0.5)]">Inner Peace</span>
-                    </motion.h1>
+                    <h1 className="text-6xl md:text-8xl font-black text-white mb-6 tracking-tighter">
+                        Hope <span className="text-primary-400 drop-shadow-[0_0_20px_rgba(72,168,184,0.6)]">Counseling</span>
+                    </h1>
 
-                    <motion.p
-                        className="text-xl md:text-2xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed font-light"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 1 }}
-                    >
-                        Professional counseling services tailored to your journey. We provide a safe space for growth, healing, and discovery.
-                    </motion.p>
+                    <p className="text-xl md:text-2xl text-gray-100 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
+                        Expert psychological support for your journey to mental wellness and inner peace.
+                    </p>
 
-                    <motion.div
-                        className="flex flex-col md:flex-row gap-6 justify-center"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6, duration: 0.8 }}
-                    >
+                    <div className="flex flex-col md:flex-row gap-6 justify-center">
                         <motion.a
                             href="#book"
-                            whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(45,137,153,0.4)" }}
+                            whileHover={{ scale: 1.05, boxShadow: "0 15px 30px -5px rgba(45,137,153,0.5)" }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-10 py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-bold transition-all shadow-xl shadow-primary-500/20 text-lg"
+                            className="px-12 py-5 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-bold transition-all shadow-2xl text-lg uppercase tracking-widest"
                         >
-                            Book a Session
+                            Start Your Journey
                         </motion.a>
                         <motion.a
                             href="#services"
-                            whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.15)" }}
+                            whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.2)" }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-10 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all backdrop-blur-md border border-white/30 text-lg"
+                            className="px-12 py-5 bg-white/5 hover:bg-white/15 text-white rounded-full font-bold transition-all backdrop-blur-xl border border-white/20 text-lg uppercase tracking-widest"
                         >
-                            Explore Services
+                            Our Services
                         </motion.a>
-                    </motion.div>
+                    </div>
                 </motion.div>
             </div>
 
-            {/* Decorative Interactive Element: Animated Scroll Indicator */}
+            {/* Modern scroll hint */}
             <motion.div
-                className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer"
+                className="absolute bottom-12 flex flex-col items-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.2, duration: 1 }}
-                onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
+                transition={{ delay: 2 }}
             >
-                <span className="text-white/40 text-[10px] uppercase tracking-[4px] mb-2 font-bold">Discover</span>
-                <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center p-1">
+                <div className="w-[1px] h-20 bg-gradient-to-b from-primary-400/80 to-transparent relative overflow-hidden">
                     <motion.div
-                        animate={{ y: [0, 12, 0] }}
-                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                        className="w-1.5 h-1.5 bg-primary-400 rounded-full"
+                        animate={{ y: [0, 80] }}
+                        transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                        className="absolute top-0 left-0 w-full h-1/2 bg-white"
                     />
                 </div>
             </motion.div>

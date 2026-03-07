@@ -2,6 +2,7 @@ import Hero from "@/components/Hero";
 import Services from "@/components/Services";
 import BookingFlow from "@/components/BookingFlow";
 import MoodTracker from "@/components/MoodTracker";
+import Chatbot from "@/components/Chatbot";
 
 export default function Home() {
     return (
@@ -14,6 +15,7 @@ export default function Home() {
                     <BookingFlow />
                 </div>
             </section>
+            <Chatbot />
         </main>
     );
 }
