@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 const moods = [
     { emoji: "😊", label: "Great", color: "bg-green-100 text-green-700" },
@@ -23,12 +24,24 @@ export default function MoodTracker() {
     };
 
     return (
-        <section className="py-20 bg-sage-50">
+        <section id="mood-tracker" className="py-20 bg-sage-50">
             <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1 }}
+                    className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start"
+                >
 
                     {/* Client Side */}
-                    <div className="bg-white p-8 rounded-3xl shadow-xl border border-sage-200">
+                    <motion.div
+                        initial={{ x: -50, opacity: 0 }}
+                        whileInView={{ x: 0, opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                        className="bg-white p-8 rounded-3xl shadow-xl border border-sage-200"
+                    >
                         <h2 className="text-3xl font-bold text-gray-900 mb-2">How are you feeling today?</h2>
                         <p className="text-gray-500 mb-8">Your counselor uses this to better prepare for your sessions.</p>
 
@@ -45,10 +58,16 @@ export default function MoodTracker() {
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Counselor Side (Demo View) */}
-                    <div className="glass p-8 rounded-3xl border border-white/40 bg-white/40">
+                    <motion.div
+                        initial={{ x: 50, opacity: 0 }}
+                        whileInView={{ x: 0, opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                        className="glass p-8 rounded-3xl border border-white/40 bg-white/40"
+                    >
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white">💼</div>
                             <h3 className="text-xl font-bold text-gray-800">Counselor Dashboard View</h3>
@@ -71,9 +90,9 @@ export default function MoodTracker() {
                             <p className="font-bold mb-1">Counselor Tip:</p>
                             <p className="opacity-90">Client seems to be improving. Focus on positive reinforcement during next session.</p>
                         </div>
-                    </div>
+                    </motion.div>
 
-                </div>
+                </motion.div>
             </div>
         </section>
     );

@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 const services = [
     {
         title: "Individual Therapy",
@@ -47,9 +49,14 @@ export default function Services() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {services.map((service, index) => (
-                        <div
+                        <motion.div
                             key={index}
-                            className="p-8 rounded-2xl bg-primary-50 border border-primary-100 hover:shadow-xl transition-all duration-300 group"
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: index * 0.1, duration: 0.6 }}
+                            whileHover={{ y: -10, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
+                            className="p-8 rounded-2xl bg-primary-50 border border-primary-100 transition-all duration-300 group cursor-default"
                         >
                             <div className="text-4xl mb-6 group-hover:scale-110 transition-transform duration-300 block w-fit">
                                 {service.icon}
@@ -61,7 +68,7 @@ export default function Services() {
                             <button className="mt-6 text-primary-600 font-semibold flex items-center gap-2 hover:gap-3 transition-all">
                                 Learn More <span>→</span>
                             </button>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
             </div>
