@@ -7,42 +7,36 @@ const services = [
     {
         slug: "individual-therapy",
         title: "Individual Therapy",
-        icon: "🧘",
         image: "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&q=80&w=800",
         description: "One-on-one sessions tailored to your unique challenges and growth goals. Find your center in a supportive environment."
     },
     {
         slug: "marriage-counseling",
         title: "Marriage Counseling",
-        icon: "💑",
         image: "https://images.unsplash.com/photo-1516534775068-ba3e84529ec1?auto=format&fit=crop&q=80&w=800",
         description: "Strengthen your bond and resolve conflicts with professional guidance for couples specialized in relational growth."
     },
     {
         slug: "youth-support",
         title: "Youth Support",
-        icon: "🎓",
         image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=800",
         description: "Specialized support for young people navigating the complexities of modern life, school, and identity."
     },
     {
         slug: "group-therapy",
         title: "Group Therapy",
-        icon: "👪",
         image: "https://images.unsplash.com/photo-1529070535873-19672836279f?auto=format&fit=crop&q=80&w=800",
         description: "Shared healing experiences in a safe, moderated community environment."
     },
     {
         slug: "crisis-intervention",
         title: "Crisis Intervention",
-        icon: "🆘",
         image: "https://images.unsplash.com/photo-1527137342181-19aab11a8ee1?auto=format&fit=crop&q=80&w=800",
         description: "Immediate support for those facing acute psychological distress or emergencies."
     },
     {
         slug: "stress-management",
         title: "Stress Management",
-        icon: "🧘",
         image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=800",
         description: "Practical tools and techniques to handle daily pressure and find balance."
     },
@@ -78,10 +72,7 @@ export default function Services() {
                                         alt={service.title}
                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent"></div>
-                                    <div className="absolute top-6 left-6 w-14 h-14 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-3xl shadow-lg">
-                                        {service.icon}
-                                    </div>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent"></div>
                                 </div>
 
                                 <div className="p-10 -mt-10 relative z-10 bg-white rounded-t-[2.5rem]">

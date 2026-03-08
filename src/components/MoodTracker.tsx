@@ -1,98 +1,113 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-const moods = [
-    { emoji: "😊", label: "Great", color: "bg-green-100 text-green-700" },
-    { emoji: "🙂", label: "Good", color: "bg-blue-100 text-blue-700" },
-    { emoji: "😐", label: "Okay", color: "bg-yellow-100 text-yellow-700" },
-    { emoji: "😔", label: "Down", color: "bg-orange-100 text-orange-700" },
-    { emoji: "😢", label: "Hard", color: "bg-red-100 text-red-700" },
-];
+export default function GrowthJourney() {
+    const [activeTab, setActiveTab] = useState<"pulse" | "journey">("pulse");
 
-export default function MoodTracker() {
-    const [selectedMood, setSelectedMood] = useState<string | null>(null);
-    const [history, setHistory] = useState([
-        { date: "Yesterday", mood: "🙂" },
-        { date: "2 days ago", mood: "😐" },
-    ]);
+    const dailyQuotes = [
+        { text: "Healing is not linear, it's a series of small, brave choices.", author: "Hope Team" },
+        { text: "Your mental health is a priority. Your happiness is an essential. Your self-care is a necessity.", author: "Amaya" },
+        { text: "Peace is not the absence of conflict, but the ability to cope with it.", author: "Counseling Wisdom" }
+    ];
 
-    const handleMoodSelect = (mood: string) => {
-        setSelectedMood(mood);
-        setHistory([{ date: "Today", mood }, ...history]);
-    };
+    const journeyMilestones = [
+        { title: "First Step", date: "Initial Session", status: "completed", desc: "Acknowledging the need for support." },
+        { title: "Building Tools", date: "Module 1", status: "active", desc: "Learning core coping mechanisms." },
+        { title: "Deep Growth", date: "Module 2", status: "locked", desc: "Exploring underlying patterns." }
+    ];
 
     return (
-        <section id="mood-tracker" className="py-20 bg-sage-50">
+        <section className="py-24 bg-gray-50 relative overflow-hidden">
             <div className="container mx-auto px-4">
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1 }}
-                    className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start"
-                >
+                {/* Navigation Tabs */}
+                <div className="flex justify-center mb-16">
+                    <div className="bg-white p-2 rounded-2xl shadow-xl flex gap-2 border border-gray-100">
+                        <button
+                            onClick={() => setActiveTab("pulse")}
+                            className={`px-8 py-3 rounded-xl font-bold transition-all ${activeTab === "pulse" ? "bg-primary-900 text-white" : "text-gray-400 hover:text-gray-900"}`}
+                        >
+                            Daily Pulse
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("journey")}
+                            className={`px-8 py-3 rounded-xl font-bold transition-all ${activeTab === "journey" ? "bg-primary-900 text-white" : "text-gray-400 hover:text-gray-900"}`}
+                        >
+                            My Journey
+                        </button>
+                    </div>
+                </div>
 
-                    {/* Client Side */}
-                    <motion.div
-                        initial={{ x: -50, opacity: 0 }}
-                        whileInView={{ x: 0, opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8 }}
-                        className="bg-white p-8 rounded-3xl shadow-xl border border-sage-200"
-                    >
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">How are you feeling today?</h2>
-                        <p className="text-gray-500 mb-8">Your counselor uses this to better prepare for your sessions.</p>
-
-                        <div className="flex justify-between gap-4">
-                            {moods.map((m) => (
-                                <button
-                                    key={m.label}
-                                    onClick={() => handleMoodSelect(m.emoji)}
-                                    className={`flex flex-col items-center gap-2 p-4 rounded-2xl transition-all ${selectedMood === m.emoji ? m.color + " ring-4 ring-offset-2 scale-110" : "bg-gray-50 hover:bg-gray-100 text-gray-400"
-                                        }`}
-                                >
-                                    <span className="text-4xl">{m.emoji}</span>
-                                    <span className="text-xs font-bold uppercase tracking-tighter">{m.label}</span>
+                <AnimatePresence mode="wait">
+                    {activeTab === "pulse" ? (
+                        <motion.div
+                            key="pulse"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="max-w-4xl mx-auto text-center"
+                        >
+                            <span className="w-16 h-16 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mx-auto mb-8 text-2xl shadow-inner">✧</span>
+                            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 uppercase tracking-tight">Today's Mindfulness Pulse</h2>
+                            <blockquote className="bg-white p-12 rounded-[3rem] shadow-2xl relative border border-gray-100 overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-2 h-full bg-primary-500"></div>
+                                <p className="text-2xl md:text-3xl text-gray-700 italic leading-relaxed mb-6 font-medium">
+                                    "{dailyQuotes[1].text}"
+                                </p>
+                                <cite className="text-primary-600 font-bold uppercase tracking-[0.2em] text-sm group-hover:tracking-[0.4em] transition-all">— {dailyQuotes[1].author}</cite>
+                            </blockquote>
+                            <div className="mt-12 flex flex-col md:flex-row gap-6 justify-center items-center">
+                                <p className="text-gray-500 font-medium">Ready to start your own growth story?</p>
+                                <button className="px-8 py-4 bg-primary-600 text-white rounded-2xl font-bold shadow-lg shadow-primary-600/20 hover:scale-105 transition-transform uppercase tracking-widest text-sm">
+                                    Start Journey Today
                                 </button>
-                            ))}
-                        </div>
-                    </motion.div>
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="journey"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="max-w-5xl mx-auto"
+                        >
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {journeyMilestones.map((milestone, idx) => (
+                                    <motion.div
+                                        key={idx}
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: idx * 0.1 }}
+                                        className={`p-8 rounded-[2.5rem] bg-white border shadow-xl relative overflow-hidden ${milestone.status === 'locked' ? 'opacity-50 grayscale' : 'border-primary-100'}`}
+                                    >
+                                        {milestone.status === 'completed' && (
+                                            <div className="absolute top-4 right-4 w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold">✓</div>
+                                        )}
+                                        <span className="text-xs font-black text-primary-500 uppercase tracking-widest mb-4 block">{milestone.date}</span>
+                                        <h3 className="text-2xl font-black text-gray-900 mb-4">{milestone.title}</h3>
+                                        <p className="text-gray-500 text-sm leading-relaxed mb-6">{milestone.desc}</p>
 
-                    {/* Counselor Side (Demo View) */}
-                    <motion.div
-                        initial={{ x: 50, opacity: 0 }}
-                        whileInView={{ x: 0, opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8 }}
-                        className="glass p-8 rounded-3xl border border-white/40 bg-white/40"
-                    >
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white">💼</div>
-                            <h3 className="text-xl font-bold text-gray-800">Counselor Dashboard View</h3>
-                        </div>
+                                        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                            <div className={`h-full bg-primary-500 ${milestone.status === 'completed' ? 'w-full' : milestone.status === 'active' ? 'w-1/3' : 'w-0'}`}></div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
 
-                        <div className="space-y-4">
-                            <p className="text-sm font-semibold text-gray-500 uppercase">Recent Client Mood Activity</p>
-                            {history.map((h, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-white/80">
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-2xl">{h.mood}</span>
-                                        <span className="font-medium text-gray-700">{h.date}</span>
-                                    </div>
-                                    <span className="text-xs text-primary-600 bg-primary-50 px-2 py-1 rounded-full font-bold">LOGGED</span>
+                            <div className="mt-16 bg-primary-900 p-12 rounded-[3.5rem] text-white flex flex-col md:flex-row justify-between items-center gap-8 shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-[100px]"></div>
+                                <div>
+                                    <h3 className="text-3xl font-black mb-2 uppercase tracking-tight">Your Progress is Private</h3>
+                                    <p className="text-primary-300 font-medium">Only you and your assigned counselor can view your journey milestones.</p>
                                 </div>
-                            ))}
-                        </div>
-
-                        <div className="mt-8 p-4 bg-primary-600 rounded-xl text-white text-sm">
-                            <p className="font-bold mb-1">Counselor Tip:</p>
-                            <p className="opacity-90">Client seems to be improving. Focus on positive reinforcement during next session.</p>
-                        </div>
-                    </motion.div>
-
-                </motion.div>
+                                <button className="whitespace-nowrap px-10 py-5 bg-white text-primary-900 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-primary-500 hover:text-white transition-all">
+                                    Access Full Dashboard
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </section>
     );

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function Chatbot() {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: "assistant", content: "Hello! I'm Amaya, your personal counseling assistant. How can I support you today? (I can help you book a session or answer mental health questions)" }
+        { role: "assistant", content: "Hi there, I'm Amaya. I'm here to make things easier for you—whether that's finding the right counselor, booking a session, or just offering some gentle support. How can I best help you today?" }
     ]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
@@ -32,13 +32,13 @@ export default function Chatbot() {
             const lowerMsg = userMessage.toLowerCase();
 
             if (lowerMsg.includes("book") || lowerMsg.includes("session") || lowerMsg.includes("schedule")) {
-                aiResponse = "I can definitely help with that! You can use our booking section right here on the home page. Just accept the consent form and choose a time that works for you. Would you like me to guide you there?";
+                aiResponse = "I'd be happy to help you get that scheduled. The easiest way is through our booking section further down this page. I can walk you through the date and time options if you'd like, or we can just jump straight there. What sounds best?";
             } else if (lowerMsg.includes("anxiety") || lowerMsg.includes("feel") || lowerMsg.includes("stress")) {
-                aiResponse = "I'm sorry to hear you're feeling that way. It takes courage to reach out. While I'm an AI assistant, our professional counselors are here to help. Taking a deep breath can sometimes help in the moment. Would you like to see our available specialties?";
+                aiResponse = "I hear you, and it's completely okay to feel that way. It takes a lot of strength just to say it out loud. While I'm here for administrative support, our specialists are wonderful at helping navigate those heavy feelings. Would you like to see who's available for a chat?";
             } else if (lowerMsg.includes("contact") || lowerMsg.includes("call") || lowerMsg.includes("email")) {
-                aiResponse = "You can reach us directly at amayakari5924@gmail.com or call 0701279231. We are based in Thika and also have a WhatsApp button at the bottom of the page!";
+                aiResponse = "Of course. You can reach the team directly at amayakari5924@gmail.com or give us a call at 0701279231. We're based right here in Thika, and there's a WhatsApp button at the bottom of the page if you prefer a quick message!";
             } else {
-                aiResponse = "I understand. I'm searching for information related to your query... It seems like a complex situation. Our counseling sessions are designed exactly for these kinds of discussions. The first step is often the hardest, and we are here to support you.";
+                aiResponse = "I truly appreciate you sharing that with me. I'm looking into how we can best support you with this. Sometimes a quiet, dedicated session is the best place to explore things further. Would you like to know more about our individual therapy sessions?";
             }
 
             setMessages(prev => [...prev, { role: "assistant", content: aiResponse }]);
@@ -71,7 +71,7 @@ export default function Chatbot() {
                         {/* Header */}
                         <div className="bg-primary-900 p-6 text-white">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">🤖</div>
+                                <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-xl">✨</div>
                                 <div>
                                     <h3 className="font-bold">Amaya Assistant</h3>
                                     <p className="text-[10px] text-primary-300 uppercase tracking-widest font-bold">Online • Support Bot</p>
@@ -114,7 +114,7 @@ export default function Chatbot() {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                                placeholder="How can I help you book?"
+                                placeholder="How can I support you right now?"
                                 className="flex-grow bg-gray-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500/20 outline-none"
                             />
                             <button
