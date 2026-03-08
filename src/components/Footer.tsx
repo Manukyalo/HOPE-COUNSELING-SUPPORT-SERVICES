@@ -22,10 +22,11 @@ export default function Footer() {
 
                     <div>
                         <h4 className="text-white font-bold mb-8 uppercase text-xs tracking-[0.3em]">Quick Links</h4>
-                        <ul className="space-y-4 font-medium">
-                            <li><a href="#services" className="hover:text-primary-400 transition-colors">Specialties</a></li>
-                            <li><a href="#mood-tracker" className="hover:text-primary-400 transition-colors">Mood Hub</a></li>
-                            <li><a href="#book" className="hover:text-primary-400 transition-colors">Book Session</a></li>
+                        <ul className="space-y-4 font-medium transition-all">
+                            <li><a href="#about" className="hover:text-primary-400 transition-colors">Our Mission</a></li>
+                            <li><a href="#services" className="hover:text-primary-400 transition-colors">Our Services</a></li>
+                            <li><a href="#journey" className="hover:text-primary-400 transition-colors">Mindfulness Pulse</a></li>
+                            <li><a href="#book" className="hover:text-primary-400 transition-colors">Book a Session</a></li>
                         </ul>
                     </div>
 

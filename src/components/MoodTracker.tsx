@@ -19,7 +19,7 @@ export default function GrowthJourney() {
     ];
 
     return (
-        <section className="py-24 bg-gray-50 relative overflow-hidden">
+        <section id="journey" className="py-24 bg-gray-50 relative overflow-hidden">
             <div className="container mx-auto px-4">
                 {/* Navigation Tabs */}
                 <div className="flex justify-center mb-16">
