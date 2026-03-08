@@ -11,7 +11,7 @@ export default function ApproachPage() {
             <section className="relative h-[50vh] flex items-center justify-center overflow-hidden pt-20 bg-primary-950">
                 <div className="absolute inset-0 z-0 opacity-40">
                     <Image
-                        src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=1200"
+                        src="/ma.jpeg"
                         alt="Our Approach"
                         fill
                         className="object-cover"
