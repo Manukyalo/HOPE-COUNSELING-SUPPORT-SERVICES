@@ -1,22 +1,46 @@
 import Hero from "@/components/Hero";
 import Services from "@/components/Services";
 import BookingFlow from "@/components/BookingFlow";
-import MoodTracker from "@/components/MoodTracker";
 import Chatbot from "@/components/Chatbot";
 import About from "@/components/About";
+import { motion } from "framer-motion";
 
 export default function Home() {
     return (
         <main className="min-h-screen bg-white">
             <Hero />
-            <About />
-            <Services />
-            <MoodTracker />
+
+            <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.8 }}
+            >
+                <About />
+            </motion.div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.8 }}
+            >
+                <Services />
+            </motion.div>
+
             <section id="book" className="py-20 bg-primary-50">
                 <div className="container mx-auto px-4">
-                    <BookingFlow />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                    >
+                        <BookingFlow />
+                    </motion.div>
                 </div>
             </section>
+
             <Chatbot />
         </main>
     );

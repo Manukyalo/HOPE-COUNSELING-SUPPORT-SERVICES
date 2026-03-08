@@ -25,10 +25,10 @@ export default function Navbar() {
                 </div>
 
                 <div className="hidden md:flex items-center gap-8">
-                    {["Services", "Mood Tracker", "Check In"].map((item) => (
+                    {["Services", "Check In"].map((item) => (
                         <a
                             key={item}
-                            href={`#${item.toLowerCase().replace(" ", "-")}`}
+                            href={item === "Check In" ? "#book" : `#${item.toLowerCase().replace(" ", "-")}`}
                             className={`font-medium transition-colors hover:text-primary-500 ${scrolled ? "text-gray-600" : "text-gray-200"}`}
                         >
                             {item}

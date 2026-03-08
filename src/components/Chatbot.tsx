@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function Chatbot() {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: "assistant", content: "Hi there, I'm Amaya. I'm here to make things easier for you—whether that's finding the right counselor, booking a session, or just offering some gentle support. How can I best help you today?" }
+        { role: "assistant", content: "Hey there! I'm Amaya. How are you doing today? I'm here to walk with you through whatever's on your mind—whether you want to explore our services or just need a safe space to start." }
     ]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
@@ -31,14 +31,18 @@ export default function Chatbot() {
             let aiResponse = "";
             const lowerMsg = userMessage.toLowerCase();
 
-            if (lowerMsg.includes("book") || lowerMsg.includes("session") || lowerMsg.includes("schedule")) {
-                aiResponse = "I'd be happy to help you get that scheduled. The easiest way is through our booking section further down this page. I can walk you through the date and time options if you'd like, or we can just jump straight there. What sounds best?";
+            if (lowerMsg === "hi" || lowerMsg === "hello" || lowerMsg === "hey") {
+                aiResponse = "Hey! It's so good to hear from you. How has your day been treating you so far?";
+            } else if (lowerMsg.includes("how are you")) {
+                aiResponse = "I'm doing well, thank you for asking! I'm just here and ready to support you. How about you—what's been on your heart today?";
+            } else if (lowerMsg.includes("book") || lowerMsg.includes("session") || lowerMsg.includes("schedule")) {
+                aiResponse = "I'd love to help you get some dedicated time. You can pick a slot that works for you in our booking section just below. Would you like me to tell you more about how our sessions work first?";
             } else if (lowerMsg.includes("anxiety") || lowerMsg.includes("feel") || lowerMsg.includes("stress")) {
-                aiResponse = "I hear you, and it's completely okay to feel that way. It takes a lot of strength just to say it out loud. While I'm here for administrative support, our specialists are wonderful at helping navigate those heavy feelings. Would you like to see who's available for a chat?";
-            } else if (lowerMsg.includes("contact") || lowerMsg.includes("call") || lowerMsg.includes("email")) {
-                aiResponse = "Of course. You can reach the team directly at amayakari5924@gmail.com or give us a call at 0701279231. We're based right here in Thika, and there's a WhatsApp button at the bottom of the page if you prefer a quick message!";
+                aiResponse = "I hear you. Those feelings can be so heavy to carry alone. I'm here to listen, and if you feel ready, our specialists can offer some really helpful tools to navigate those waves. What's been the hardest part for you lately?";
+            } else if (lowerMsg.includes("thank")) {
+                aiResponse = "You are so very welcome. I'm just glad I can be here with you. Is there anything else you'd like to chat about?";
             } else {
-                aiResponse = "I truly appreciate you sharing that with me. I'm looking into how we can best support you with this. Sometimes a quiet, dedicated session is the best place to explore things further. Would you like to know more about our individual therapy sessions?";
+                aiResponse = "I'm listening. That sounds like a lot to hold. Sometimes just sharing it is the first step toward feeling a bit lighter. Would you like to explore how one of our sessions might help with that?";
             }
 
             setMessages(prev => [...prev, { role: "assistant", content: aiResponse }]);
