@@ -135,7 +135,7 @@ export function ChatBot() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setIsOpen(true)}
-                        className="fixed bottom-6 right-6 p-4 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 transition-colors z-50 flex items-center justify-center"
+                        className="fixed bottom-8 right-8 p-4 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 transition-colors z-50 flex items-center justify-center"
                         aria-label="Open chat"
                     >
                         <MessageCircle className="w-6 h-6" />
@@ -151,7 +151,7 @@ export function ChatBot() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed bottom-6 right-6 w-[380px] h-[600px] max-h-[calc(100vh-48px)] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-slate-200"
+                        className="fixed bottom-8 right-8 w-[380px] h-[600px] max-h-[calc(100vh-64px)] max-w-[calc(100vw-64px)] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-slate-200"
                     >
                         {/* Header */}
                         <div className="bg-emerald-600 p-4 text-white flex items-center justify-between shrink-0">
@@ -195,7 +195,7 @@ export function ChatBot() {
                                                 }`}
                                         >
                                             {msg.isError && <AlertCircle className="w-4 h-4 mb-2 inline-block mr-1" />}
-                                            <div className={`prose prose-sm max-w-none ${msg.role === "user" ? "prose-invert" : ""}`}>
+                                            <div className={`prose prose-sm max-w-none ${msg.role === "user" ? "prose-invert" : "text-slate-800"}`}>
                                                 <ReactMarkdown>{msg.text}</ReactMarkdown>
                                             </div>
                                         </div>
@@ -243,7 +243,7 @@ export function ChatBot() {
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     placeholder="Type your message..."
-                                    className="w-full max-h-32 min-h-[44px] bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-4 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                                    className="w-full max-h-32 min-h-[44px] bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-4 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-900"
                                     rows={1}
                                 />
                                 <button
