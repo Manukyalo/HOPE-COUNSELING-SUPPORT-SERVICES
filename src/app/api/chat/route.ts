@@ -15,6 +15,14 @@ const SYSTEM_INSTRUCTION = `You are Amaya, a warm, professional, and deeply empa
 
 export async function POST(req: NextRequest) {
     try {
+        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "your_gemini_api_key_here") {
+            console.error("API Error: GEMINI_API_KEY is missing or using placeholder.");
+            return NextResponse.json(
+                { error: "Configuration Error", details: "Gemini API key is not configured in environment variables." },
+                { status: 500 }
+            );
+        }
+
         const { message, history } = await req.json();
 
         if (!message) {

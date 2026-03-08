@@ -62,7 +62,11 @@ export function ChatBot() {
                 body: JSON.stringify({ message: currentInput, history }),
             });
 
-            if (!response.ok) throw new Error("Failed to fetch response");
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || "Failed to fetch response");
+            }
+
             if (!response.body) throw new Error("No response body");
 
             const reader = response.body.getReader();
@@ -89,12 +93,19 @@ export function ChatBot() {
             }
         } catch (error) {
             console.error("Chat error:", error);
+            let errorMessage = "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.";
+
+            // Try to extract a more specific error message from the response if it was a configuration issue
+            if (error instanceof Error && error.message.includes("Configuration Error")) {
+                errorMessage = "I'm not quite ready to chat yet. My API key hasn't been configured in the environment variables.";
+            }
+
             setMessages((prev) => [
                 ...prev,
                 {
                     id: Date.now().toString(),
                     role: "model",
-                    text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+                    text: errorMessage,
                     isError: true,
                 },
             ]);
