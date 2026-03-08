@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function About() {
     return (
@@ -39,24 +40,19 @@ export default function About() {
                             We believe that every individual possesses the innate strength to overcome life's most difficult challenges. Our role is to provide the professional guidance and safe environment necessary to unlock that potential.
                         </p>
 
-                        <div className="grid grid-cols-2 gap-10 mb-12">
+                        <div className="grid grid-cols-1 gap-10 mb-12">
                             <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 shadow-xl">
                                 <h4 className="text-4xl font-black text-primary-600 mb-2">10+</h4>
-                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest uppercase">Expertise Fields</p>
-                            </div>
-                            <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 shadow-xl">
-                                <h4 className="text-4xl font-black text-primary-600 mb-2">500+</h4>
-                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest uppercase">Live Sessions</p>
+                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest uppercase">Expertise Fields in Psychology</p>
                             </div>
                         </div>
 
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-10 py-5 bg-gray-900 text-white rounded-[2rem] font-bold uppercase tracking-[0.2em] text-sm hover:bg-primary-600 transition-all shadow-xl"
+                        <Link
+                            href="/approach"
+                            className="px-10 py-5 bg-gray-900 text-white rounded-[2rem] font-bold uppercase tracking-[0.2em] text-sm hover:bg-primary-600 transition-all shadow-xl inline-block"
                         >
                             Our Team Approach
-                        </motion.button>
+                        </Link>
                     </motion.div>
 
                     <motion.div

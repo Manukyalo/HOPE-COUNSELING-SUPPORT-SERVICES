@@ -14,7 +14,7 @@ interface Service {
 const servicesDetails: Record<string, Service> = {
     "stress-anxiety-management": {
         title: "Stress and Anxiety management",
-        image: "https://images.unsplash.com/photo-1474418397713-7dedd4d2b45a?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=800",
         description: "Master tools to navigate life's pressures and find your internal calm using evidence-based techniques.",
         longContent: [
             "Life's pressures can often feel overwhelming, but you don't have to navigate them alone. Our stress and anxiety management sessions provide a compassionate and professional space to understand the root causes of your tension.",
@@ -54,7 +54,7 @@ const servicesDetails: Record<string, Service> = {
     },
     "emotional-peer-support": {
         title: "Emotional support and Peer Counseling",
-        image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&q=80&w=800",
         description: "A safe, shared space for connection and mutual understanding led by experienced peer facilitators.",
         longContent: [
             "Sometimes, the most powerful healing comes from knowing you are not alone. Our emotional peer support and peer counseling sessions provide a unique space for shared experiences.",

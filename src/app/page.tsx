@@ -5,6 +5,7 @@ import Services from "@/components/Services";
 import BookingFlow from "@/components/BookingFlow";
 import Chatbot from "@/components/Chatbot";
 import About from "@/components/About";
+import ExtraFeatures from "@/components/ExtraFeatures";
 import { motion } from "framer-motion";
 
 export default function Home() {
@@ -22,6 +23,8 @@ export default function Home() {
             >
                 <Services />
             </motion.div>
+
+            <ExtraFeatures />
 
             <section id="book" className="py-20 bg-primary-50">
                 <div className="container mx-auto px-4">
