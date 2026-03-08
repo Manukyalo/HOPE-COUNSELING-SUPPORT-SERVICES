@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-export const dynamic = 'force-dynamic';
+export const dynamic = 'auto'; // Re-enable SSG
 
 interface Service {
     title: string;
