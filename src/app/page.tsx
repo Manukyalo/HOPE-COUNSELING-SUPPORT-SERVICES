@@ -3,7 +3,6 @@
 import Hero from "@/components/Hero";
 import Services from "@/components/Services";
 import BookingFlow from "@/components/BookingFlow";
-import Chatbot from "@/components/Chatbot";
 import About from "@/components/About";
 import ExtraFeatures from "@/components/ExtraFeatures";
 import { motion } from "framer-motion";
@@ -38,8 +37,6 @@ export default function Home() {
                     </motion.div>
                 </div>
             </section>
-
-            <Chatbot />
         </main>
     );
 }

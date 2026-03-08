@@ -1,132 +1,265 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { useState, useEffect, useRef } from "react";
+import { Send, User, Bot, X, MessageCircle, AlertCircle } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function Chatbot() {
+// Initialize the Gemini AI client
+// NOTE: Using the environment variable as per user suggestion
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
+
+const SYSTEM_INSTRUCTION = `You are a warm, empathetic, and professional AI assistant for a counseling psychology website. Your goal is to provide a safe, non-judgmental space for users to express themselves.
+- Converse naturally, like a compassionate human listener. Avoid sounding robotic, overly formal, or like you are reading from a script.
+- Validate the user's feelings and show genuine care.
+- Do not provide medical diagnoses, prescribe medication, or act as a replacement for professional therapy.
+- If a user expresses thoughts of self-harm or is in immediate danger, gently but firmly encourage them to contact emergency services or a crisis hotline immediately.
+- Keep your responses concise and conversational. Ask open-ended questions to encourage them to share more if they feel comfortable.
+- You can help guide them to resources on the counseling website if appropriate (e.g., booking an appointment, reading articles).`;
+
+type Message = {
+    id: string;
+    role: "user" | "model";
+    text: string;
+    isError?: boolean;
+};
+
+export function ChatBot() {
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState([
-        { role: "assistant", content: "Hey there! I'm Amaya. How are you doing today? I'm here to walk with you through whatever's on your mind—whether you want to explore our services or just need a safe space to start." }
+    const [messages, setMessages] = useState<Message[]>([
+        {
+            id: "welcome",
+            role: "model",
+            text: "Hello. I'm here to listen and support you. How are you feeling today?",
+        },
     ]);
     const [input, setInput] = useState("");
-    const [isTyping, setIsTyping] = useState(false);
-    const scrollRef = useRef<HTMLDivElement | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Store the chat instance in a ref so it persists across renders
+    const chatRef = useRef<any>(null);
 
     useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        if (!chatRef.current) {
+            chatRef.current = genAI.getGenerativeModel({
+                model: "gemini-pro",
+                systemInstruction: SYSTEM_INSTRUCTION
+            }).startChat({
+                history: [],
+                generationConfig: {
+                    temperature: 0.7,
+                },
+            });
         }
-    }, [messages, isTyping]);
+    }, []);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        if (isOpen) {
+            scrollToBottom();
+        }
+    }, [messages, isOpen]);
 
     const handleSend = async () => {
-        if (!input.trim() || isTyping) return;
+        if (!input.trim() || isLoading) return;
 
-        const userMessage = { role: "user", content: input.trim() };
+        const userMessage: Message = {
+            id: Date.now().toString(),
+            role: "user",
+            text: input.trim(),
+        };
+
+        setMessages((prev) => [...prev, userMessage]);
         setInput("");
-        setMessages(prev => [...prev, userMessage]);
-        setIsTyping(true);
+        setIsLoading(true);
 
         try {
-            const response = await fetch("/api/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    messages: [...messages, userMessage]
-                }),
-            });
+            const result = await chatRef.current.sendMessageStream(userMessage.text);
 
-            if (!response.ok) throw new Error("API call failed");
+            let fullResponse = "";
+            const modelMessageId = (Date.now() + 1).toString();
 
-            const data = await response.json();
-            setMessages(prev => [...prev, { role: "assistant", content: data.content }]);
+            setMessages((prev) => [
+                ...prev,
+                { id: modelMessageId, role: "model", text: "" },
+            ]);
+
+            for await (const chunk of result.stream) {
+                const chunkText = chunk.text();
+                if (chunkText) {
+                    fullResponse += chunkText;
+                    setMessages((prev) =>
+                        prev.map((msg) =>
+                            msg.id === modelMessageId ? { ...msg, text: fullResponse } : msg
+                        )
+                    );
+                }
+            }
         } catch (error) {
-            console.error("Amaya Chat Error:", error);
-            setMessages(prev => [...prev, {
-                role: "assistant",
-                content: "I'm so sorry, I hit a little snag while thinking. I'm still here for you, though—would you like to try sharing that again, or can I help you with booking a session?"
-            }]);
+            console.error("Chat error:", error);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: Date.now().toString(),
+                    role: "model",
+                    text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+                    isError: true,
+                },
+            ]);
         } finally {
-            setIsTyping(false);
+            setIsLoading(false);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
         }
     };
 
     return (
         <>
-            <div className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[9999]">
-                <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="w-14 h-14 md:w-16 md:h-16 bg-primary-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl md:text-3xl shadow-primary-600/40 relative overflow-hidden group"
-                >
-                    <div className="absolute inset-0 bg-white/20 scale-0 group-hover:scale-150 transition-transform duration-500 rounded-full" />
-                    {isOpen ? "✕" : "💬"}
-                </motion.button>
-            </div>
+            {/* Floating Action Button */}
+            <AnimatePresence>
+                {!isOpen && (
+                    <motion.button
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setIsOpen(true)}
+                        className="fixed bottom-6 right-6 p-4 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 transition-colors z-50 flex items-center justify-center"
+                        aria-label="Open chat"
+                    >
+                        <MessageCircle className="w-6 h-6" />
+                    </motion.button>
+                )}
+            </AnimatePresence>
 
+            {/* Chat Window */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 20, scale: 0.95, transformOrigin: "bottom right" }}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className="fixed bottom-24 right-6 md:bottom-32 md:right-10 w-[min(calc(100vw-3rem),400px)] h-[min(600px,calc(100vh-10rem))] bg-white rounded-[2rem] shadow-2xl z-[9999] border border-gray-100 flex flex-col overflow-hidden"
+                        transition={{ duration: 0.2 }}
+                        className="fixed bottom-6 right-6 w-[380px] h-[600px] max-h-[calc(100vh-48px)] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-slate-200"
                     >
                         {/* Header */}
-                        <div className="bg-primary-900 p-6 text-white">
+                        <div className="bg-emerald-600 p-4 text-white flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-xl">✨</div>
+                                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                    <Bot className="w-6 h-6" />
+                                </div>
                                 <div>
-                                    <h3 className="font-bold">Amaya Assistant</h3>
-                                    <p className="text-[10px] text-primary-300 uppercase tracking-widest font-bold">Online • Support Bot</p>
+                                    <h2 className="font-semibold text-lg leading-tight">Amaya</h2>
+                                    <p className="text-emerald-100 text-xs">Your Supportive Assistant</p>
                                 </div>
                             </div>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                                aria-label="Close chat"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
 
-                        {/* Messages */}
-                        <div ref={scrollRef} className="flex-grow p-6 overflow-y-auto space-y-6 scrollbar-hide">
-                            {messages.map((msg, i) => (
+                        {/* Messages Area */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+                            {messages.map((msg) => (
                                 <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, x: msg.role === "user" ? 20 : -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    key={msg.id}
                                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                                 >
-                                    <div className={`max-w-[80%] p-4 rounded-2xl ${msg.role === "user"
-                                        ? "bg-primary-600 text-white rounded-tr-none shadow-lg shadow-primary-600/10"
-                                        : "bg-gray-100 text-gray-800 rounded-tl-none font-medium"
-                                        }`}>
-                                        <p className="text-sm leading-relaxed">{msg.content}</p>
+                                    <div className={`flex gap-2 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === "user" ? "bg-slate-200 text-slate-600" : "bg-emerald-100 text-emerald-600"}`}>
+                                            {msg.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
+                                        </div>
+                                        <div
+                                            className={`p-3 rounded-2xl ${msg.role === "user"
+                                                ? "bg-emerald-600 text-white rounded-tr-sm"
+                                                : msg.isError
+                                                    ? "bg-red-50 text-red-600 border border-red-100 rounded-tl-sm"
+                                                    : "bg-white text-slate-800 shadow-sm border border-slate-100 rounded-tl-sm"
+                                                }`}
+                                        >
+                                            {msg.isError && <AlertCircle className="w-4 h-4 mb-2 inline-block mr-1" />}
+                                            <div className={`prose prose-sm max-w-none ${msg.role === "user" ? "prose-invert" : ""}`}>
+                                                <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                            </div>
+                                        </div>
                                     </div>
                                 </motion.div>
                             ))}
-                            {isTyping && (
-                                <div className="flex justify-start">
-                                    <div className="bg-gray-100 p-4 rounded-2xl rounded-tl-none flex gap-1">
-                                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
-                                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
-                                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+                            {isLoading && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex justify-start"
+                                >
+                                    <div className="flex gap-2 max-w-[85%] flex-row">
+                                        <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600">
+                                            <Bot className="w-5 h-5" />
+                                        </div>
+                                        <div className="p-4 rounded-2xl bg-white text-slate-800 shadow-sm border border-slate-100 rounded-tl-sm flex items-center gap-1">
+                                            <motion.div
+                                                animate={{ y: [0, -5, 0] }}
+                                                transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                                                className="w-2 h-2 bg-emerald-400 rounded-full"
+                                            />
+                                            <motion.div
+                                                animate={{ y: [0, -5, 0] }}
+                                                transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                                                className="w-2 h-2 bg-emerald-400 rounded-full"
+                                            />
+                                            <motion.div
+                                                animate={{ y: [0, -5, 0] }}
+                                                transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                                                className="w-2 h-2 bg-emerald-400 rounded-full"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             )}
+                            <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Input */}
-                        <div className="p-6 border-t border-gray-100 flex gap-3 items-center">
-                            <input
-                                type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                                placeholder="How can I support you right now?"
-                                className="flex-grow bg-gray-100 border-none rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-primary-500/20 outline-none"
-                            />
-                            <button
-                                onClick={handleSend}
-                                className="w-12 h-12 bg-primary-600 text-white rounded-xl flex items-center justify-center hover:bg-primary-700 transition-colors"
-                            >
-                                ➔
-                            </button>
+                        {/* Input Area */}
+                        <div className="p-4 bg-white border-t border-slate-100 shrink-0">
+                            <div className="relative flex items-end gap-2">
+                                <textarea
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder="Type your message..."
+                                    className="w-full max-h-32 min-h-[44px] bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-4 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                                    rows={1}
+                                />
+                                <button
+                                    onClick={handleSend}
+                                    disabled={!input.trim() || isLoading}
+                                    className="absolute right-2 bottom-1.5 p-2 text-emerald-600 hover:bg-emerald-50 rounded-full disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+                                    aria-label="Send message"
+                                >
+                                    <Send className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="text-center mt-2">
+                                <p className="text-[10px] text-slate-400">
+                                    This is an AI assistant, not a replacement for professional therapy.
+                                </p>
+                            </div>
                         </div>
                     </motion.div>
                 )}
