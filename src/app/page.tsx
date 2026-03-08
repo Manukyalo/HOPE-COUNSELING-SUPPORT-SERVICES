@@ -12,14 +12,7 @@ export default function Home() {
         <main className="min-h-screen bg-white">
             <Hero />
 
-            <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8 }}
-            >
-                <About />
-            </motion.div>
+            <About />
 
             <motion.div
                 initial={{ opacity: 0, y: 50 }}

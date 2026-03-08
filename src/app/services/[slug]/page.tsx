@@ -4,8 +4,6 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
 interface Service {
     title: string;
@@ -33,7 +31,6 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
             transition={{ duration: 0.5 }}
             className="min-h-screen bg-white"
         >
-            <Navbar />
 
             {/* Hero Section */}
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden pt-20">
@@ -107,7 +104,6 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
                 </div>
             </section>
 
-            <Footer />
         </motion.main>
     );
 }

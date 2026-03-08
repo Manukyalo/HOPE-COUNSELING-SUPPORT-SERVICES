@@ -1,0 +1,26 @@
+﻿
+> hope-counseling-support-services@0.1.0 lint
+> next lint
+
+node.exe : 'next' is 
+not recognized as an 
+internal or external 
+command,
+At C:\Program Files\no
+dejs\npm.ps1:29 char:3
++   & $NODE_EXE 
+$NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: ('next' is    
+ not r...ternal co    
+mmand,:String) []    
+, RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+operable program or 
+batch file.

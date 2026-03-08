@@ -7,7 +7,6 @@ export default function About() {
     return (
         <section id="about" className="py-24 bg-white relative overflow-hidden">
             <div className="container mx-auto px-4 relative z-10 text-center">
-                {/* ... existing content ... */}
                 <div className="max-w-4xl mx-auto mb-16">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
@@ -73,6 +72,7 @@ export default function About() {
                                 alt="Hope Counseling Support Services"
                                 fill
                                 className="object-cover"
+                                priority
                             />
                         </div>
                         <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary-100 rounded-full blur-3xl opacity-60 z-0"></div>

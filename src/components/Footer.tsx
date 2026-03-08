@@ -23,9 +23,8 @@ export default function Footer() {
                     <div>
                         <h4 className="text-white font-bold mb-8 uppercase text-xs tracking-[0.3em]">Quick Links</h4>
                         <ul className="space-y-4 font-medium transition-all">
-                            <li><a href="#about" className="hover:text-primary-400 transition-colors">Our Mission</a></li>
+                            <li><a href="#about" className="hover:text-primary-400 transition-colors">About Us</a></li>
                             <li><a href="#services" className="hover:text-primary-400 transition-colors">Our Services</a></li>
-                            <li><a href="#resources" className="hover:text-primary-400 transition-colors">Resource Sanctuary</a></li>
                             <li><a href="#book" className="hover:text-primary-400 transition-colors">Book a Session</a></li>
                         </ul>
                     </div>
@@ -72,7 +71,7 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <div className="pt-12 border-t border-white/5 flex flex-col md:row justify-between items-center gap-6 text-xs font-bold uppercase tracking-widest text-gray-600">
+                <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-xs font-bold uppercase tracking-widest text-gray-600">
                     <p>© 2026 Hope Counseling Support Services.</p>
                     <div className="flex gap-10">
                         <a href="#" className="hover:text-white transition-colors">Privacy</a>
