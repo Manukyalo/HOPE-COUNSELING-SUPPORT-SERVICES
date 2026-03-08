@@ -47,10 +47,10 @@ export default function About() {
                         transition={{ duration: 0.8 }}
                         className="relative"
                     >
-                        <div className="aspect-square rounded-[3rem] overflow-hidden shadow-2xl relative z-10">
+                        <div className="aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl relative z-10 border-4 border-white/20">
                             <img
-                                src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=1000"
-                                alt="Counseling Session"
+                                src="/ma.jpeg"
+                                alt="Hope Counseling Support Services"
                                 className="w-full h-full object-cover"
                             />
                         </div>
