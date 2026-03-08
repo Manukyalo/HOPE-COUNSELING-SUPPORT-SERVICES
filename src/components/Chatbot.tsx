@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function Chatbot() {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: "assistant", content: "Hello! I'm your Hope Counseling assistant. How can I support you today? (I can help you book a session or answer mental health questions)" }
+        { role: "assistant", content: "Hello! I'm Amaya, your personal counseling assistant. How can I support you today? (I can help you book a session or answer mental health questions)" }
     ]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
@@ -73,7 +73,7 @@ export default function Chatbot() {
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">🤖</div>
                                 <div>
-                                    <h3 className="font-bold">Hope Assistant</h3>
+                                    <h3 className="font-bold">Amaya Assistant</h3>
                                     <p className="text-[10px] text-primary-300 uppercase tracking-widest font-bold">Online • Support Bot</p>
                                 </div>
                             </div>
