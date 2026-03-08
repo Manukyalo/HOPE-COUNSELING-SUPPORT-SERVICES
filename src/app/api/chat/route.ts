@@ -1,57 +1,65 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-interface Message {
-    role: "user" | "assistant";
-    content: string;
-}
-
-const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey || "dummy_key_for_build");
 
-export async function POST(req: Request) {
+const SYSTEM_INSTRUCTION = `You are Amaya, a warm, professional, and deeply empathetic personal assistant for "Hope Counseling Support Services". Your goal is to provide a safe, non-judgmental space for users to express themselves.
+- Converse naturally, like a compassionate human listener. Avoid sounding robotic or overly formal.
+- Validate the user's feelings and show genuine care.
+- Do not provide medical diagnoses, prescribe medication, or act as a replacement for professional therapy.
+- If a user expresses thoughts of self-harm or is in immediate danger, gently but firmly encourage them to contact emergency services or a crisis hotline immediately.
+- Keep your responses concise and conversational.
+- You can help guide them to resources: Location (Thika), Contact (0701279231), Services (Stress/Anxiety, Relationship, Youth, Academic, Peer Support).
+- Session length is 45 minutes. Booking can be done via the site's booking section.`;
+
+export async function POST(req: NextRequest) {
     try {
-        const { messages }: { messages: Message[] } = await req.json();
+        const { message, history } = await req.json();
 
-        // Define the empathetic system persona for Amaya
-        const systemPrompt = `
-You are Amaya, a warm, high-end, and deeply empathetic personal assistant for "Hope Counseling Support Services".
-Your mission is to provide support, information, and a safe space for clients.
+        if (!message) {
+            return NextResponse.json({ error: "Message is required" }, { status: 400 });
+        }
 
-**Your Personality:**
-- You are NOT a robot. You are a professional, caring, and natural-sounding human assistant.
-- Your tone is gentle, supportive, and sophisticated.
-- You speak clearly and avoid overly technical or "bot-like" medical jargon unless explaining a specific service.
-- When someone says "Hi" or greets you, respond primarily with "Hey there! I'm Amaya. How are you doing today?" or variations that feel natural and empathetic.
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            systemInstruction: SYSTEM_INSTRUCTION,
+        });
 
-**Website Context:**
-- Location: Thika based.
-- Contact: 0701279231 (Phone/WhatsApp).
-- Email: amayakari5924@gmail.com
-- Main Services: Stress & Anxiety Management, Relationship Counseling, Youth Mentorship, Academic Guidance, Emotional Peer Support.
-- Session Length: Standard 45 minutes.
-- Booking: Can be done directly through the website's booking section (scroll down).
+        const chat = model.startChat({
+            history: history || [],
+            generationConfig: {
+                temperature: 0.7,
+            },
+        });
 
-**Your Rules:**
-- DO NOT say you are an AI or a large language model. You are Amaya.
-- Keep responses concise but meaningful.
-- If a user shares a struggle, validate their feelings first before suggesting resources or booking.
-- Be proactive but never pushy.
-- If they ask about session prices or specific insurance, politely suggest they contact the office via the provided phone/email for the latest details.
+        const result = await chat.sendMessageStream(message);
 
-Conversation History:
-${messages.map((m: Message) => `${m.role === 'user' ? 'User' : 'Amaya'}: ${m.content}`).join('\n')}
-`;
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+            async start(controller) {
+                try {
+                    for await (const chunk of result.stream) {
+                        const chunkText = chunk.text();
+                        if (chunkText) {
+                            controller.enqueue(encoder.encode(chunkText));
+                        }
+                    }
+                    controller.close();
+                } catch (e) {
+                    controller.error(e);
+                }
+            },
+        });
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(systemPrompt);
-        const responseText = result.response.text().trim();
+        return new Response(stream, {
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
+        });
 
-        return NextResponse.json({ content: responseText });
-    } catch (error) {
-        console.error("AI Chat Error:", error);
+    } catch (error: any) {
+        console.error("API Chat Error:", error);
         return NextResponse.json(
-            { content: "I'm so sorry, I hit a little snag while thinking. I'm still here for you, though—would you like to try sharing that again, or can I help you with booking a session?" },
+            { error: "Internal Server Error", details: error.message },
             { status: 500 }
         );
     }

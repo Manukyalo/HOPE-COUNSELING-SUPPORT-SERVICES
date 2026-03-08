@@ -1,22 +1,9 @@
 "use client";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useState, useEffect, useRef } from "react";
 import { Send, User, Bot, X, MessageCircle, AlertCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Initialize the Gemini AI client
-// NOTE: Using the environment variable as per user suggestion
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
-
-const SYSTEM_INSTRUCTION = `You are a warm, empathetic, and professional AI assistant for a counseling psychology website. Your goal is to provide a safe, non-judgmental space for users to express themselves.
-- Converse naturally, like a compassionate human listener. Avoid sounding robotic, overly formal, or like you are reading from a script.
-- Validate the user's feelings and show genuine care.
-- Do not provide medical diagnoses, prescribe medication, or act as a replacement for professional therapy.
-- If a user expresses thoughts of self-harm or is in immediate danger, gently but firmly encourage them to contact emergency services or a crisis hotline immediately.
-- Keep your responses concise and conversational. Ask open-ended questions to encourage them to share more if they feel comfortable.
-- You can help guide them to resources on the counseling website if appropriate (e.g., booking an appointment, reading articles).`;
 
 type Message = {
     id: string;
@@ -38,23 +25,6 @@ export function ChatBot() {
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Store the chat instance in a ref so it persists across renders
-    const chatRef = useRef<any>(null);
-
-    useEffect(() => {
-        if (!chatRef.current) {
-            chatRef.current = genAI.getGenerativeModel({
-                model: "gemini-pro",
-                systemInstruction: SYSTEM_INSTRUCTION
-            }).startChat({
-                history: [],
-                generationConfig: {
-                    temperature: 0.7,
-                },
-            });
-        }
-    }, []);
-
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -74,13 +44,29 @@ export function ChatBot() {
             text: input.trim(),
         };
 
+        const currentInput = input.trim();
         setMessages((prev) => [...prev, userMessage]);
         setInput("");
         setIsLoading(true);
 
         try {
-            const result = await chatRef.current.sendMessageStream(userMessage.text);
+            // Prepare chat history for the API
+            const history = messages.map(m => ({
+                role: m.role === "user" ? "user" : "model",
+                parts: [{ text: m.text }]
+            }));
 
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: currentInput, history }),
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch response");
+            if (!response.body) throw new Error("No response body");
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
             let fullResponse = "";
             const modelMessageId = (Date.now() + 1).toString();
 
@@ -89,16 +75,17 @@ export function ChatBot() {
                 { id: modelMessageId, role: "model", text: "" },
             ]);
 
-            for await (const chunk of result.stream) {
-                const chunkText = chunk.text();
-                if (chunkText) {
-                    fullResponse += chunkText;
-                    setMessages((prev) =>
-                        prev.map((msg) =>
-                            msg.id === modelMessageId ? { ...msg, text: fullResponse } : msg
-                        )
-                    );
-                }
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunkText = decoder.decode(value);
+                fullResponse += chunkText;
+                setMessages((prev) =>
+                    prev.map((msg) =>
+                        msg.id === modelMessageId ? { ...msg, text: fullResponse } : msg
+                    )
+                );
             }
         } catch (error) {
             console.error("Chat error:", error);
