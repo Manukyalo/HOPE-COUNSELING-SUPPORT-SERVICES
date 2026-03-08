@@ -48,12 +48,12 @@ export default function Chatbot() {
 
     return (
         <>
-            <div className="fixed bottom-10 right-10 z-[100]">
+            <div className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[9999]">
                 <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-16 h-16 bg-primary-600 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl shadow-primary-600/40 relative overflow-hidden group"
+                    className="w-14 h-14 md:w-16 md:h-16 bg-primary-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl md:text-3xl shadow-primary-600/40 relative overflow-hidden group"
                 >
                     <div className="absolute inset-0 bg-white/20 scale-0 group-hover:scale-150 transition-transform duration-500 rounded-full" />
                     {isOpen ? "✕" : "💬"}
@@ -63,10 +63,10 @@ export default function Chatbot() {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 50, scale: 0.9, transformOrigin: "bottom right" }}
+                        initial={{ opacity: 0, y: 20, scale: 0.95, transformOrigin: "bottom right" }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 50, scale: 0.9 }}
-                        className="fixed bottom-32 right-10 w-[90vw] md:w-[400px] h-[600px] bg-white rounded-[2.5rem] shadow-2xl z-[100] border border-gray-100 flex flex-col overflow-hidden"
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        className="fixed bottom-24 right-6 md:bottom-32 md:right-10 w-[min(calc(100vw-3rem),400px)] h-[min(600px,calc(100vh-10rem))] bg-white rounded-[2rem] shadow-2xl z-[9999] border border-gray-100 flex flex-col overflow-hidden"
                     >
                         {/* Header */}
                         <div className="bg-primary-900 p-6 text-white">
@@ -89,8 +89,8 @@ export default function Chatbot() {
                                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                                 >
                                     <div className={`max-w-[80%] p-4 rounded-2xl ${msg.role === "user"
-                                            ? "bg-primary-600 text-white rounded-tr-none shadow-lg shadow-primary-600/10"
-                                            : "bg-gray-100 text-gray-700 rounded-tl-none"
+                                        ? "bg-primary-600 text-white rounded-tr-none shadow-lg shadow-primary-600/10"
+                                        : "bg-gray-100 text-gray-700 rounded-tl-none"
                                         }`}>
                                         <p className="text-sm leading-relaxed">{msg.content}</p>
                                     </div>
