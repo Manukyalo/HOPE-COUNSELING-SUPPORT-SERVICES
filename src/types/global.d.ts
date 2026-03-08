@@ -27,6 +27,7 @@ declare module 'node' {
 }
 
 declare module 'next' {
+    export type Metadata = any;
     const next: any;
     export default next;
 }
