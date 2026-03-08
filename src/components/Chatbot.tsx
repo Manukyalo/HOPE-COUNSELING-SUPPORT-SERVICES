@@ -19,35 +19,35 @@ export default function Chatbot() {
     }, [messages, isTyping]);
 
     const handleSend = async () => {
-        if (!input.trim()) return;
+        if (!input.trim() || isTyping) return;
 
-        const userMessage = input.trim();
+        const userMessage = { role: "user", content: input.trim() };
         setInput("");
-        setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+        setMessages(prev => [...prev, userMessage]);
         setIsTyping(true);
 
-        // Simulate AI response logic
-        setTimeout(() => {
-            let aiResponse = "";
-            const lowerMsg = userMessage.toLowerCase();
+        try {
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    messages: [...messages, userMessage]
+                }),
+            });
 
-            if (lowerMsg === "hi" || lowerMsg === "hello" || lowerMsg === "hey") {
-                aiResponse = "Hey! It's so good to hear from you. How has your day been treating you so far?";
-            } else if (lowerMsg.includes("how are you")) {
-                aiResponse = "I'm doing well, thank you for asking! I'm just here and ready to support you. How about you—what's been on your heart today?";
-            } else if (lowerMsg.includes("book") || lowerMsg.includes("session") || lowerMsg.includes("schedule")) {
-                aiResponse = "I'd love to help you get some dedicated time. You can pick a slot that works for you in our booking section just below. Would you like me to tell you more about how our sessions work first?";
-            } else if (lowerMsg.includes("anxiety") || lowerMsg.includes("feel") || lowerMsg.includes("stress")) {
-                aiResponse = "I hear you. Those feelings can be so heavy to carry alone. I'm here to listen, and if you feel ready, our specialists can offer some really helpful tools to navigate those waves. What's been the hardest part for you lately?";
-            } else if (lowerMsg.includes("thank")) {
-                aiResponse = "You are so very welcome. I'm just glad I can be here with you. Is there anything else you'd like to chat about?";
-            } else {
-                aiResponse = "I'm listening. That sounds like a lot to hold. Sometimes just sharing it is the first step toward feeling a bit lighter. Would you like to explore how one of our sessions might help with that?";
-            }
+            if (!response.ok) throw new Error("API call failed");
 
-            setMessages(prev => [...prev, { role: "assistant", content: aiResponse }]);
+            const data = await response.json();
+            setMessages(prev => [...prev, { role: "assistant", content: data.content }]);
+        } catch (error) {
+            console.error("Amaya Chat Error:", error);
+            setMessages(prev => [...prev, {
+                role: "assistant",
+                content: "I'm so sorry, I hit a little snag while thinking. I'm still here for you, though—would you like to try sharing that again, or can I help you with booking a session?"
+            }]);
+        } finally {
             setIsTyping(false);
-        }, 1500);
+        }
     };
 
     return (

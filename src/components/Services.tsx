@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 const services = [
     {
@@ -62,10 +63,11 @@ export default function Services() {
                             >
                                 {/* Card Image */}
                                 <div className="h-72 overflow-hidden relative">
-                                    <img
+                                    <Image
                                         src={service.image}
                                         alt={service.title}
-                                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                        fill
+                                        className="object-cover transition-transform duration-1000 group-hover:scale-110"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-transparent opacity-60"></div>
                                 </div>

@@ -1,11 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function About() {
     return (
         <section id="about" className="py-24 bg-white relative overflow-hidden">
             <div className="container mx-auto px-4 relative z-10 text-center">
+                {/* ... existing content ... */}
                 <div className="max-w-4xl mx-auto mb-16">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
@@ -66,10 +68,11 @@ export default function About() {
                         className="relative"
                     >
                         <div className="aspect-[4/5] rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] relative z-10 border-8 border-white">
-                            <img
+                            <Image
                                 src="/ma.jpeg"
                                 alt="Hope Counseling Support Services"
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
                             />
                         </div>
                         <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary-100 rounded-full blur-3xl opacity-60 z-0"></div>

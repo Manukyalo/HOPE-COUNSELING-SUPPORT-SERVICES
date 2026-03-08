@@ -31,3 +31,31 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# build logs
+*_log.txt
+*_attempt.txt
+*_verification.txt
+*_fix.txt
+*_v2.txt
+*.ps1
+repair.ps1
+push_err.txt
+push_out.txt
+GITHUB_PUSH_VERIFICATION.txt
+out.txt
+lint_errors.txt
+lint_errors_utf8.txt
+final_build_no_lock.txt
+final_build_with_pinned_deps.txt
+build_after_force_caniuse.txt
+build_after_force_caniuse_v2.txt
+build_after_caniuse_fix.txt
+build_after_caniuse_fix_v2.txt
+build_success_verification.txt
+build_log.txt
+final_build_log.txt
+install_log.txt
+push_err.txt
+push_out.txt
+out.txt

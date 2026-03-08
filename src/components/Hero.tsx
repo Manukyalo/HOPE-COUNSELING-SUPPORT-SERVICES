@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function Hero() {
     return (
@@ -11,11 +12,16 @@ export default function Hero() {
                     initial={{ scale: 1.1 }}
                     animate={{ scale: 1 }}
                     transition={{ duration: 5, ease: "easeOut" }}
-                    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                    style={{
-                        backgroundImage: "url('/ma.jpeg')",
-                    }}
-                />
+                    className="absolute inset-0"
+                >
+                    <Image
+                        src="/ma.jpeg"
+                        alt="Background"
+                        fill
+                        className="object-cover"
+                        priority
+                    />
+                </motion.div>
                 {/* Deep atmosphere overlay */}
                 <div className="absolute inset-0 bg-gradient-to-b from-gray-900/40 via-gray-900/20 to-gray-900/90 backdrop-blur-[1px]"></div>
             </div>

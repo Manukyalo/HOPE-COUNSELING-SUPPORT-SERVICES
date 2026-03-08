@@ -2,66 +2,21 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const servicesDetails: Record<string, any> = {
-    "stress-anxiety-management": {
-        title: "Stress & Anxiety Management",
-        image: "https://images.unsplash.com/photo-1474418397713-7dedd4d2b45a?auto=format&fit=crop&q=80&w=1000",
-        description: "Master tools to navigate life's pressures and find your internal calm using evidence-based techniques.",
-        longContent: [
-            "In today's fast-paced world, stress and anxiety can often feel like constant companions. Our management program is designed to give you back the steering wheel.",
-            "We utilize a blend of Cognitive Behavioral Therapy (CBT) and Mindfulness-Based Stress Reduction (MBSR) to help you identify triggers and develop a personalized toolkit for calm.",
-            "Whether you're dealing with workplace burnout, social anxiety, or generalized worry, we provide a safe space to deconstruct these feelings and rebuild your sense of peace."
-        ],
-        benefits: ["Reduced physical tension", "Greater mental clarity", "Customized coping tools", "Improved sleep quality"]
-    },
-    "relationship-counseling": {
-        title: "Relationship Counseling",
-        image: "https://images.unsplash.com/photo-1516534775068-ba3e84529ec1?auto=format&fit=crop&q=80&w=1000",
-        description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance.",
-        longContent: [
-            "Every relationship has its seasons of challenge. Our counseling service provides a neutral, structured environment to explore the dynamics of your connection.",
-            "We focus on improving communication patterns, rebuilding trust, and rediscovering the shared values that brought you together in the first place.",
-            "From pre-marital guidance to resolving long-standing conflicts, our therapists help couples develop the emotional intelligence needed for a thriving partnership."
-        ],
-        benefits: ["Effective communication", "Conflict resolution", "Emotional intimacy", "Trust restoration"]
-    },
-    "youth-mentorship": {
-        title: "Youth Mentorship & Guidance",
-        image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=1000",
-        description: "Empowering the next generation with the confidence and clarity needed to navigate modern adolescence.",
-        longContent: [
-            "Adolescence is a pivotal time of self-discovery and growth. Our mentorship program goes beyond traditional therapy to provide proactive guidance for young people.",
-            "We help teens and young adults navigate social pressures, identity exploration, and the transition to adulthood with specialized emotional support.",
-            "By pairing therapeutic insight with practical life-coaching, we empower youth to build a strong foundation of self-esteem and resilience."
-        ],
-        benefits: ["Improved self-confidence", "Social skill development", "Identity clarity", "Emotional resilience"]
-    },
-    "academic-guidance": {
-        title: "Academic Guidance",
-        image: "https://images.unsplash.com/photo-1434030216411-0bb7c3f3df44?auto=format&fit=crop&q=80&w=1000",
-        description: "Navigating educational pathways and overcoming learning challenges with strategic personal development.",
-        longContent: [
-            "Academic pressure can deeply impact a student's mental well-8being. Our guidance service addresses the intersection of education and emotional health.",
-            "We support students in managing exam anxiety, developing effective study habits, and navigating the difficult decisions surrounding career and educational paths.",
-            "Our approach helps students find balance, reducing the 'burnout' often associated with high-pressure academic environments."
-        ],
-        benefits: ["Enhanced focus", "Reduced exam anxiety", "Better study-life balance", "Career path clarity"]
-    },
-    "emotional-peer-support": {
-        title: "Emotional Support & Peer Counseling",
-        image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=1000",
-        description: "A safe, shared space for connection and mutual understanding led by experienced peer facilitators.",
-        longContent: [
-            "Sometimes, the most powerful healing comes from knowing you are not alone. Our peer support groups offer a community-based approach to mental wellness.",
-            "Led by trained facilitators with lived experience, these sessions provide a space for shared stories, mutual encouragement, and collective wisdom.",
-            "We foster an environment of radical empathy and zero judgment, where participants can feel seen and heard in a way that only a peer community can provide."
-        ],
-        benefits: ["Sense of belonging", "Reduced isolation", "Shared coping strategies", "Mutual empowerment"]
-    }
+interface Service {
+    title: string;
+    image: string;
+    description: string;
+    longContent: string[];
+    benefits: string[];
+}
+
+const servicesDetails: Record<string, Service> = {
+    // ... data ...
 };
 
 export default function ServicePage({ params }: { params: { slug: string } }) {
@@ -83,13 +38,16 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
             {/* Hero Section */}
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden pt-20">
                 <div className="absolute inset-0 z-0">
-                    <img
+                    <Image
                         src={service.image}
                         alt={service.title}
-                        className="w-full h-full object-cover scale-105"
+                        fill
+                        className="object-cover"
+                        priority
                     />
                     <div className="absolute inset-0 bg-gray-950/60 backdrop-blur-sm"></div>
                 </div>
+                {/* ... rest of the section ... */}
 
                 <div className="container mx-auto px-4 relative z-10 text-center">
                     <motion.div
