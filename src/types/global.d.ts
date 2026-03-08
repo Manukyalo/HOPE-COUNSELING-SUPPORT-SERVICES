@@ -12,7 +12,6 @@ declare module 'react' {
     export function useMemo<T>(factory: () => T, deps: any[]): T;
     export function useCallback<T extends (...args: any[]) => any>(callback: T, deps: any[]): T;
     export function useRef<T>(initialValue: T): { current: T };
-    // Add more common hooks as needed
     const React: any;
     export default React;
 }
@@ -20,6 +19,16 @@ declare module 'react' {
 declare module 'react-dom' {
     const ReactDOM: any;
     export default ReactDOM;
+}
+
+declare module 'node' {
+    const node: any;
+    export default node;
+}
+
+declare module 'next' {
+    const next: any;
+    export default next;
 }
 
 declare module 'framer-motion' {
@@ -43,3 +52,10 @@ declare module 'next/navigation' {
     export function useSearchParams(): any;
     export function notFound(): never;
 }
+
+// Global process definition for the IDE
+declare const process: {
+    env: {
+        [key: string]: string | undefined;
+    };
+};
