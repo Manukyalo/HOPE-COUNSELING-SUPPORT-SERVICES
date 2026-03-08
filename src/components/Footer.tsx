@@ -25,7 +25,7 @@ export default function Footer() {
                         <ul className="space-y-4 font-medium transition-all">
                             <li><a href="#about" className="hover:text-primary-400 transition-colors">Our Mission</a></li>
                             <li><a href="#services" className="hover:text-primary-400 transition-colors">Our Services</a></li>
-                            <li><a href="#journey" className="hover:text-primary-400 transition-colors">Mindfulness Pulse</a></li>
+                            <li><a href="#resources" className="hover:text-primary-400 transition-colors">Resource Sanctuary</a></li>
                             <li><a href="#book" className="hover:text-primary-400 transition-colors">Book a Session</a></li>
                         </ul>
                     </div>

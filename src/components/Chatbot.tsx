@@ -90,7 +90,7 @@ export default function Chatbot() {
                                 >
                                     <div className={`max-w-[80%] p-4 rounded-2xl ${msg.role === "user"
                                         ? "bg-primary-600 text-white rounded-tr-none shadow-lg shadow-primary-600/10"
-                                        : "bg-gray-100 text-gray-700 rounded-tl-none"
+                                        : "bg-gray-100 text-gray-800 rounded-tl-none font-medium"
                                         }`}>
                                         <p className="text-sm leading-relaxed">{msg.content}</p>
                                     </div>
@@ -115,7 +115,7 @@ export default function Chatbot() {
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
                                 placeholder="How can I support you right now?"
-                                className="flex-grow bg-gray-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500/20 outline-none"
+                                className="flex-grow bg-gray-100 border-none rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-primary-500/20 outline-none"
                             />
                             <button
                                 onClick={handleSend}
