@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+export const dynamic = 'force-dynamic';
+
 export default function LiveSession({ params }: { params: { id: string } }) {
     const [permissionState, setPermissionState] = useState<"prompt" | "granted" | "denied">("prompt");
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);

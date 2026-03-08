@@ -6,7 +6,8 @@ interface Message {
     content: string;
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || "");
+const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+const genAI = new GoogleGenerativeAI(apiKey || "dummy_key_for_build");
 
 export async function POST(req: Request) {
     try {
