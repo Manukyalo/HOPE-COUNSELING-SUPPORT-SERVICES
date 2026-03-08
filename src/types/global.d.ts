@@ -7,11 +7,11 @@ declare namespace JSX {
 declare module 'react' {
     export type ReactNode = any;
     export type ReactElement = any;
-    export function useState<T>(initialState: T | (() => T)): [T, (newState: T) => void];
+    export function useState<T>(initialState: T | (() => T)): [T, (action: T | ((prevState: T) => T)) => void];
     export function useEffect(effect: () => void | (() => void), deps?: any[]): void;
     export function useMemo<T>(factory: () => T, deps: any[]): T;
     export function useCallback<T extends (...args: any[]) => any>(callback: T, deps: any[]): T;
-    export function useRef<T>(initialValue: T): { current: T };
+    export function useRef<T>(initialValue: T | null): { current: T | null };
     const React: any;
     export default React;
 }
