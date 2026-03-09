@@ -76,7 +76,7 @@ export default function ApproachPage() {
                         >
                             <div className="aspect-square rounded-[4rem] overflow-hidden shadow-2xl relative z-10 border-8 border-white">
                                 <Image
-                                    src="https://images.unsplash.com/photo-1516534775068-ba3e84529ec1?auto=format&fit=crop&q=80&w=800"
+                                    src="/ma.jpeg"
                                     alt="Collaboration"
                                     fill
                                     className="object-cover"
