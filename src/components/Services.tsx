@@ -8,13 +8,13 @@ const services = [
     {
         slug: "stress-anxiety-management",
         title: "Stress and Anxiety management",
-        image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1544126592-807daa215a0b?auto=format&fit=crop&q=80&w=800",
         description: "Master tools to navigate life's pressures and find your internal calm using evidence-based techniques."
     },
     {
         slug: "relationship-counseling",
         title: "Relationship Counseling",
-        image: "https://images.unsplash.com/photo-1516534775068-ba3e84529ec1?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1573497620053-ea5310f94a17?auto=format&fit=crop&q=80&w=800",
         description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance."
     },
     {
@@ -26,7 +26,7 @@ const services = [
     {
         slug: "academic-guidance",
         title: "Academic guidance",
-        image: "https://images.unsplash.com/photo-1434030216411-0bb7c3f3df44?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=800",
         description: "Navigating educational pathways and overcoming learning challenges with strategic personal development."
     },
     {

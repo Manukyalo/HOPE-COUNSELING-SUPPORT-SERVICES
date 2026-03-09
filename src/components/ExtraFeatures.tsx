@@ -21,12 +21,12 @@ const faqs = [
 const testimonials = [
     {
         quote: "Hope Counseling changed how I navigate stress. The techniques are practical and the support is genuinely empathetic.",
-        author: "Sarah J.",
+        author: "Quinter",
         role: "Individual Client"
     },
     {
         quote: "Our relationship sessions gave us the tools to communicate again. It's like we finally speak the same language.",
-        author: "David & Maria",
+        author: "Asnath",
         role: "Relationship Counseling"
     }
 ];

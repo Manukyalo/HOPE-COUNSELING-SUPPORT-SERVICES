@@ -14,7 +14,7 @@ interface Service {
 const servicesDetails: Record<string, Service> = {
     "stress-anxiety-management": {
         title: "Stress and Anxiety management",
-        image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1544126592-807daa215a0b?auto=format&fit=crop&q=80&w=800",
         description: "Master tools to navigate life's pressures and find your internal calm using evidence-based techniques.",
         longContent: [
             "Life's pressures can often feel overwhelming, but you don't have to navigate them alone. Our stress and anxiety management sessions provide a compassionate and professional space to understand the root causes of your tension.",
@@ -24,7 +24,7 @@ const servicesDetails: Record<string, Service> = {
     },
     "relationship-counseling": {
         title: "Relationship Counseling",
-        image: "https://images.unsplash.com/photo-1516534775068-ba3e84529ec1?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1573497620053-ea5310f94a17?auto=format&fit=crop&q=80&w=800",
         description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance.",
         longContent: [
             "Healthy relationships are the cornerstone of a fulfilling life. Whether you're navigating partnership challenges, family dynamics, or workplace connections, our relationship counseling offers a neutral ground for clear, empathetic communication.",
@@ -44,7 +44,7 @@ const servicesDetails: Record<string, Service> = {
     },
     "academic-guidance": {
         title: "Academic guidance",
-        image: "https://images.unsplash.com/photo-1434030216411-0bb7c3f3df44?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=800",
         description: "Navigating educational pathways and overcoming learning challenges with strategic personal development.",
         longContent: [
             "Academic success isn't just about hard work; it's about the right strategy and mindset. We provide support for students facing learning hurdles, exam anxiety, or transition challenges between educational levels.",
