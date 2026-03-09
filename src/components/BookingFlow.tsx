@@ -182,12 +182,12 @@ export default function BookingFlow() {
                                 Your booking for <span className="text-primary-600 font-black">{selectedDate}</span> at <span className="text-primary-600 font-black">{selectedTime}</span> has been logged.
                             </p>
 
-                            <div className="space-y-8">
+                            <div className="flex flex-col items-center gap-12">
                                 <a
                                     href={generateWhatsAppLink()}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="w-full py-7 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-[2.5rem] font-black transition-all shadow-2xl shadow-emerald-500/30 uppercase tracking-[0.3em] text-sm flex items-center justify-center gap-4 group"
+                                    className="inline-flex items-center justify-center gap-4 px-12 py-7 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-[2.5rem] font-black transition-all shadow-2xl shadow-emerald-500/30 uppercase tracking-[0.3em] text-sm group"
                                 >
                                     <svg className="w-6 h-6 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
                                         <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.185-.573c.948.517 2.053.888 3.144.889h.002c3.181 0 5.767-2.586 5.768-5.766 0-3.18-2.587-5.766-5.768-5.766zM12.031 16.757c-1.131 0-2.115-.311-2.956-.816l-.212-.128-1.574.412.42-1.533-.141-.223c-.569-.912-.871-1.956-.87-3.029.001-3.08 2.505-5.585 5.586-5.585 3.081 0 5.585 2.505 5.585 5.585.001 3.081-2.505 5.585-5.586 5.585zM14.636 12.188c-.144-.072-.857-.423-.99-.47-.133-.048-.23-.072-.326.072-.097.144-.374.47-.458.566-.084.097-.168.109-.312.037-.144-.072-.607-.224-1.155-.712-.426-.379-.714-.848-.798-.992-.084-.144-.009-.222.063-.293.065-.064.144-.168.216-.252.072-.084.097-.144.144-.241.048-.096.024-.18-.012-.252-.036-.072-.326-.784-.446-1.073-.117-.282-.236-.243-.326-.248-.084-.005-.18-.006-.277-.006s-.253.036-.386.18c-.133.144-.506.494-.506 1.205 0 .711.518 1.398.59 1.494.072.096 1.02 1.557 2.471 2.183.345.149.614.238.823.304.346.11.662.094.912.057.279-.042.857-.35.976-.687.12-.337.12-.627.084-.687-.036-.06-.133-.096-.277-.168z" />
@@ -195,7 +195,7 @@ export default function BookingFlow() {
                                     Confirm on WhatsApp
                                 </a>
 
-                                <div className="pt-8 border-t border-gray-100 flex justify-center">
+                                <div className="pt-8 border-t border-gray-100 w-full flex justify-center">
                                     <button
                                         onClick={() => {
                                             setStep(1);
