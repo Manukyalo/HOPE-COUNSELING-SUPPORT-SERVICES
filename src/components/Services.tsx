@@ -8,13 +8,13 @@ const services = [
     {
         slug: "stress-anxiety-management",
         title: "Stress and Anxiety management",
-        image: "https://images.unsplash.com/photo-1544126592-807daa215a0b?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1463171359979-330b66a358fb?auto=format&fit=crop&q=80&w=800",
         description: "Master tools to navigate life's pressures and find your internal calm using evidence-based techniques."
     },
     {
         slug: "relationship-counseling",
         title: "Relationship Counseling",
-        image: "https://images.unsplash.com/photo-1573497620053-ea5310f94a17?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1581056771107-24ca5f033842?auto=format&fit=crop&q=80&w=800",
         description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance."
     },
     {
