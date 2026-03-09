@@ -8,19 +8,19 @@ const services = [
     {
         slug: "stress-anxiety-management",
         title: "Stress and Anxiety management",
-        image: "https://images.unsplash.com/photo-1463171359979-330b66a358fb?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1541199249251-f713e6145470?auto=format&fit=crop&q=80&w=800",
         description: "Master tools to navigate life's pressures and find your internal calm using evidence-based techniques."
     },
     {
         slug: "relationship-counseling",
         title: "Relationship Counseling",
-        image: "https://images.unsplash.com/photo-1581056771107-24ca5f033842?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1516584566738-4f41a82c4731?auto=format&fit=crop&q=80&w=800",
         description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance."
     },
     {
         slug: "youth-mentorship",
         title: "Youth mentorship and guidance",
-        image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1529156069898-49953e3ac?auto=format&fit=crop&q=80&w=800",
         description: "Empowering the next generation with the confidence and clarity needed to navigate modern adolescence."
     },
     {
@@ -32,7 +32,7 @@ const services = [
     {
         slug: "emotional-peer-support",
         title: "Emotional support and Peer Counseling",
-        image: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1541199249251-f713e6145470?auto=format&fit=crop&q=80&w=800",
         description: "A safe, shared space for connection and mutual understanding led by experienced peer facilitators."
     },
 ];

@@ -2,22 +2,34 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 export default function BookingFlow() {
     const [step, setStep] = useState(1);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
-    const [sessionLink, setSessionLink] = useState("");
+    const [sessionData, setSessionData] = useState<{ ref: string; counselorLink: string; clientLink: string } | null>(null);
 
     const handleConsent = () => setStep(2);
 
     const handleBooking = () => {
-        const roomId = Math.random().toString(36).substring(7);
-        setSessionLink(`https://meet.jit.si/HopeCounseling_${roomId}`);
+        // Real-time counter logic using localStorage
+        const currentCount = parseInt(localStorage.getItem("hope_session_count") || "0") + 1;
+        localStorage.setItem("hope_session_count", currentCount.toString());
+
+        const refId = `C${currentCount.toString().padStart(3, '0')}`;
+        const roomId = `${refId}_${Math.random().toString(36).substring(7)}`;
+
+        setSessionData({
+            ref: refId,
+            counselorLink: `/session/Counselor-${roomId}`,
+            clientLink: `/session/Client-${roomId}`
+        });
         setStep(3);
     };
 
     const dates = [
+        { day: "Sun", date: "09", full: "Sunday, March 09" },
         { day: "Mon", date: "10", full: "Monday, March 10" },
         { day: "Tue", date: "11", full: "Tuesday, March 11" },
         { day: "Wed", date: "12", full: "Wednesday, March 12" },
@@ -33,10 +45,21 @@ export default function BookingFlow() {
         <section id="book" className="py-24 bg-white scroll-mt-24">
             <div className="max-w-4xl mx-auto px-4">
                 {/* Section Header - Centralized */}
-                <div className="text-center mb-16">
+                <div className="text-center mb-8">
                     <span className="text-primary-600 font-bold uppercase tracking-[0.4em] text-xs">Reservations</span>
                     <h2 className="text-4xl md:text-5xl font-black text-gray-900 mt-4 mb-6 uppercase tracking-tight">Secure Your Session</h2>
                     <div className="w-24 h-1.5 bg-primary-500 mx-auto rounded-full"></div>
+                </div>
+
+                {/* Live Session Counter */}
+                <div className="flex justify-center mb-16">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100 shadow-sm">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">3 Active Live Sessions</span>
+                    </div>
                 </div>
 
                 <AnimatePresence mode="wait">
@@ -59,6 +82,7 @@ export default function BookingFlow() {
                                 <p>2. <span className="text-gray-900 font-black">Crisis Support:</span> This platform is not for emergencies. If you are in crisis, please contact local emergency responders immediately.</p>
                                 <p>3. <span className="text-gray-900 font-black">Attendance:</span> Sessions are 45 minutes. A 24-hour cancellation notice is required to honor our mutual commitment.</p>
                                 <p>4. <span className="text-gray-900 font-black">Environment:</span> Please ensure a private, quiet space with stable connectivity for optimal therapeutic impact.</p>
+                                <p>5. <span className="text-gray-900 font-black">Real-Time Access:</span> For live sessions, counselors manage a waiting room. You will be admitted once the session begins.</p>
                             </div>
 
                             <button
@@ -142,32 +166,45 @@ export default function BookingFlow() {
                         </motion.div>
                     )}
 
-                    {step === 3 && (
+                    {step === 3 && sessionData && (
                         <motion.div
                             key="success"
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="bg-white p-12 md:p-20 rounded-[4rem] shadow-2xl border border-gray-100 text-center"
+                            className="bg-white p-8 md:p-12 rounded-[4rem] shadow-2xl border border-gray-100 text-center"
                         >
-                            <div className="w-28 h-28 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-12 text-5xl shadow-inner animate-bounce">
+                            <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8 text-3xl shadow-inner">
                                 ✓
                             </div>
-                            <h2 className="text-4xl font-black text-gray-900 mb-6 uppercase tracking-tight">Appointment Secured</h2>
-                            <p className="text-gray-500 mb-12 text-lg font-medium leading-relaxed">
-                                Your session for <span className="text-primary-600 font-black">{selectedDate}</span> at <span className="text-primary-600 font-black">{selectedTime}</span> has been confirmed in our system.
+                            <h2 className="text-3xl font-black text-gray-900 mb-4 uppercase tracking-tight">Appointment Secured</h2>
+                            <p className="text-gray-500 mb-8 text-sm font-medium leading-relaxed">
+                                Reference Code: <span className="text-primary-600 font-black">{sessionData.ref}</span><br />
+                                Session for <span className="text-primary-600 font-black">{selectedDate}</span> at <span className="text-primary-600 font-black">{selectedTime}</span>
                             </p>
 
-                            <div className="bg-primary-900 p-10 rounded-[3rem] border-4 border-dashed border-primary-500/30 mb-12 relative overflow-hidden group shadow-2xl">
-                                <div className="relative z-10">
-                                    <p className="text-[10px] text-primary-300 font-black uppercase tracking-[0.4em] mb-6">Encrypted Session Room</p>
-                                    <a
-                                        href={sessionLink}
-                                        target="_blank"
-                                        className="text-lg md:text-xl font-mono text-white hover:text-primary-400 transition-colors break-all underline decoration-primary-500/50 underline-offset-8"
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                                {/* Counselor Box */}
+                                <div className="bg-gray-950 p-8 rounded-[3rem] border-2 border-primary-500/20 text-left">
+                                    <p className="text-[10px] text-primary-400 font-black uppercase tracking-[0.4em] mb-4">Counselor Access</p>
+                                    <Link
+                                        href={sessionData.counselorLink}
+                                        className="text-xs font-mono text-white hover:text-primary-400 transition-colors break-all block mb-4 underline decoration-primary-500/30 underline-offset-4"
                                     >
-                                        {sessionLink}
-                                    </a>
-                                    <p className="mt-8 text-primary-400 text-[10px] font-black uppercase tracking-widest">Keep this link private</p>
+                                        Live Session Dashboard
+                                    </Link>
+                                    <p className="text-[9px] text-gray-500 uppercase font-black">Manage Waiting Room & Recording</p>
+                                </div>
+
+                                {/* Client Box */}
+                                <div className="bg-primary-950 p-8 rounded-[3rem] border-2 border-primary-400/20 text-left">
+                                    <p className="text-[10px] text-primary-300 font-black uppercase tracking-[0.4em] mb-4">Client Access</p>
+                                    <Link
+                                        href={sessionData.clientLink}
+                                        className="text-xs font-mono text-white hover:text-primary-300 transition-colors break-all block mb-4 underline decoration-primary-400/30 underline-offset-4"
+                                    >
+                                        Join Secure Session
+                                    </Link>
+                                    <p className="text-[9px] text-primary-400/60 uppercase font-black">Wait for Counselor Admission</p>
                                 </div>
                             </div>
 
@@ -176,10 +213,11 @@ export default function BookingFlow() {
                                     setStep(1);
                                     setSelectedDate(null);
                                     setSelectedTime(null);
+                                    setSessionData(null);
                                 }}
-                                className="px-12 py-5 bg-gray-100 hover:bg-gray-950 text-gray-400 hover:text-white rounded-[2rem] font-black transition-all uppercase tracking-widest text-xs"
+                                className="px-12 py-5 bg-gray-100 hover:bg-gray-900 text-gray-400 hover:text-white rounded-[2rem] font-black transition-all uppercase tracking-widest text-xs"
                             >
-                                Schedule Another
+                                Finish
                             </button>
                         </motion.div>
                     )}

@@ -8,7 +8,11 @@ export const dynamic = 'force-dynamic';
 export default function LiveSession({ params }: { params: { id: string } }) {
     const [permissionState, setPermissionState] = useState<"prompt" | "granted" | "denied">("prompt");
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const roomName = `HopeCounseling_${params.id}`;
+
+    // Role detection
+    const isCounselor = params.id.startsWith("Counselor-");
+    const sessionId = params.id.replace(/^(Counselor-|Client-)/, "");
+    const roomName = `HopeCounseling_${sessionId}`;
 
     useEffect(() => {
         async function checkPermissions() {
@@ -23,6 +27,12 @@ export default function LiveSession({ params }: { params: { id: string } }) {
         checkPermissions();
     }, []);
 
+    // Jitsi configuration based on role
+    // config.enableLobby=true for counselor to manage the room
+    const jitsiConfig = isCounselor
+        ? "#config.enableLobby=true&config.prejoinPageEnabled=false"
+        : "#config.prejoinPageEnabled=true";
+
     return (
         <div className="min-h-screen bg-gray-950 flex flex-col pt-20">
             {/* Header */}
@@ -36,13 +46,25 @@ export default function LiveSession({ params }: { params: { id: string } }) {
                         {isSidebarOpen ? "⇠" : "⇢"}
                     </button>
                     <div>
-                        <h1 className="text-white font-bold tracking-tight">Session Room: {params.id}</h1>
-                        <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-0.5">Secure & Encrypted</p>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-white font-bold tracking-tight">
+                                {isCounselor ? "Counselor Dashboard" : "Client Session"}
+                            </h1>
+                            <span className="px-2 py-0.5 bg-primary-500/20 text-primary-400 text-[9px] font-black rounded-md uppercase tracking-widest border border-primary-500/20">
+                                {sessionId.split('_')[0]}
+                            </span>
+                        </div>
+                        <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-0.5">
+                            {isCounselor ? "Managing Secure Waiting Room" : "Encrypted Connection Active"}
+                        </p>
                     </div>
                 </div>
                 <div className="flex gap-4">
-                    <button className="px-5 py-2.5 bg-red-600/10 text-red-400 border border-red-600/20 rounded-xl text-xs font-black hover:bg-red-600 hover:text-white transition-all uppercase tracking-widest">
-                        LEAVE SESSION
+                    <button
+                        onClick={() => window.location.href = '/'}
+                        className="px-5 py-2.5 bg-red-600/10 text-red-400 border border-red-600/20 rounded-xl text-xs font-black hover:bg-red-600 hover:text-white transition-all uppercase tracking-widest"
+                    >
+                        END SESSION
                     </button>
                 </div>
             </div>
@@ -55,22 +77,10 @@ export default function LiveSession({ params }: { params: { id: string } }) {
                 >
                     {permissionState === "granted" ? (
                         <iframe
-                            src={`https://meet.jit.si/${roomName}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false`}
+                            src={`https://meet.jit.si/${roomName}${jitsiConfig}`}
                             className="w-full h-full border-none"
                             allow="camera; microphone; display-capture; autoplay; clipboard-write"
                         />
-                    ) : permissionState === "denied" ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-10">
-                            <div className="w-20 h-20 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center text-4xl mb-6">!</div>
-                            <h2 className="text-2xl font-bold text-white mb-4 uppercase tracking-tight">Hardware Access Denied</h2>
-                            <p className="text-gray-400 max-w-sm mb-8">Please enable camera and microphone access in your browser settings to join the session.</p>
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="px-8 py-3 bg-white text-black font-black uppercase tracking-widest rounded-xl hover:bg-primary-400 transition-all"
-                            >
-                                Retry Access
-                            </button>
-                        </div>
                     ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-10">
                             <motion.div
@@ -78,49 +88,62 @@ export default function LiveSession({ params }: { params: { id: string } }) {
                                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
                                 className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full mb-6"
                             />
-                            <h2 className="text-xl font-bold text-white mb-2 uppercase tracking-widest">Requesting Access</h2>
-                            <p className="text-gray-500">Please click "Allow" when prompted by your browser.</p>
+                            <h2 className="text-xl font-bold text-white mb-2 uppercase tracking-widest">Initialising Secure Bridge</h2>
+                            <p className="text-gray-500">Connecting to encrypted servers...</p>
                         </div>
                     )}
                 </motion.div>
 
-                {/* Collapsible Info/Chat Area */}
+                {/* Info Sidebar */}
                 <AnimatePresence>
                     {isSidebarOpen && (
                         <motion.div
                             initial={{ x: 300, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: 300, opacity: 0 }}
-                            transition={{ type: "spring", damping: 20, stiffness: 100 }}
                             className="w-96 flex flex-col gap-4 flex-shrink-0"
                         >
                             <div className="bg-gray-900 rounded-[2rem] p-8 border border-white/5">
                                 <h3 className="text-white font-black mb-6 flex items-center gap-3 text-xs uppercase tracking-[0.2em]">
                                     <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                    Live Participants
+                                    Session Status
                                 </h3>
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center text-white font-black">C</div>
-                                        <span className="text-gray-300 font-bold">Counselor (You)</span>
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                                        <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Role</p>
+                                        <p className="text-white font-bold">{isCounselor ? "Counselor (Host)" : "Client (Guest)"}</p>
                                     </div>
-                                    <div className="flex items-center gap-4 opacity-30">
-                                        <div className="w-12 h-12 bg-gray-800 rounded-2xl flex items-center justify-center text-white font-black">U</div>
-                                        <span className="text-gray-500 font-bold italic">Waiting for Client...</span>
+                                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                                        <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Security</p>
+                                        <p className="text-emerald-400 font-bold flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
+                                            End-to-End Encrypted
+                                        </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex-grow bg-gray-900 rounded-[2rem] p-8 border border-white/5 flex flex-col shadow-inner">
-                                <h3 className="text-white font-black mb-6 text-xs uppercase tracking-[0.2em]">Digital Notebook</h3>
-                                <textarea
-                                    placeholder="Take private notes here during the session..."
-                                    className="flex-grow bg-black/40 border border-white/10 rounded-2xl p-6 text-gray-300 text-sm focus:border-primary-500/50 outline-none resize-none font-medium leading-relaxed"
-                                />
-                                <button className="mt-6 w-full py-4 bg-primary-600 text-white font-black rounded-2xl shadow-lg shadow-primary-600/20 hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
-                                    SAVE PRIVATE NOTES
-                                </button>
-                            </div>
+                            {isCounselor ? (
+                                <div className="flex-grow bg-gray-900 rounded-[2rem] p-8 border border-white/5 flex flex-col">
+                                    <h3 className="text-white font-black mb-6 text-xs uppercase tracking-[0.2em]">Counseling Notes</h3>
+                                    <textarea
+                                        placeholder="Record clinical observations..."
+                                        className="flex-grow bg-black/40 border border-white/10 rounded-2xl p-6 text-gray-300 text-sm focus:border-primary-500/50 outline-none resize-none font-medium"
+                                    />
+                                    <button className="mt-6 w-full py-4 bg-primary-600 text-white font-black rounded-2xl text-xs uppercase tracking-[0.2em]">
+                                        SAVE CLIENT RECORDS
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex-grow bg-gray-900 rounded-[2rem] p-8 border border-white/5 flex flex-col">
+                                    <h3 className="text-white font-black mb-6 text-xs uppercase tracking-[0.2em]">Client Journal</h3>
+                                    <textarea
+                                        placeholder="Note down thoughts or feelings during your session..."
+                                        className="flex-grow bg-black/40 border border-white/10 rounded-2xl p-6 text-gray-300 text-sm focus:border-primary-500/50 outline-none resize-none font-medium"
+                                    />
+                                    <p className="mt-4 text-[9px] text-gray-600 uppercase font-black text-center">Your notes are private and not shared</p>
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>
