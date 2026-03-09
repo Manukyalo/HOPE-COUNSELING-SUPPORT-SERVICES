@@ -57,35 +57,75 @@ export default function Navbar() {
             <AnimatePresence>
                 {mobileMenuOpen && (
                     <motion.div
-                        initial={{ opacity: 0, x: "100%" }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: "100%" }}
-                        className="fixed inset-0 bg-primary-950 z-[200] flex flex-col p-8"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-primary-950/95 backdrop-blur-2xl z-[200] overflow-hidden"
                     >
-                        <div className="flex justify-between items-center mb-16">
-                            <div className="flex items-center gap-2">
-                                <div className="w-10 h-10 premium-gradient rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">H</div>
-                                <span className="text-xl font-bold tracking-tight text-white">
-                                    HOPE <span className="font-light text-primary-500">SERVICES</span>
-                                </span>
-                            </div>
-                            <button onClick={() => setMobileMenuOpen(false)} className="text-white">
-                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
+                        {/* Decorative Background Elements */}
+                        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary-500/10 rounded-full blur-[120px]" />
+                        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#698465]/10 rounded-full blur-[120px]" />
 
-                        <div className="flex flex-col gap-8">
-                            <a href="/#services" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-black text-white uppercase tracking-tighter">Services</a>
-                            <a href="/approach" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-black text-white uppercase tracking-tighter">Our Approach</a>
-                            <a
-                                href="/#book"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="mt-8 px-10 py-5 bg-primary-500 text-white rounded-full font-black uppercase tracking-widest text-sm text-center shadow-2xl shadow-primary-500/40"
-                            >
-                                Book Now
-                            </a>
+                        <div className="container mx-auto px-6 h-full flex flex-col relative z-10">
+                            {/* Mobile Menu Header */}
+                            <div className="flex justify-between items-center py-8">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-10 h-10 premium-gradient rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">H</div>
+                                    <span className="text-xl font-bold tracking-tight text-white uppercase">
+                                        Hope <span className="font-light text-primary-500">Services</span>
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="w-12 h-12 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {/* Menu Links */}
+                            <div className="flex-grow flex flex-col justify-center items-center gap-12 text-center">
+                                {[
+                                    { label: "Our Services", href: "/#services" },
+                                    { label: "Our Approach", href: "/approach" },
+                                ].map((link, i) => (
+                                    <motion.a
+                                        key={link.label}
+                                        href={link.href}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.1 + 0.2 }}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="text-4xl font-black text-white hover:text-primary-400 transition-colors uppercase tracking-tight"
+                                    >
+                                        {link.label}
+                                    </motion.a>
+                                ))}
+
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="mt-8"
+                                >
+                                    <a
+                                        href="/#book"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="px-12 py-6 bg-primary-600 text-white rounded-full font-black uppercase tracking-[0.2em] text-sm shadow-2xl shadow-primary-500/40 inline-block"
+                                    >
+                                        Book Your Session
+                                    </a>
+                                </motion.div>
+                            </div>
+
+                            {/* Footer inside menu */}
+                            <div className="py-12 border-t border-white/10 text-center">
+                                <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.4em]">
+                                    Guided by Excellence in Thika
+                                </p>
+                            </div>
                         </div>
                     </motion.div>
                 )}

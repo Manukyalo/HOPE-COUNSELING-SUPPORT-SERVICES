@@ -24,19 +24,6 @@ export default function BookingFlow() {
         setStep(3);
     };
 
-    const dates = [
-        { day: "Sun", date: "09", full: "Sunday, March 09" },
-        { day: "Mon", date: "10", full: "Monday, March 10" },
-        { day: "Tue", date: "11", full: "Tuesday, March 11" },
-        { day: "Wed", date: "12", full: "Wednesday, March 12" },
-        { day: "Thu", date: "13", full: "Thursday, March 13" },
-        { day: "Fri", date: "14", full: "Friday, March 14" },
-    ];
-
-    const times = [
-        "09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM"
-    ];
-
     const whatsappNumber = "254701279231";
     const generateWhatsAppLink = () => {
         const message = `Hello Hope Counseling,\n\nI would like to book a session.\n\n*Reference:* ${refCode}\n*Date:* ${selectedDate}\n*Time:* ${selectedTime}\n*Email:* ${formData.email}\n*Phone:* ${formData.phone}\n*Needs:* ${formData.needs}`;
@@ -98,44 +85,28 @@ export default function BookingFlow() {
                             </div>
 
                             <form onSubmit={handleBooking} className="space-y-12">
-                                {/* Date Selection */}
-                                <div>
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-8 block text-center">Available Dates</label>
-                                    <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide justify-center">
-                                        {dates.map((d) => (
-                                            <button
-                                                type="button"
-                                                key={d.date}
-                                                onClick={() => setSelectedDate(d.full)}
-                                                className={`flex-shrink-0 w-24 h-28 rounded-3xl flex flex-col items-center justify-center transition-all border-2 ${selectedDate === d.full
-                                                    ? "bg-primary-900 border-primary-900 text-white shadow-2xl shadow-primary-900/30 scale-110"
-                                                    : "bg-white border-gray-100 text-gray-400 hover:border-primary-200 hover:text-primary-500"
-                                                    }`}
-                                            >
-                                                <span className="text-[10px] uppercase font-black tracking-widest">{d.day}</span>
-                                                <span className="text-3xl font-black mt-2">{d.date}</span>
-                                            </button>
-                                        ))}
+                                {/* Dynamic Date & Time Selection */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] block">Select Date (Month/Day/Year)</label>
+                                        <input
+                                            required
+                                            type="date"
+                                            className="w-full bg-gray-50 border-2 border-transparent focus:border-primary-500 focus:bg-white rounded-2xl p-5 outline-none transition-all font-bold text-gray-900 text-sm"
+                                            value={selectedDate || ""}
+                                            onChange={(e) => setSelectedDate(e.target.value)}
+                                            min={new Date().toISOString().split('T')[0]}
+                                        />
                                     </div>
-                                </div>
-
-                                {/* Time Selection */}
-                                <div>
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-8 block text-center">Standard Sessions (45 min)</label>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                        {times.map((t) => (
-                                            <button
-                                                type="button"
-                                                key={t}
-                                                onClick={() => setSelectedTime(t)}
-                                                className={`py-5 rounded-2xl font-black transition-all border-2 text-xs tracking-widest ${selectedTime === t
-                                                    ? "bg-primary-900 border-primary-900 text-white shadow-xl shadow-primary-900/10"
-                                                    : "bg-gray-100 border-transparent text-gray-500 hover:bg-white hover:border-primary-200 hover:text-primary-900"
-                                                    }`}
-                                            >
-                                                {t}
-                                            </button>
-                                        ))}
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] block">Select Time</label>
+                                        <input
+                                            required
+                                            type="time"
+                                            className="w-full bg-gray-50 border-2 border-transparent focus:border-primary-500 focus:bg-white rounded-2xl p-5 outline-none transition-all font-bold text-gray-900 text-sm"
+                                            value={selectedTime || ""}
+                                            onChange={(e) => setSelectedTime(e.target.value)}
+                                        />
                                     </div>
                                 </div>
 
