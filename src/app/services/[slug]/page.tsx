@@ -14,7 +14,7 @@ interface Service {
 const servicesDetails: Record<string, Service> = {
     "stress-anxiety-management": {
         title: "Stress and Anxiety management",
-        image: "https://images.unsplash.com/photo-1541199249251-f713e6145470?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1541194578103-97a7abc964c4?auto=format&fit=crop&q=80&w=800",
         description: "Master tools to navigate life's pressures and find your internal calm using evidence-based techniques.",
         longContent: [
             "Life's pressures can often feel overwhelming, but you don't have to navigate them alone. Our stress and anxiety management sessions provide a compassionate and professional space to understand the root causes of your tension.",
@@ -24,7 +24,7 @@ const servicesDetails: Record<string, Service> = {
     },
     "relationship-counseling": {
         title: "Relationship Counseling",
-        image: "https://images.unsplash.com/photo-1516584566738-4f41a82c4731?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1573497620053-ea5310f94a11?auto=format&fit=crop&q=80&w=800",
         description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance.",
         longContent: [
             "Healthy relationships are the cornerstone of a fulfilling life. Whether you're navigating partnership challenges, family dynamics, or workplace connections, our relationship counseling offers a neutral ground for clear, empathetic communication.",
@@ -34,7 +34,7 @@ const servicesDetails: Record<string, Service> = {
     },
     "youth-mentorship": {
         title: "Youth mentorship and guidance",
-        image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1590650516494-0c8e4a4dd67e?auto=format&fit=crop&q=80&w=800",
         description: "Empowering the next generation with the confidence and clarity needed to navigate modern adolescence.",
         longContent: [
             "Adolescence and young adulthood are periods of profound change and often, confusion. Our youth mentorship program goes beyond traditional counseling to offer active guidance and support.",
@@ -44,7 +44,7 @@ const servicesDetails: Record<string, Service> = {
     },
     "academic-guidance": {
         title: "Academic guidance",
-        image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=800",
         description: "Navigating educational pathways and overcoming learning challenges with strategic personal development.",
         longContent: [
             "Academic success isn't just about hard work; it's about the right strategy and mindset. We provide support for students facing learning hurdles, exam anxiety, or transition challenges between educational levels.",
@@ -54,7 +54,7 @@ const servicesDetails: Record<string, Service> = {
     },
     "emotional-peer-support": {
         title: "Emotional support and Peer Counseling",
-        image: "https://images.unsplash.com/photo-1541199249251-f713e6145470?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800",
         description: "A safe, shared space for connection and mutual understanding led by experienced peer facilitators.",
         longContent: [
             "Sometimes, the most powerful healing comes from knowing you are not alone. Our emotional peer support and peer counseling sessions provide a unique space for shared experiences.",

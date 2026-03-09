@@ -8,31 +8,31 @@ const services = [
     {
         slug: "stress-anxiety-management",
         title: "Stress and Anxiety management",
-        image: "https://images.unsplash.com/photo-1541199249251-f713e6145470?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1541194578103-97a7abc964c4?auto=format&fit=crop&q=80&w=800",
         description: "Master tools to navigate life's pressures and find your internal calm using evidence-based techniques."
     },
     {
         slug: "relationship-counseling",
         title: "Relationship Counseling",
-        image: "https://images.unsplash.com/photo-1516584566738-4f41a82c4731?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1573497620053-ea5310f94a11?auto=format&fit=crop&q=80&w=800",
         description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance."
     },
     {
         slug: "youth-mentorship",
         title: "Youth mentorship and guidance",
-        image: "https://images.unsplash.com/photo-1529156069898-49953e3ac?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1590650516494-0c8e4a4dd67e?auto=format&fit=crop&q=80&w=800",
         description: "Empowering the next generation with the confidence and clarity needed to navigate modern adolescence."
     },
     {
         slug: "academic-guidance",
         title: "Academic guidance",
-        image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=800",
         description: "Navigating educational pathways and overcoming learning challenges with strategic personal development."
     },
     {
         slug: "emotional-peer-support",
         title: "Emotional support and Peer Counseling",
-        image: "https://images.unsplash.com/photo-1541199249251-f713e6145470?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800",
         description: "A safe, shared space for connection and mutual understanding led by experienced peer facilitators."
     },
 ];

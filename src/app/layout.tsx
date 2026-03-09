@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
     title: "Hope Counseling Support Services",
-    description: "A premium counseling psychology platform providing booking, live sessions, and mood tracking.",
+    description: "Our premium counseling platform provides professional psychological support, strategic mental wellness planning, and direct consultation booking.",
 };
 
 export default function RootLayout({
