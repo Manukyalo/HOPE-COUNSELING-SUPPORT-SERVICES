@@ -14,7 +14,7 @@ const services = [
     {
         slug: "relationship-counseling",
         title: "Relationship Counseling",
-        image: "https://images.unsplash.com/photo-1473621054470-b05823e81147?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&q=80&w=800",
         description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance."
     },
     {
@@ -59,7 +59,7 @@ export default function Services() {
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.1, duration: 0.5 }}
                                 whileHover={{ y: -10 }}
-                                className="group relative overflow-hidden rounded-[3rem] bg-white shadow-2xl transition-all duration-500 cursor-pointer h-full border border-gray-100/50"
+                                className={`group relative overflow-hidden rounded-[3rem] bg-white shadow-2xl transition-all duration-500 cursor-pointer h-full border ${service.slug === 'relationship-counseling' ? 'border-red-500/50' : 'border-gray-100/50'}`}
                             >
                                 {/* Card Image */}
                                 <div className="h-72 overflow-hidden relative">
