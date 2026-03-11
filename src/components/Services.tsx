@@ -8,13 +8,13 @@ const services = [
     {
         slug: "stress-anxiety-management",
         title: "Stress and Anxiety management",
-        image: "https://images.unsplash.com/photo-1760617229270-4b6cbc954925?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=800",
         description: "Master tools to navigate life's pressures and find your internal calm using evidence-based techniques."
     },
     {
         slug: "relationship-counseling",
         title: "Relationship Counseling",
-        image: "https://images.unsplash.com/photo-1627964464837-6328f5931576?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1516589174184-c6858b16ecb0?auto=format&fit=crop&q=80&w=800",
         description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance."
     },
     {
@@ -32,7 +32,7 @@ const services = [
     {
         slug: "emotional-peer-support",
         title: "Emotional support and Peer Counseling",
-        image: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=800",
         description: "A safe, shared space for connection and mutual understanding led by experienced peer facilitators."
     },
 ];
