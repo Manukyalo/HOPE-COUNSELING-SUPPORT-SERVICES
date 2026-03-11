@@ -14,7 +14,7 @@ const services = [
     {
         slug: "relationship-counseling",
         title: "Relationship Counseling",
-        image: "https://images.unsplash.com/photo-1534120247760-c44c5cd41c8f?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1473621054470-b05823e81147?auto=format&fit=crop&q=80&w=800",
         description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance."
     },
     {

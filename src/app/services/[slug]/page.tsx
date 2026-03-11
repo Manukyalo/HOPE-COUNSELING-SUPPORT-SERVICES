@@ -24,7 +24,7 @@ const servicesDetails: Record<string, Service> = {
     },
     "relationship-counseling": {
         title: "Relationship Counseling",
-        image: "https://images.unsplash.com/photo-1534120247760-c44c5cd41c8f?auto=format&fit=crop&q=80&w=800",
+        image: "https://images.unsplash.com/photo-1473621054470-b05823e81147?auto=format&fit=crop&q=80&w=800",
         description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance.",
         longContent: [
             "Healthy relationships are the cornerstone of a fulfilling life. Whether you're navigating partnership challenges, family dynamics, or workplace connections, our relationship counseling offers a neutral ground for clear, empathetic communication.",
