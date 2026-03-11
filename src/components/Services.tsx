@@ -59,7 +59,7 @@ export default function Services() {
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.1, duration: 0.5 }}
                                 whileHover={{ y: -10 }}
-                                className={`group relative overflow-hidden rounded-[3rem] bg-white shadow-2xl transition-all duration-500 cursor-pointer h-full border ${service.slug === 'relationship-counseling' ? 'border-red-500/50' : 'border-gray-100/50'}`}
+                                className="group relative overflow-hidden rounded-[3rem] bg-white shadow-2xl transition-all duration-500 cursor-pointer h-full border border-gray-100/50"
                             >
                                 {/* Card Image */}
                                 <div className="h-72 overflow-hidden relative">
