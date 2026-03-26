@@ -63,7 +63,7 @@ export default function TermsPage() {
                     <section>
                         <h2 className="font-sans text-[13px] uppercase tracking-[0.15em] text-[#2d6e5a] font-medium mb-6 mt-10">Your Responsibility</h2>
                         <p>
-                            You agree to engage with sessions honestly and in good faith. Counseling works best as a partnership — we bring our expertise, you bring your openness.
+                            You agree to engage with sessions honestly and in good faith. Counseling works best as a partnership; we bring our expertise, you bring your openness.
                         </p>
                     </section>
 
@@ -77,7 +77,7 @@ export default function TermsPage() {
                     <section>
                         <h2 className="font-sans text-[13px] uppercase tracking-[0.15em] text-[#2d6e5a] font-medium mb-6 mt-10">Intellectual Property</h2>
                         <p>
-                            All content on this website — text, design, and structure — belongs to Hope Counseling Support Services and may not be reproduced without permission.
+                            All content on this website, including text, design, and structure, belongs to Hope Counseling Support Services and may not be reproduced without permission.
                         </p>
                     </section>
 

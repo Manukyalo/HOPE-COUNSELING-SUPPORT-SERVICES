@@ -36,7 +36,7 @@ const servicesDetails: Record<string, Service> = {
         whoIsItFor: [
             "The student before an exam who can't switch off",
             "The person whose mind races at 2am",
-            "Anyone who's been told to just relax — and can't"
+            "Anyone who's been told to just relax, and can't"
         ],
         sessionSteps: [
             { title: "Step 1", desc: "We talk about what's happening and when it started" },
@@ -50,14 +50,14 @@ const servicesDetails: Record<string, Service> = {
         title: "For the Conversations You Haven't Been Able to Have",
         image: "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&q=80&w=800",
         description: "Foster deeper connections and resolve conflicts through compassionate communication and expert guidance.",
-        intro: "Whether it's a partnership, a friendship, or family — relationships are hard.",
+        intro: "Whether it's a partnership, a friendship, or family, relationships are hard.",
         longContent: "Healthy relationships are the cornerstone of a fulfilling life. Whether you're navigating partnership challenges, family dynamics, or workplace connections, our relationship counseling offers a neutral ground for clear, empathetic communication. We focus on identifying destructive patterns and replacing them with constructive dialogue.",
         whatIsCovered: [
             "Identifying communication patterns that create distance",
             "Learning to express needs without conflict escalating",
             "Rebuilding trust after a rupture",
             "Individual sessions for those navigating a relationship alone",
-            "Deciding what a relationship needs — or whether it has a future"
+            "Deciding what a relationship needs, or whether it has a future"
         ],
         whoIsItFor: [
             "Couples who love each other but can't stop arguing",
@@ -102,7 +102,7 @@ const servicesDetails: Record<string, Service> = {
         title: "When School Stops Feeling Possible",
         image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=800",
         description: "Navigating educational pathways and overcoming learning challenges with strategic personal development.",
-        intro: "Struggling academically is rarely just about the subject — it's usually about something deeper.",
+        intro: "Struggling academically is rarely just about the subject; it's usually about something deeper.",
         longContent: "Academic success isn't just about hard work; it's about the right strategy and mindset. We provide support for students facing learning hurdles, exam anxiety, or transition challenges between educational levels. From study skills to career pathway exploration, we help students align their strengths with their academic pursuits.",
         whatIsCovered: [
             "Understanding the emotional blocks behind academic difficulty",
@@ -118,7 +118,7 @@ const servicesDetails: Record<string, Service> = {
         ],
         sessionSteps: [
             { title: "Step 1", desc: "We separate the academic problem from the personal one" },
-            { title: "Step 2", desc: "We address both — the mindset and the method" },
+            { title: "Step 2", desc: "We address both: the mindset and the method" },
             { title: "Step 3", desc: "We build a practical plan with realistic milestones" }
         ]
     },
@@ -128,7 +128,7 @@ const servicesDetails: Record<string, Service> = {
         title: "Sometimes You Just Need to Be Heard",
         image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=800",
         description: "A safe, shared space for connection and mutual understanding led by experienced peer facilitators.",
-        intro: "Not every struggle needs a diagnosis — sometimes it just needs a safe space.",
+        intro: "Not every struggle needs a diagnosis; sometimes it just needs a safe space.",
         longContent: "Sometimes, the most powerful healing comes from knowing you are not alone. Our emotional peer support and peer counseling sessions provide a unique space for shared experiences. Facilitated by experienced counselors, these sessions emphasize mutual understanding, validated feelings, and the strength found in community.",
         whatIsCovered: [
             "Processing difficult emotions without judgment",
@@ -143,7 +143,7 @@ const servicesDetails: Record<string, Service> = {
             "Anyone who's been told their feelings are an overreaction"
         ],
         sessionSteps: [
-            { title: "Step 1", desc: "You speak. We listen — fully, without interrupting." },
+            { title: "Step 1", desc: "You speak. We listen fully, without interrupting." },
             { title: "Step 2", desc: "Together we make sense of what you're carrying" },
             { title: "Step 3", desc: "We find small, real steps toward feeling better" }
         ]

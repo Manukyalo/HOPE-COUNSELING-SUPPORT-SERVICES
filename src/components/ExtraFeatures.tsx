@@ -22,11 +22,11 @@ const faqs = [
   },
   {
     question: "Do you work with teenagers?",
-    answer: "Absolutely. A significant part of our work is with young people between 13 and 22. Whether it's exam pressure, identity, family issues, or just feeling lost — these are real struggles that deserve real support, not dismissal."
+    answer: "Absolutely. A significant part of our work is with young people between 13 and 22. Whether it's exam pressure, identity, family issues, or just feeling lost; these are real struggles that deserve real support, not dismissal."
   },
   {
     question: "What if I need to cancel or reschedule?",
-    answer: "Life happens. Just let us know at least 24 hours in advance via WhatsApp and we'll find another time that works. We don't charge cancellation fees — we'd rather reschedule than have you stress about missing a session."
+    answer: "Life happens. Just let us know at least 24 hours in advance via WhatsApp and we'll find another time that works. We don't charge cancellation fees; we'd rather reschedule than have you stress about missing a session."
   },
   {
     question: "Is counseling covered by NHIF or insurance?",
@@ -34,15 +34,15 @@ const faqs = [
   },
   {
     question: "What's the difference between a counselor and a therapist?",
-    answer: "In Kenya the terms are often used interchangeably. A counselor typically focuses on specific challenges — stress, relationships, life transitions — using structured, goal-oriented sessions. What matters most is finding someone you feel safe talking to. That's what we focus on here."
+    answer: "In Kenya the terms are often used interchangeably. A counselor typically focuses on specific challenges: stress, relationships, life transitions, using structured, goal-oriented sessions. What matters most is finding someone you feel safe talking to. That's what we focus on here."
   },
   {
     question: "Will I have to talk about my childhood or past trauma?",
-    answer: "Only if you want to and only when you're ready. Sessions are led by you. We follow where you need to go — we don't push into territory before you're comfortable."
+    answer: "Only if you want to and only when you're ready. Sessions are led by you. We follow where you need to go; we don't push into territory before you're comfortable."
   },
   {
     question: "What if I feel worse after a session?",
-    answer: "It's actually normal to feel emotionally tired or even raw after a session — especially the first few. You've just done real work. That feeling usually passes within a day or two. If it doesn't, tell us. We adjust and we check in. You're never left to process alone."
+    answer: "It's actually normal to feel emotionally tired or even raw after a session, especially the first few. You've just done real work. That feeling usually passes within a day or two. If it doesn't, tell us. We adjust and we check in. You're never left to process alone."
   }
 ];
 

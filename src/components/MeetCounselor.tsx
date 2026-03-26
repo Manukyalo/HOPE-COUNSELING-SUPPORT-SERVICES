@@ -73,7 +73,7 @@ export default function MeetCounselor() {
                 "I started Hope Counseling because I saw how many people were 
                 carrying weight they didn't have to carry alone. Whether you're 
                 dealing with anxiety, a difficult relationship, or just feeling 
-                stuck — this is a place where you can speak freely and be met 
+                stuck; this is a place where you can speak freely and be met 
                 with honesty, not judgment."
               </p>
 

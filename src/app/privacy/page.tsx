@@ -18,7 +18,7 @@ export default function PrivacyPage() {
                 <div className="space-y-10 font-sans text-[15px] text-[#444] leading-[1.8]">
                     <section>
                         <p className="italic text-[#666]">
-                            "At Hope Counseling, your privacy is not just a legal requirement — it's the foundation of everything we do. This page explains clearly what information we collect, how we use it, and your rights."
+                            "At Hope Counseling, your privacy is not just a legal requirement; it's the foundation of everything we do. This page explains clearly what information we collect, how we use it, and your rights."
                         </p>
                     </section>
 
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
                     <section>
                         <h2 className="font-sans text-[13px] uppercase tracking-[0.15em] text-[#2d6e5a] font-medium mb-6 mt-10">WhatsApp Communication</h2>
                         <p>
-                            If you contact us via WhatsApp, your messages are subject to WhatsApp's own privacy policy. We use WhatsApp only to coordinate bookings and respond to enquiries — not for marketing purposes unless you've asked to receive updates.
+                            If you contact us via WhatsApp, your messages are subject to WhatsApp's own privacy policy. We use WhatsApp only to coordinate bookings and respond to enquiries, not for marketing purposes unless you've asked to receive updates.
                         </p>
                     </section>
 
