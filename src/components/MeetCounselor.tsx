@@ -3,104 +3,104 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-const badges = ["Certified Counselor", "CBT Trained", "Confidential"];
-const stats = ["10+ Fields of Expertise", "Free First Session"];
-
 export default function MeetCounselor() {
   return (
-    <section className="py-20 md:py-32 bg-[#f9f7f4] overflow-hidden">
+    <section className="py-24 md:py-32 bg-[#f9f7f4] overflow-hidden">
       <div className="container mx-auto px-6">
-        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 max-w-[1000px] mx-auto">
           
-          {/* Left Column - Photo */}
+          {/* Photo Side */}
           <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="w-full lg:w-[45%] relative"
+            className="w-full lg:w-[45%] flex flex-col items-center lg:items-start"
           >
-            {/* Decorative Shadow Element */}
-            <div className="absolute inset-0 translate-x-3 translate-y-3 bg-[#7ecab0] opacity-10 rounded-[20px] pointer-events-none" />
-            
-            <div className="relative aspect-[4/5] w-full rounded-[20px] overflow-hidden shadow-sm">
-              <Image
-                src="/ma.jpeg"
-                alt="Maryann Wangari"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 45vw"
-              />
+            <div className="relative group">
+              {/* Solid Depth Element (No Shadow Trick) */}
+              <div className="absolute top-[14px] left-[14px] w-full h-full bg-[#a8e6cf] opacity-20 rounded-[18px] z-0" />
+              
+              <div className="relative z-10 aspect-[3/4] w-[320px] md:w-[380px] lg:w-full rounded-[18px] overflow-hidden grayscale-[0.1] hover:grayscale-0 transition-all duration-700">
+                <Image
+                  src="/ma.jpeg"
+                  alt="Maryann Wangari"
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  sizes="(max-width: 1024px) 100vw, 45vw"
+                />
+              </div>
             </div>
 
-            {/* Trust Badges */}
-            <div className="mt-8 flex flex-wrap gap-3">
-              {badges.map((badge) => (
+            {/* Handpicked Pills */}
+            <div className="mt-10 flex flex-wrap justify-center lg:justify-start gap-2">
+              {["Certified Counselor", "CBT Practitioner", "Safe Space"].map((pill) => (
                 <span 
-                  key={badge}
-                  className="px-3 py-1 bg-[#e8f5f0] text-[#2d6e5a] text-[10px] font-sans font-medium rounded-full tracking-wide"
+                  key={pill}
+                  className="font-sans text-[10px] font-medium px-3.5 py-1.5 bg-[#e0f4ec] text-[#1e5c45] rounded-[30px] tracking-wide"
                 >
-                  {badge}
+                  {pill}
                 </span>
               ))}
             </div>
           </motion.div>
 
-          {/* Right Column - Bio */}
+          {/* Bio Side */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.15, ease: "easeOut" }}
-            className="w-full lg:w-[55%] text-left"
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            className="w-full lg:w-[55%]"
           >
-            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-[#7ecab0] mb-4 block font-medium">
+            <span className="font-sans text-[10px] uppercase tracking-[0.18em] text-[#2d6e5a] mb-6 block font-medium">
               Your Counselor
             </span>
-            <h2 className="font-playfair text-3xl md:text-4xl text-[#0d2b22] mb-2 leading-tight">
+            
+            <h2 className="font-playfair text-[34px] text-[#0d2b22] leading-tight mb-2">
               Maryann Wangari
             </h2>
-            <p className="font-sans text-sm text-[#666] mb-4">
+            
+            <p className="font-sans text-[14px] text-[#888] font-light mb-5 tracking-wide">
               Psychological Counselor & Mentor
             </p>
-            
-            <div className="w-10 h-[3px] bg-[#7ecab0] mb-6" />
 
-            <p className="font-sans text-[15px] text-[#444] leading-relaxed mb-8 max-w-[540px]">
-              "I founded Hope Counseling with a single belief — that every person 
-              deserves a safe space to be heard without judgment. With expertise 
-              spanning stress management, relationships, and youth development, 
-              I combine evidence-based techniques with genuine human compassion 
-              to walk alongside you on your journey."
-            </p>
+            {/* Hand-drawn style divider */}
+            <div className="w-[36px] h-[2px] bg-[#7ecab0] rounded-[2px] mb-8" />
 
-            <blockquote className="border-l-[3px] border-[#7ecab0] pl-6 mb-10 py-1">
-              <p className="font-playfair italic text-lg text-[#0d2b22] mb-2">
-                "My goal isn't to fix you — it's to remind you that you were never broken."
+            <div className="space-y-8">
+              <p className="font-sans text-[16px] text-[#444] leading-[1.7] max-w-[500px]">
+                "I started Hope Counseling because I saw how many people were 
+                carrying weight they didn't have to carry alone. Whether you're 
+                dealing with anxiety, a difficult relationship, or just feeling 
+                stuck — this is a place where you can speak freely and be met 
+                with honesty, not judgment."
               </p>
-              <cite className="font-sans text-[11px] text-[#666] uppercase tracking-widest not-italic">
-                — Maryann Wangari
-              </cite>
-            </blockquote>
 
-            <div className="flex flex-wrap gap-4 mb-10">
-              {stats.map((stat) => (
-                <div 
-                  key={stat}
-                  className="px-4 py-2 bg-white border border-black/[0.03] rounded-xl shadow-sm text-[11px] font-sans text-[#0d2b22] font-semibold tracking-wide"
+              <blockquote className="border-l-[3px] border-[#7ecab0] pl-[18px] py-1">
+                <p className="font-playfair italic text-[17px] text-[#0d2b22] leading-relaxed">
+                  "My work isn't about fixing people. It's about sitting with them 
+                  until they remember their own strength."
+                </p>
+              </blockquote>
+
+              <div className="pt-2">
+                <p className="font-sans text-[13px] text-[#444] flex items-center gap-3">
+                  <span>10+ Specializations</span>
+                  <span className="text-[#ccc]">•</span>
+                  <span>Free First Session</span>
+                </p>
+              </div>
+
+              <div className="pt-4">
+                <a 
+                  href="#book"
+                  className="inline-block px-[26px] py-[12px] bg-[#0d2b22] text-white rounded-full font-sans text-[13px] tracking-[0.03em] font-medium transition-opacity hover:opacity-85 active:scale-[0.98]"
                 >
-                  {stat}
-                </div>
-              ))}
+                  Book a Session with Maryann
+                </a>
+              </div>
             </div>
-
-            <a 
-              href="#book"
-              className="inline-flex items-center px-8 h-12 bg-[#0d2b22] text-[#7ecab0] rounded-full font-sans text-[11px] font-medium uppercase tracking-[0.15em] transition-all hover:bg-[#1a4a38] group"
-            >
-              Book with Maryann
-              <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
-            </a>
           </motion.div>
 
         </div>
