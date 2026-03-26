@@ -41,8 +41,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Social Col */}
-          <div className="flex flex-col md:items-end">
+          <div className="flex flex-col md:items-end w-full">
             <div className="flex flex-col gap-4 md:items-end w-full md:w-auto">
               <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-[#7ecab0] mb-2 font-medium">Connect</span>
               <ul className="space-y-3 font-sans text-xs uppercase tracking-widest text-[#f5f2ec]/60 md:text-right">
@@ -50,6 +49,10 @@ export default function Footer() {
                 <li><a href={whatsappLink} target="_blank" className="hover:text-[#7ecab0] transition-colors">WhatsApp</a></li>
                 <li><a href="mailto:amayakari5924@gmail.com" className="hover:text-[#7ecab0] transition-colors">Email</a></li>
               </ul>
+              <div className="mt-8 flex gap-6 md:justify-end">
+                <Link href="/privacy" className="font-sans text-[9px] uppercase tracking-widest text-[#f5f2ec]/30 hover:text-[#7ecab0] transition-colors">Privacy Policy</Link>
+                <Link href="/terms" className="font-sans text-[9px] uppercase tracking-widest text-[#f5f2ec]/30 hover:text-[#7ecab0] transition-colors">Terms of Service</Link>
+              </div>
             </div>
           </div>
         </div>
