@@ -61,12 +61,12 @@ export default function MeetCounselor() {
               Maryann Wangari
             </h2>
             
-            <p className="font-sans text-[14px] text-[#888] font-light mb-5 tracking-wide">
+            <p className="font-sans text-[14px] text-[#888] font-light tracking-wide">
               Psychological Counselor & Mentor
             </p>
 
             {/* Hand-drawn style divider */}
-            <div className="w-[36px] h-[2px] bg-[#7ecab0] rounded-[2px] mb-8" />
+            <div className="w-[36px] h-[2px] bg-[#7ecab0] rounded-[2px] my-[18px]" />
 
             <div className="space-y-8">
               <p className="font-sans text-[16px] text-[#444] leading-[1.7] max-w-[500px]">

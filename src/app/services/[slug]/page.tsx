@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import ServiceDetailContent from "@/components/ServiceDetailContent";
+import { Metadata } from "next";
 
 export const dynamic = 'auto'; // Re-enable SSG
 
@@ -63,6 +64,47 @@ const servicesDetails: Record<string, Service> = {
         benefits: ["Sense of community and belonging", "Validation from shared lived experience", "Reduced feelings of isolation", "Social skill reinforcement"]
     }
 };
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+    const seoData: Record<string, { title: string; description: string }> = {
+        "stress-anxiety-management": {
+            title: "Stress & Anxiety Counseling in Thika | Hope Counseling",
+            description: "Evidence-based stress and anxiety management sessions in Thika, Kenya. Learn practical tools to reclaim calm and navigate life's pressures."
+        },
+        "relationship-counseling": {
+            title: "Relationship Counseling in Thika | Hope Counseling",
+            description: "Rebuild communication and resolve conflict with professional relationship counseling in Thika, Kenya. For couples and individuals."
+        },
+        "youth-mentorship": {
+            title: "Youth Mentorship & Guidance in Thika | Hope Counseling",
+            description: "Empowering teenagers and young adults in Thika, Kenya with clarity, confidence, and direction through professional youth mentorship."
+        },
+        "academic-guidance": {
+            title: "Academic Guidance & Counseling | Hope Counseling Thika",
+            description: "Helping students in Thika overcome academic challenges and find direction through strategic personal development and counseling."
+        },
+        "emotional-peer-support": {
+            title: "Emotional Support & Peer Counseling | Hope Counseling Thika",
+            description: "A safe, shared space for emotional support and peer counseling in Thika, Kenya. Facilitated by experienced counselors."
+        }
+    };
+
+    const seo = seoData[params.slug];
+    
+    return {
+        title: seo?.title || "Specialized Counseling | Hope Counseling",
+        description: seo?.description || "Professional psychological support in Thika, Kenya.",
+        alternates: {
+            canonical: `/services/${params.slug}`,
+        },
+        openGraph: {
+            title: seo?.title,
+            description: seo?.description,
+            images: ["/ma.jpeg"],
+            url: `https://hope-counseling-support-services.vercel.app/services/${params.slug}`,
+        }
+    };
+}
 
 export async function generateStaticParams() {
     return Object.keys(servicesDetails).map((slug) => ({

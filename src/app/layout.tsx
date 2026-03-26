@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import MobileStickyCTA from "@/components/MobileStickyCTA";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -19,8 +20,16 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://hope-counseling-support-services.vercel.app"),
   title: "Hope Counseling Support Services | Thika, Kenya",
-  description: "Our premium counseling platform provides professional psychological support, strategic mental wellness planning, and direct consultation booking.",
+  description: "Professional psychological counseling in Thika, Kenya. Specializing in stress, anxiety, relationships, youth mentorship, and emotional support.",
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function RootLayout({
@@ -34,8 +43,9 @@ export default function RootLayout({
         <Navbar />
         {children}
         <WhatsAppButton />
+        <MobileStickyCTA />
         <Footer />
       </body>
     </html>
-  );
+);
 }

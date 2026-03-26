@@ -39,7 +39,14 @@ const services = [
 
 export default function Services() {
   return (
-    <section id="services" className="py-20 md:py-32 bg-[#f9f7f4]">
+    <motion.section 
+      id="services" 
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.8 }}
+      className="py-20 md:py-32 bg-[#f9f7f4]"
+    >
       <div className="container mx-auto px-6">
         <div className="text-center mb-16 md:mb-24">
           <span className="font-sans text-[10px] uppercase tracking-[0.15em] text-[#7ecab0] mb-3 block font-medium">
@@ -95,6 +102,6 @@ export default function Services() {
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

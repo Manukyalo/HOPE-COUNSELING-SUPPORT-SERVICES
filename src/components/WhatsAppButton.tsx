@@ -7,7 +7,7 @@ export default function WhatsAppButton() {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <div className="fixed bottom-[20px] right-[16px] md:bottom-[28px] md:right-[28px] z-[9000] flex items-center justify-end group">
+    <div className="fixed bottom-[76px] right-[16px] md:bottom-[28px] md:right-[28px] z-[9000] flex items-center justify-end group">
       {/* Tooltip */}
       <AnimatePresence>
         {isHovered && (
