@@ -32,9 +32,11 @@ export default function Footer() {
             <div className="flex flex-col gap-4">
               <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-[#7ecab0] mb-2 font-medium">Nav</span>
               <ul className="space-y-3 font-sans text-xs uppercase tracking-widest text-[#f5f2ec]/60">
-                <li><Link href="#about" className="hover:text-[#7ecab0] transition-colors">About</Link></li>
-                <li><Link href="#services" className="hover:text-[#7ecab0] transition-colors">Services</Link></li>
-                <li><Link href="#book" className="hover:text-[#7ecab0] transition-colors">Booking</Link></li>
+                <li><Link href="/#about" className="hover:text-[#7ecab0] transition-colors">About</Link></li>
+                <li><Link href="/#services" className="hover:text-[#7ecab0] transition-colors">Services</Link></li>
+                <li><Link href="/approach" className="hover:text-[#7ecab0] transition-colors">Approach</Link></li>
+                <li><Link href="/contact" className="hover:text-[#7ecab0] transition-colors">Contact</Link></li>
+                <li><Link href="/#book" className="hover:text-[#7ecab0] transition-colors">Booking</Link></li>
               </ul>
             </div>
           </div>

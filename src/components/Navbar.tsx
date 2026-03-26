@@ -46,6 +46,12 @@ export default function Navbar() {
               >
                 Our Approach
               </Link>
+              <Link
+                href="/contact"
+                className="font-sans text-[11px] uppercase tracking-[0.05em] text-[#f5f2ec]/60 transition-colors hover:text-[#7ecab0]"
+              >
+                Contact
+              </Link>
             </div>
             <Link
               href="/#book"
@@ -105,6 +111,13 @@ export default function Navbar() {
                 className="font-playfair text-3xl text-[#f5f2ec]"
               >
                 Our Approach
+              </Link>
+              <Link
+                href="/contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-playfair text-3xl text-[#f5f2ec]"
+              >
+                Contact
               </Link>
               <Link
                 href="/#book"
