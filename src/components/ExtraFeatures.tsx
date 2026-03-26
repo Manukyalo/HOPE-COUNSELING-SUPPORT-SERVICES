@@ -15,6 +15,34 @@ const faqs = [
   {
     question: "How long is a typical session?",
     answer: "Standard sessions are 45-50 minutes long. This allows enough time for deep processing while ensuring you can integrate the insights into your daily life without feeling drained."
+  },
+  {
+    question: "Do you offer online sessions?",
+    answer: "Yes. If you're not in Thika or prefer to speak from home, we offer sessions via video call. You'll need a stable internet connection and a private space where you can speak freely. Get in touch and we'll sort out the details."
+  },
+  {
+    question: "Do you work with teenagers?",
+    answer: "Absolutely. A significant part of our work is with young people between 13 and 22. Whether it's exam pressure, identity, family issues, or just feeling lost — these are real struggles that deserve real support, not dismissal."
+  },
+  {
+    question: "What if I need to cancel or reschedule?",
+    answer: "Life happens. Just let us know at least 24 hours in advance via WhatsApp and we'll find another time that works. We don't charge cancellation fees — we'd rather reschedule than have you stress about missing a session."
+  },
+  {
+    question: "Is counseling covered by NHIF or insurance?",
+    answer: "Not currently. Sessions are paid privately. We keep our rates accessible because we believe cost shouldn't be the reason someone doesn't get support. Reach out and we'll discuss options openly."
+  },
+  {
+    question: "What's the difference between a counselor and a therapist?",
+    answer: "In Kenya the terms are often used interchangeably. A counselor typically focuses on specific challenges — stress, relationships, life transitions — using structured, goal-oriented sessions. What matters most is finding someone you feel safe talking to. That's what we focus on here."
+  },
+  {
+    question: "Will I have to talk about my childhood or past trauma?",
+    answer: "Only if you want to and only when you're ready. Sessions are led by you. We follow where you need to go — we don't push into territory before you're comfortable."
+  },
+  {
+    question: "What if I feel worse after a session?",
+    answer: "It's actually normal to feel emotionally tired or even raw after a session — especially the first few. You've just done real work. That feeling usually passes within a day or two. If it doesn't, tell us. We adjust and we check in. You're never left to process alone."
   }
 ];
 
@@ -107,11 +135,13 @@ export default function ExtraFeatures() {
             </div>
           </div>
 
-          {/* FAQ Section */}
           <div className="flex flex-col justify-center">
             <span className="font-sans text-[10px] uppercase tracking-[0.15em] text-[#7ecab0] mb-3 block font-medium">
               Common Questions
             </span>
+            <p className="font-sans text-[14px] text-[#888] italic mb-8">
+              Honest answers to the things most people wonder before their first session.
+            </p>
             <h2 className="font-playfair text-3xl md:text-[36px] text-[#0d2b22] leading-tight mb-10">
               A Clearer <span className="italic">Path</span> Ahead
             </h2>
