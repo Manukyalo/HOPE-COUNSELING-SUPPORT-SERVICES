@@ -8,34 +8,22 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                primary: {
-                    50: '#f0f9fa',
-                    100: '#d9f0f2',
-                    200: '#afe1e6',
-                    300: '#7ccbd4',
-                    400: '#48a8b8',
-                    500: '#2d8999',
-                    600: '#25707f',
-                    700: '#225b68',
-                    800: '#214b56',
-                    900: '#1f4049',
-                },
-                sage: {
-                    50: '#f4f7f4',
-                    100: '#e5ebe5',
-                    200: '#cedbcc',
-                    300: '#adc0aa',
-                    400: '#87a283',
-                    500: '#698465',
-                    600: '#52684f',
-                    700: '#425340',
-                    800: '#384436',
-                    900: '#303a2f',
+                brand: {
+                    dark: '#0d2b22',
+                    'dark-mid': '#1a4a38',
+                    accent: '#7ecab0',
+                    'accent-light': '#a8e6cf',
+                    ivory: '#f9f7f4',
+                    muted: '#666',
+                    card: '#ffffff',
                 },
             },
+            fontFamily: {
+                playfair: ['var(--font-playfair)', 'serif'],
+                sans: ['var(--font-dm-sans)', 'sans-serif'],
+            },
             backgroundImage: {
-                'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-                'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+                'gradient-premium': 'linear-gradient(135deg, #0d2b22, #1a4a38)',
             },
         },
     },
