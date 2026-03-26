@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import Services from "@/components/Services";
 import BookingFlow from "@/components/BookingFlow";
 import About from "@/components/About";
+import MeetCounselor from "@/components/MeetCounselor";
 import ExtraFeatures from "@/components/ExtraFeatures";
 import { motion } from "framer-motion";
 
@@ -13,6 +14,8 @@ export default function Home() {
       <Hero />
 
       <About />
+
+      <MeetCounselor />
 
       <motion.div
         initial={{ opacity: 0, y: 50 }}
