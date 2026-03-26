@@ -1,36 +1,29 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const services = [
-  { id: "stress-anxiety-management", name: "Stress & Anxiety", icon: "🧘", desc: "Master tools to navigate life's pressures and find calm." },
-  { id: "relationship-counseling", name: "Relationship Counseling", icon: "👫", desc: "Foster deeper connections through expert guidance." },
-  { id: "youth-mentorship", name: "Youth Mentorship", icon: "🌱", desc: "Empowering next-gen with confidence and clarity." },
-  { id: "academic-guidance", name: "Academic Guidance", icon: "📚", desc: "Overcome learning challenges with strategic development." },
-  { id: "emotional-peer-support", name: "Emotional & Peer Support", icon: "🤝", desc: "A safe space for connection and mutual understanding." },
+  { id: "stress", name: "Stress & Anxiety", sub: "For when the pressure feels unmanageable" },
+  { id: "relationship", name: "Relationship Counseling", sub: "For couples or individuals navigating conflict" },
+  { id: "youth", name: "Youth Mentorship", sub: "For teenagers and young adults finding their footing" },
+  { id: "academic", name: "Academic Guidance", sub: "For students feeling overwhelmed or directionless" },
+  { id: "emotional", name: "Emotional Support", sub: "For those who just need to be heard" },
 ];
 
-const timePeriods = [
-  { id: "Morning", label: "Morning (8am–12pm)" },
-  { id: "Afternoon", label: "Afternoon (12pm–5pm)" },
-  { id: "Evening", label: "Evening (5pm–8pm)" },
-];
+const timeRefs = ["Morning", "Afternoon", "Evening"];
 
 export default function BookingFlow() {
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     agreed: false,
   });
-
-  const nextStep = () => setStep((s) => Math.min(s + 1, 3));
-  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
   const days = useMemo(() => {
     const d = [];
@@ -39,98 +32,102 @@ export default function BookingFlow() {
       const date = new Date(now);
       date.setDate(now.getDate() + i);
       d.push({
-        full: date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }),
+        label: date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }),
         short: date.toLocaleDateString("en-US", { weekday: "short" }),
         num: date.getDate(),
         isToday: i === 0,
+        isPast: false, // Simple logic for current week strip
       });
     }
     return d;
   }, []);
 
   const handleWhatsApp = () => {
-    const serviceName = services.find(s => s.id === selectedService)?.name;
-    const baseUrl = "https://wa.me/254701279231";
-    const text = `Hello, I'd like to book a ${serviceName} session on ${selectedDate} (${selectedPeriod}). My name is ${formData.name}.`;
-    window.open(`${baseUrl}?text=${encodeURIComponent(text)}`, "_blank");
+    const sName = services.find(s => s.id === selectedService)?.name;
+    const text = `Hello, I'd like to book a ${sName} session on ${selectedDate} (${selectedTime}). My name is ${formData.name}.`;
+    window.open(`https://wa.me/254701279231?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   return (
-    <section id="book" className="py-20 md:py-32 bg-[#f9f7f4]">
-      <div className="container mx-auto px-6 max-w-[560px]">
-        <div className="text-center mb-12">
-          <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-[#7ecab0] mb-3 block font-medium">
-            Schedule a Free Consultation
-          </span>
+    <section id="book" className="py-24 md:py-40 bg-[#f9f7f4]">
+      <div className="container mx-auto px-6 max-w-[580px]">
+        
+        {/* Header */}
+        <div className="text-center mb-20">
           <h2 className="font-playfair text-3xl text-[#0d2b22] mb-4">
-            Your first session is <span className="italic">free</span>.
+            Schedule a Free Consultation
           </h2>
-          <p className="font-sans text-[11px] text-[#666] uppercase tracking-widest">
-            No commitment required.
+          <p className="font-sans text-[13px] text-[#666] tracking-wide">
+            Your first session costs nothing. No pressure, no commitment.
           </p>
         </div>
 
-        {/* Progress Display */}
-        <div className="mb-10">
-          <div className="flex justify-between items-center mb-6">
-            <span className="font-sans text-[10px] uppercase tracking-widest text-[#666]">
-              Step {step} of 3
-            </span>
-            <div className="flex gap-2">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    step === i ? "bg-[#7ecab0] w-6" : step > i ? "bg-[#7ecab0]" : "bg-black/[0.05]"
-                  }`}
-                />
-              ))}
+        {/* Minimalist Progress Indicator */}
+        <div className="flex justify-center items-center gap-3 mb-16 relative">
+          <div className="absolute h-[1px] bg-black/[0.06] w-24 z-0" />
+          {[1, 2, 3].map((i) => (
+            <div 
+              key={i}
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-sans transition-all duration-500 z-10 relative ${
+                step === i 
+                  ? "border border-[#7ecab0] text-[#7ecab0] bg-[#f9f7f4]" 
+                  : step > i 
+                  ? "bg-[#7ecab0] text-white" 
+                  : "bg-black/[0.05] text-[#999]"
+              }`}
+            >
+              {i}
             </div>
-          </div>
+          ))}
         </div>
 
-        <div className="bg-white rounded-[24px] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-black/[0.02] overflow-hidden">
-          <AnimatePresence mode="wait">
+        {/* Form Content */}
+        <div className="relative min-h-[460px]">
+          <AnimatePresence mode="wait" initial={false}>
             {step === 1 && (
               <motion.div
                 key="step1"
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.3 }}
-                className="p-8 md:p-10"
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.28, ease: "easeInOut" }}
+                className="space-y-10"
               >
-                <h3 className="font-playfair text-xl text-[#0d2b22] mb-8">Choose Your Service</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+                <h3 className="font-playfair text-2xl text-[#0d2b22] text-center mb-12">
+                  What brings you here today?
+                </h3>
+                <div className="space-y-4">
                   {services.map((s) => (
                     <button
                       key={s.id}
                       onClick={() => setSelectedService(s.id)}
-                      className={`p-6 rounded-2xl border text-left transition-all duration-300 group ${
+                      className={`w-full p-6 text-left transition-all duration-300 relative overflow-hidden group ${
                         selectedService === s.id
-                          ? "border-[#7ecab0] bg-[#7ecab0]/5"
-                          : "border-black/[0.05] hover:border-[#7ecab0]/40"
+                          ? "bg-[#f5f2ec]"
+                          : "hover:bg-[#f5f2ec]/50"
                       }`}
                     >
-                      <span className="text-2xl mb-4 block">{s.icon}</span>
-                      <p className="font-sans text-xs font-semibold text-[#0d2b22] uppercase tracking-wide mb-1 leading-tight">
+                      {selectedService === s.id && (
+                        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#7ecab0]" />
+                      )}
+                      <p className="font-sans text-[15px] font-medium text-[#0d2b22] mb-1">
                         {s.name}
                       </p>
-                      <p className="font-sans text-[10px] text-[#666] leading-relaxed">
-                        {s.desc}
+                      <p className="font-sans text-[12px] text-[#888]">
+                        {s.sub}
                       </p>
                     </button>
                   ))}
                 </div>
                 {selectedService && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={nextStep}
-                    className="w-full h-12 bg-[#0d2b22] text-[#7ecab0] rounded-[12px] font-sans font-medium uppercase tracking-widest text-[10px] transition-all hover:bg-[#1a4a38]"
-                  >
-                    Next Step →
-                  </motion.button>
+                  <div className="pt-8 text-center">
+                    <button
+                      onClick={() => setStep(2)}
+                      className="px-10 py-3.5 bg-[#0d2b22] text-[#7ecab0] rounded-full font-sans text-[11px] uppercase tracking-widest font-medium transition-all hover:bg-[#1a4a38]"
+                    >
+                      Continue
+                    </button>
+                  </div>
                 )}
               </motion.div>
             )}
@@ -138,62 +135,66 @@ export default function BookingFlow() {
             {step === 2 && (
               <motion.div
                 key="step2"
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.3 }}
-                className="p-8 md:p-10"
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.28, ease: "easeInOut" }}
+                className="space-y-12"
               >
-                <h3 className="font-playfair text-xl text-[#0d2b22] mb-8">Pick a Date & Time</h3>
+                <h3 className="font-playfair text-2xl text-[#0d2b22] text-center mb-12">
+                  When works for you?
+                </h3>
                 
-                <div className="flex gap-2 overflow-x-auto pb-6 mb-8 scrollbar-hide">
+                {/* Date Strip */}
+                <div className="flex justify-between items-center gap-1 overflow-x-auto pb-4 scrollbar-hide">
                   {days.map((d) => (
                     <button
-                      key={d.full}
-                      onClick={() => setSelectedDate(d.full)}
-                      className={`flex-shrink-0 w-14 h-18 rounded-xl border flex flex-col items-center justify-center transition-all ${
-                        selectedDate === d.full
-                          ? "border-[#7ecab0] bg-[#0d2b22] text-[#7ecab0]"
-                          : "border-black/[0.05] bg-white text-[#666]"
+                      key={d.label}
+                      onClick={() => setSelectedDate(d.label)}
+                      className={`flex-shrink-0 w-12 h-16 rounded-full flex flex-col items-center justify-center transition-all ${
+                        selectedDate === d.label
+                          ? "bg-[#0d2b22] text-[#7ecab0]"
+                          : d.isToday
+                          ? "bg-[#7ecab0]/10 text-[#7ecab0]"
+                          : "bg-transparent text-[#999] hover:bg-black/[0.02]"
                       }`}
                     >
-                      <span className="text-[9px] uppercase font-medium mb-1">{d.short}</span>
-                      <span className="text-base font-playfair font-bold">{d.num}</span>
-                      {d.isToday && <div className="w-1 h-1 bg-[#7ecab0] rounded-full mt-1" />}
+                      <span className="text-[10px] uppercase font-sans mb-1">{d.short}</span>
+                      <span className="text-[15px] font-playfair font-bold">{d.num}</span>
                     </button>
                   ))}
                 </div>
 
-                <div className="space-y-3 mb-10">
-                  {timePeriods.map((p) => (
+                {/* Time Buttons */}
+                <div className="flex justify-center gap-8 py-8 border-y border-black/[0.03]">
+                  {timeRefs.map((t) => (
                     <button
-                      key={p.id}
-                      onClick={() => setSelectedPeriod(p.label)}
-                      className={`w-full py-4 px-6 rounded-xl border font-sans text-xs transition-all text-left flex justify-between items-center ${
-                        selectedPeriod === p.label
-                          ? "border-[#7ecab0] bg-[#7ecab0]/10 text-[#0d2b22] font-medium"
-                          : "border-black/[0.05] hover:border-[#7ecab0]/40 text-[#666]"
+                      key={t}
+                      onClick={() => setSelectedTime(t)}
+                      className={`font-sans text-[14px] transition-all py-1 px-4 rounded-md ${
+                        selectedTime === t
+                          ? "bg-[#0d2b22] text-white"
+                          : "text-[#888] hover:text-[#0d2b22]"
                       }`}
                     >
-                      {p.label}
-                      {selectedPeriod === p.label && <div className="w-2 h-2 bg-[#7ecab0] rounded-full" />}
+                      {t}
                     </button>
                   ))}
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex justify-center gap-4 pt-4">
                   <button
-                    onClick={prevStep}
-                    className="flex-1 h-12 border border-black/10 rounded-[12px] font-sans text-[10px] uppercase tracking-widest text-[#666] hover:bg-black/[0.02]"
+                    onClick={() => setStep(1)}
+                    className="px-8 py-3 bg-[#0d2b22] text-[#7ecab0] rounded-full font-sans text-[11px] uppercase tracking-widest font-medium transition-all"
                   >
-                    ← Back
+                    Back
                   </button>
                   <button
-                    disabled={!selectedDate || !selectedPeriod}
-                    onClick={nextStep}
-                    className="flex-[2] h-12 bg-[#0d2b22] text-[#7ecab0] rounded-[12px] font-sans font-medium uppercase tracking-widest text-[10px] disabled:opacity-30 transition-all"
+                    disabled={!selectedDate || !selectedTime}
+                    onClick={() => setStep(3)}
+                    className="px-10 py-3.5 bg-[#0d2b22] text-[#7ecab0] rounded-full font-sans text-[11px] uppercase tracking-widest font-medium transition-all disabled:opacity-20"
                   >
-                    Next →
+                    Continue
                   </button>
                 </div>
               </motion.div>
@@ -202,78 +203,90 @@ export default function BookingFlow() {
             {step === 3 && (
               <motion.div
                 key="step3"
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.3 }}
-                className="p-8 md:p-10"
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.28, ease: "easeInOut" }}
+                className="space-y-10"
               >
-                <h3 className="font-playfair text-xl text-[#0d2b22] mb-8">Your Details</h3>
+                <h3 className="font-playfair text-2xl text-[#0d2b22] text-center mb-12">
+                  Almost there
+                </h3>
                 
-                <div className="space-y-4 mb-8 text-left">
-                  <div className="space-y-1.5">
-                    <label className="font-sans text-[9px] uppercase tracking-widest text-[#666] ml-1">Full Name</label>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="font-sans text-[11px] text-[#999] uppercase tracking-widest ml-1">Full Name</label>
                     <input
                       type="text"
-                      className="w-full h-12 px-5 bg-[#f9f7f4] border border-black/[0.05] rounded-xl font-sans text-sm focus:border-[#7ecab0] outline-none transition-all placeholder:text-[#ccc]"
+                      className="w-full h-12 bg-white border-b border-black/[0.08] px-0 font-sans text-[15px] focus:border-[#7ecab0] outline-none transition-all placeholder:text-[#ddd]"
                       placeholder="Jane Doe"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="font-sans text-[9px] uppercase tracking-widest text-[#666] ml-1">Email Address</label>
+                  <div className="space-y-2">
+                    <label className="font-sans text-[11px] text-[#999] uppercase tracking-widest ml-1">Email Address</label>
                     <input
                       type="email"
-                      className="w-full h-12 px-5 bg-[#f9f7f4] border border-black/[0.05] rounded-xl font-sans text-sm focus:border-[#7ecab0] outline-none transition-all placeholder:text-[#ccc]"
+                      className="w-full h-12 bg-white border-b border-black/[0.08] px-0 font-sans text-[15px] focus:border-[#7ecab0] outline-none transition-all placeholder:text-[#ddd]"
                       placeholder="jane@example.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="font-sans text-[9px] uppercase tracking-widest text-[#666] ml-1">Phone Number</label>
-                    <input
-                      type="tel"
-                      className="w-full h-12 px-5 bg-[#f9f7f4] border border-black/[0.05] rounded-xl font-sans text-sm focus:border-[#7ecab0] outline-none transition-all placeholder:text-[#ccc]"
-                      placeholder="+254 7XX XXX XXX"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    />
+                  <div className="space-y-2">
+                    <label className="font-sans text-[11px] text-[#999] uppercase tracking-widest ml-1">Phone Number</label>
+                    <div className="flex items-center border-b border-black/[0.08] focus-within:border-[#7ecab0] transition-all">
+                      <span className="font-sans text-[15px] text-[#0d2b22] pr-2">+254</span>
+                      <input
+                        type="tel"
+                        className="w-full h-12 bg-transparent px-0 font-sans text-[15px] outline-none transition-all placeholder:text-[#ddd]"
+                        placeholder="7XX XXX XXX"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="mb-10 text-left">
-                  <span className="font-sans text-[9px] uppercase tracking-widest text-[#666] ml-1 mb-2 block">Confidentiality Agreement</span>
-                  <div className="max-h-[120px] overflow-y-scroll p-4 bg-[#f9f7f4] rounded-xl font-sans text-[11px] text-[#888] leading-relaxed mb-4 scrollbar-thin">
-                    All consultations at Hope Counseling are strictly confidential. We adhere to clinical ethical standards to protect your privacy and maintain the highest level of professional boundary. By proceeding, you acknowledge that this is for non-emergency psychological support. If you are in crisis, please contact emergency medical services or visit the nearest hospital. The first session is a free 45-minute consultation to assess needs and alignment.
-                  </div>
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded border-black/10 text-[#7ecab0] focus:ring-[#7ecab0] accent-[#7ecab0]"
-                      checked={formData.agreed}
-                      onChange={(e) => setFormData({ ...formData, agreed: e.target.checked })}
-                    />
-                    <span className="font-sans text-[11px] text-[#666] group-hover:text-[#0d2b22] transition-colors">
-                      I understand and accept the above terms
-                    </span>
-                  </label>
+                <div className="bg-[#f5f2ec]/50 p-6 rounded-2xl italic font-sans text-xs text-[#888] leading-relaxed">
+                  All consultations at Hope Counseling are strictly confidential. We adhere to clinical ethical standards to protect your privacy. By proceeding, you acknowledge that this is for non-emergency support. The first session is a free 45-minute alignment call.
                 </div>
 
-                <div className="flex gap-3">
+                <label className="flex items-center gap-3 cursor-pointer select-none group">
+                  <div className={`w-5 h-5 border rounded flex items-center justify-center transition-all ${
+                    formData.agreed ? "bg-[#7ecab0] border-[#7ecab0]" : "border-black/[0.1] bg-white group-hover:border-[#7ecab0]/50"
+                  }`}>
+                    {formData.agreed && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="hidden"
+                    checked={formData.agreed}
+                    onChange={(e) => setFormData({ ...formData, agreed: e.target.checked })}
+                  />
+                  <span className="font-sans text-[12px] text-[#666]">
+                    I understand and accept the terms
+                  </span>
+                </label>
+
+                <div className="flex justify-center gap-4 pt-4">
                   <button
-                    onClick={prevStep}
-                    className="flex-1 h-12 border border-black/10 rounded-[12px] font-sans text-[10px] uppercase tracking-widest text-[#666]"
+                    onClick={() => setStep(2)}
+                    className="px-8 py-3 bg-[#0d2b22] text-[#7ecab0] rounded-full font-sans text-[11px] uppercase tracking-widest font-medium transition-all"
                   >
-                    ← Back
+                    Back
                   </button>
                   <button
                     disabled={!formData.name || !formData.email || !formData.phone || !formData.agreed}
                     onClick={handleWhatsApp}
-                    className="flex-[2] h-12 bg-[#0d2b22] text-[#7ecab0] rounded-[12px] font-sans font-medium uppercase tracking-widest text-[10px] disabled:opacity-30 transition-all shadow-lg shadow-[#0d2b22]/10"
+                    className="px-10 py-3.5 bg-[#0d2b22] text-[#7ecab0] rounded-full font-sans text-[11px] uppercase tracking-widest font-medium shadow-xl shadow-[#0d2b22]/10 transition-all disabled:opacity-20"
                   >
-                    Confirm via WhatsApp
+                    Send to WhatsApp
                   </button>
                 </div>
               </motion.div>
