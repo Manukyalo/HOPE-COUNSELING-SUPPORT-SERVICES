@@ -57,11 +57,11 @@ export default function MeetCounselor() {
               Your Counselor
             </span>
             
-            <h2 className="font-playfair text-[34px] text-[#0d2b22] leading-tight mb-2">
+            <h2 className="font-instrument text-[42px] text-[#0d2b22] leading-[1.1] mb-2 animate-fade-rise">
               Maryann Wangari
             </h2>
             
-            <p className="font-sans text-[14px] text-[#888] font-light tracking-wide">
+            <p className="font-inter text-[14px] text-[#888] font-medium tracking-[0.1em] uppercase animate-fade-rise-delay">
               Psychological Counselor & Mentor
             </p>
 
@@ -77,8 +77,8 @@ export default function MeetCounselor() {
                 with honesty, not judgment."
               </p>
 
-              <blockquote className="border-l-[3px] border-[#7ecab0] pl-[18px] py-1">
-                <p className="font-playfair italic text-[17px] text-[#0d2b22] leading-relaxed">
+              <blockquote className="border-l-[3px] border-[#7ecab0] pl-[24px] py-2 animate-fade-rise-delay-2">
+                <p className="font-instrument italic text-[20px] text-[#0d2b22] leading-relaxed">
                   "My work isn't about fixing people. It's about sitting with them 
                   until they remember their own strength."
                 </p>

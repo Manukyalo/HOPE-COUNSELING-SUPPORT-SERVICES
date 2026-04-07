@@ -48,52 +48,50 @@ export default function Services() {
       className="py-20 md:py-32 bg-[#f9f7f4]"
     >
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16 md:mb-24">
-          <span className="font-sans text-[10px] uppercase tracking-[0.15em] text-[#7ecab0] mb-3 block font-medium">
+        <div className="text-center mb-20 md:mb-32">
+          <span className="font-inter text-[10px] uppercase tracking-[0.2em] text-[#7ecab0] mb-4 block font-semibold animate-fade-rise">
             Our Expertise
           </span>
-          <h2 className="font-playfair text-3xl md:text-[42px] text-[#0d2b22] leading-tight">
-            Our <span className="italic">Specialized</span> Services
+          <h2 className="font-instrument text-4xl md:text-[64px] text-[#0d2b22] leading-[1.1] animate-fade-rise-delay">
+            Our <span className="italic text-[#7ecab0]">Specialized</span> Services
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           {services.map((service, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.6 }}
+              transition={{ delay: index * 0.1, duration: 0.8 }}
               className="group"
             >
               <Link href={`/services/${service.slug}`} className="block">
-                <div className="bg-white rounded-[16px] border border-black/[0.05] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                  {/* Top Image Area */}
-                  <div className="h-[120px] relative overflow-hidden">
+                <div className="overflow-hidden bg-white rounded-3xl border border-black/[0.03] transition-all duration-500 hover:shadow-2xl hover:shadow-[#0d2b22]/5">
+                  {/* Top Image Area - Large Editorial Style */}
+                  <div className="h-[280px] relative overflow-hidden">
                     <Image
                       src={service.image}
                       alt={service.title}
                       fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="object-cover transition-transform duration-1000 group-hover:scale-110"
                     />
-                    {/* Floating icon badge */}
-                    <div className="absolute bottom-3 left-3 w-8 h-8 bg-white/25 backdrop-blur-md rounded-lg flex items-center justify-center border border-white/20">
-                      <div className="w-3 h-3 bg-white/60 rounded-sm" />
-                    </div>
+                    {/* Subtle Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   </div>
 
                   {/* Card Body */}
-                  <div className="p-6">
-                    <h3 className="font-playfair text-[15px] text-[#0d2b22] mb-3 group-hover:text-[#7ecab0] transition-colors uppercase tracking-tight">
+                  <div className="p-10">
+                    <h3 className="font-instrument text-[24px] text-[#0d2b22] mb-4 leading-tight group-hover:text-[#7ecab0] transition-colors">
                       {service.title}
                     </h3>
-                    <p className="font-sans text-[12px] text-[#666] leading-relaxed mb-6 line-clamp-3">
+                    <p className="font-inter text-[14px] text-[#666] leading-relaxed mb-10 line-clamp-3">
                       {service.description}
                     </p>
-                    <div className="font-sans text-[10px] uppercase tracking-[0.1em] text-[#0d2b22] flex items-center gap-2 group/link">
-                      Learn More 
-                      <span className="transition-transform group-hover/link:translate-x-1">→</span>
+                    <div className="font-inter text-[11px] uppercase tracking-[0.1em] font-semibold text-[#0d2b22] flex items-center gap-3">
+                      Explore Service
+                      <div className="w-8 h-[1px] bg-[#0d2b22] transition-all duration-300 group-hover:w-12 group-hover:bg-[#7ecab0]" />
                     </div>
                   </div>
                 </div>

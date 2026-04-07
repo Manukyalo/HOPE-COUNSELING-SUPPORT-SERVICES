@@ -19,9 +19,9 @@ export default function About() {
             <span className="font-sans text-[10px] uppercase tracking-[0.15em] text-[#7ecab0] mb-3 block font-medium">
               About Our Practice
             </span>
-            <h2 className="font-playfair text-3xl md:text-[42px] text-[#0d2b22] leading-tight mb-8">
+            <h2 className="font-instrument text-4xl md:text-[56px] text-[#0d2b22] leading-[1.1] mb-8 animate-fade-rise">
               Guided by Compassion, <br />
-              <span className="italic">Rooted in Excellence.</span>
+              <span className="italic text-[#7ecab0]">Rooted in Excellence.</span>
             </h2>
 
             <div className="flex gap-6 mb-10">
@@ -35,11 +35,11 @@ export default function About() {
               Based in Thika, Hope Counseling Support Services provides a sanctuary for mental healing and personal growth. We offer professional psychological support tailored to your unique journey, ensuring you feel seen, heard, and supported every step of the way.
             </p>
 
-            <div className="mb-12">
-              <div className="font-playfair text-[48px] text-[#0d2b22] leading-none mb-1">
+            <div className="mb-12 animate-fade-rise-delay-2">
+              <div className="font-instrument text-[64px] text-[#0d2b22] leading-none mb-1">
                 10+
               </div>
-              <div className="font-sans text-[11px] uppercase tracking-widest text-[#666]">
+              <div className="font-inter text-[11px] uppercase tracking-[0.2em] text-[#666] font-medium">
                 Expertise Fields in Psychology
               </div>
             </div>

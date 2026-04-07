@@ -1,10 +1,22 @@
 import type { Metadata } from "next";
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import { Instrument_Serif, Inter, Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import MobileStickyCTA from "@/components/MobileStickyCTA";
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  variable: "--font-instrument",
+  weight: ["400"],
+  style: ["normal", "italic"],
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -39,7 +51,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${dmSans.variable} ${playfair.variable} font-sans antialiased bg-[#f9f7f4] text-[#0d2b22]`}>
+      <body className={`${inter.variable} ${instrumentSerif.variable} ${playfair.variable} ${dmSans.variable} font-inter antialiased bg-[#f9f7f4] text-[#0d2b22]`}>
         <Navbar />
         {children}
         <WhatsAppButton />

@@ -97,7 +97,7 @@ export default function ExtraFeatures() {
                     transition={{ duration: 0.6, ease: "easeInOut" }}
                     className="absolute inset-0"
                   >
-                    <p className="font-playfair italic text-xl md:text-2xl text-[#f5f2ec] leading-relaxed max-w-[520px]">
+                    <p className="font-instrument italic text-2xl md:text-3xl text-[#f5f2ec] leading-tight max-w-[540px]">
                       "{testimonials[currentTestimonial].quote}"
                     </p>
                   </motion.div>
@@ -142,8 +142,8 @@ export default function ExtraFeatures() {
             <p className="font-sans text-[14px] text-[#888] italic mb-8">
               Honest answers to the things most people wonder before their first session.
             </p>
-            <h2 className="font-playfair text-3xl md:text-[36px] text-[#0d2b22] leading-tight mb-10">
-              A Clearer <span className="italic">Path</span> Ahead
+            <h2 className="font-instrument text-4xl md:text-[52px] text-[#0d2b22] leading-[1.1] mb-12 animate-fade-rise">
+              A Clearer <span className="italic text-[#7ecab0]">Path</span> Ahead
             </h2>
 
             <div className="space-y-2">
@@ -153,7 +153,7 @@ export default function ExtraFeatures() {
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
                     className="w-full text-left py-6 flex items-center justify-between group"
                   >
-                    <span className="font-playfair text-lg text-[#0d2b22] group-hover:text-[#7ecab0] transition-colors">
+                    <span className="font-instrument text-xl text-[#0d2b22] group-hover:text-[#7ecab0] transition-colors pr-8">
                       {faq.question}
                     </span>
                     <span className={`text-xl transition-transform duration-300 ${openFaq === i ? "rotate-45 text-[#7ecab0]" : "text-gray-300"}`}>

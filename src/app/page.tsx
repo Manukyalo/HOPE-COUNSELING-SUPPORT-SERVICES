@@ -1,10 +1,12 @@
-import Hero from "@/components/Hero";
+import CinematicHero from "@/components/CinematicHero";
 import Services from "@/components/Services";
 import BookingFlow from "@/components/BookingFlow";
 import About from "@/components/About";
 import MeetCounselor from "@/components/MeetCounselor";
 import ExtraFeatures from "@/components/ExtraFeatures";
 import { Metadata } from "next";
+
+
 
 export const metadata: Metadata = {
   title: "Hope Counseling Support Services | Mental Wellness & Therapy in Thika, Kenya",
@@ -62,7 +64,7 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <Hero />
+      <CinematicHero />
 
       <About />
 
