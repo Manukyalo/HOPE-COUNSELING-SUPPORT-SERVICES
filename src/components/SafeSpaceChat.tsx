@@ -41,9 +41,9 @@ export default function SafeSpaceChat() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 w-14 h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-[0_8px_30px_rgb(5,150,105,0.3)] flex items-center justify-center z-50 transition-colors"
+            className="fixed bottom-[140px] right-[16px] md:bottom-[100px] md:right-[28px] w-14 h-14 bg-[#0d2b22] hover:bg-[#1a4a38] text-white rounded-full shadow-[0_8px_30px_rgba(13,43,34,0.3)] flex items-center justify-center z-50 transition-colors border border-[#7ecab0]/20"
           >
-            <MessageCircle className="w-6 h-6" />
+            <Heart className="w-6 h-6 fill-[#7ecab0]/20" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -55,35 +55,51 @@ export default function SafeSpaceChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed bottom-6 right-6 w-[380px] h-[600px] max-h-[80vh] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden border border-emerald-100/50"
+            className="fixed bottom-[140px] right-[16px] md:bottom-[100px] md:right-[28px] w-[380px] h-[600px] max-h-[80vh] bg-[#f9f7f4]/95 backdrop-blur-2xl rounded-2xl shadow-[0_32px_64px_-16px_rgba(13,43,34,0.2)] flex flex-col z-50 overflow-hidden border border-[#7ecab0]/30"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-emerald-100 flex items-center justify-between">
+            <div className="bg-[#0d2b22] px-6 py-4 border-b border-[#7ecab0]/20 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-emerald-600">
-                  <Heart className="w-4 h-4 fill-emerald-100" />
+                <div className="w-8 h-8 rounded-full bg-[#1a4a38] shadow-sm flex items-center justify-center text-[#7ecab0]">
+                  <Heart className="w-4 h-4 fill-current" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-emerald-900 text-sm">Safe Space</h3>
-                  <p className="text-xs text-emerald-600/70">Support & Resource Guide</p>
+                  <h3 className="font-instrument italic text-[#f9f7f4] text-lg leading-none">Safe Space</h3>
+                  <p className="text-[10px] uppercase tracking-widest text-[#7ecab0] font-medium mt-1">Concierge</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-emerald-100/50 text-emerald-700 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-[#f9f7f4] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#fafafa]">
+            <motion.div 
+              className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#fafafa]/50"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: {
+                  transition: {
+                    staggerChildren: 0.1
+                  }
+                }
+              }}
+            >
               {messages.length === 0 && (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-70">
-                  <Heart className="w-12 h-12 text-emerald-200" />
-                  <p className="text-sm text-neutral-500 max-w-[200px]">
-                    Hi there. This is a safe space. How are you feeling today?
-                  </p>
+                  <div className="w-16 h-16 rounded-full bg-white shadow-inner flex items-center justify-center">
+                    <Heart className="w-8 h-8 text-[#7ecab0] fill-[#7ecab0]/10" />
+                  </div>
+                  <div>
+                    <p className="font-instrument italic text-[#0d2b22] text-xl">Peace be with you.</p>
+                    <p className="text-sm text-neutral-500 max-w-[200px] mt-2">
+                      This is a safe space. How are you feeling today?
+                    </p>
+                  </div>
                 </div>
               )}
               
@@ -98,18 +114,20 @@ export default function SafeSpaceChat() {
                         return (
                           <motion.div
                             key={index}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={`flex ${isUser ? "justify-end" : "justify-start"} mb-2`}
+                            variants={{
+                              hidden: { opacity: 0, y: 10, scale: 0.95 },
+                              visible: { opacity: 1, y: 0, scale: 1 }
+                            }}
+                            className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}
                           >
                             <div
-                              className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                              className={`max-w-[85%] rounded-[1.25rem] px-5 py-3.5 shadow-sm text-sm leading-relaxed ${
                                 isUser
-                                  ? "bg-emerald-600 text-white rounded-br-sm"
-                                  : "bg-white border border-neutral-100 shadow-sm text-neutral-700 rounded-bl-sm"
+                                  ? "bg-[#1a4a38] text-[#f9f7f4] rounded-br-[0.25rem]"
+                                  : "bg-white border border-[#7ecab0]/10 text-[#0d2b22] rounded-bl-[0.25rem]"
                               }`}
                             >
-                              <p className="text-sm leading-relaxed whitespace-pre-wrap">{part.text}</p>
+                              <p className="whitespace-pre-wrap">{part.text}</p>
                             </div>
                           </motion.div>
                         );
@@ -141,15 +159,22 @@ export default function SafeSpaceChat() {
                            );
                         }
                         return (
-                          <div key={index} className="bg-white border border-emerald-100/50 shadow-sm rounded-xl p-4 mb-4">
-                            <h4 className="text-emerald-800 font-medium mb-1 text-sm">{part.output.service}</h4>
-                            <p className="text-xs text-neutral-600 leading-relaxed">
+                          <motion.div 
+                            key={index}
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-white border border-[#7ecab0]/30 shadow-md rounded-2xl p-5 mb-6 overflow-hidden relative"
+                          >
+                            <div className="absolute top-0 left-0 w-1 h-full bg-[#7ecab0]" />
+                            <h4 className="text-[#0d2b22] font-semibold mb-2 text-base font-instrument italic">Recommended Service</h4>
+                            <p className="text-[#1a4a38] font-bold text-sm mb-2 uppercase tracking-wide">{part.output.service}</p>
+                            <p className="text-xs text-neutral-600 leading-relaxed mb-4">
                               {part.output.reason}
                             </p>
-                            <button className="mt-3 text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full font-medium hover:bg-emerald-100 transition-colors">
-                              Learn More &rarr;
+                            <button className="text-xs bg-[#f9f7f4] text-[#0d2b22] px-4 py-2 rounded-full font-bold border border-[#0d2b22]/10 hover:bg-[#0d2b22] hover:text-white transition-all">
+                              View Service Details &rarr;
                             </button>
-                          </div>
+                          </motion.div>
                         );
                       }
 
@@ -187,33 +212,33 @@ export default function SafeSpaceChat() {
               
               {isLoading && messages.length > 0 && messages[messages.length - 1].role === "user" && (
                 <div className="flex justify-start">
-                  <div className="bg-white border border-neutral-100 shadow-sm rounded-2xl rounded-bl-sm px-4 py-3 flex space-x-1.5 h-10 items-center">
-                    <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.4, delay: 0 }} className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-                    <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.4, delay: 0.2 }} className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-                    <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.4, delay: 0.4 }} className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                  <div className="bg-white border border-[#7ecab0]/10 shadow-sm rounded-[1.25rem] rounded-bl-[0.25rem] px-5 py-3.5 flex space-x-1.5 h-11 items-center">
+                    <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.95, 1.05, 0.95] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0 }} className="w-2 h-2 bg-[#7ecab0] rounded-full" />
+                    <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.95, 1.05, 0.95] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }} className="w-2 h-2 bg-[#7ecab0] rounded-full" />
+                    <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.95, 1.05, 0.95] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }} className="w-2 h-2 bg-[#7ecab0] rounded-full" />
                   </div>
                 </div>
               )}
               
               <div ref={messagesEndRef} />
-            </div>
+            </motion.div>
 
             {/* Input Form */}
-            <div className="p-4 bg-white border-t border-emerald-100/50">
+            <div className="p-4 bg-white/80 backdrop-blur-md border-t border-[#7ecab0]/10">
               <form onSubmit={handleSubmit} className="relative flex items-center">
                 <input
                   type="text"
                   value={input}
                   onChange={handleInputChange}
-                  placeholder="Type a message..."
-                  className="w-full bg-neutral-50 border border-neutral-100 rounded-full pl-5 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all text-neutral-800 placeholder:text-neutral-400"
+                  placeholder="How can we support you today?"
+                  className="w-full bg-[#f9f7f4] border border-[#7ecab0]/20 rounded-full pl-5 pr-12 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#7ecab0]/20 focus:border-[#7ecab0]/50 transition-all text-[#0d2b22] font-sans placeholder:text-neutral-400"
                 />
                 <button
                   type="submit"
                   disabled={isLoading || !input.trim()}
-                  className="absolute right-2 w-8 h-8 bg-emerald-600 hover:bg-emerald-700 disabled:bg-neutral-200 disabled:text-neutral-400 text-white rounded-full flex items-center justify-center transition-colors"
+                  className="absolute right-2 w-10 h-10 bg-[#0d2b22] hover:bg-[#1a4a38] disabled:bg-neutral-100 disabled:text-neutral-300 text-white rounded-full flex items-center justify-center transition-all shadow-sm"
                 >
-                  <Send className="w-4 h-4 ml-0.5" />
+                  <Send className="w-5 h-5 ml-0.5" />
                 </button>
               </form>
             </div>
