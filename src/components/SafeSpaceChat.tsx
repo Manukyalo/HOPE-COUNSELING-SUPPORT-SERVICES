@@ -8,9 +8,21 @@ import BreathingWidget from "./BreathingWidget";
 
 export default function SafeSpaceChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: "/api/chat"
-  });
+  const [input, setInput] = useState("");
+  const { messages, status, sendMessage } = useChat();
+  const isLoading = status === 'submitted' || status === 'streaming';
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+    // @ts-ignore - Ignore type error if SDK demands different payload
+    sendMessage({ role: 'user', parts: [{ type: 'text', text: input }] });
+    setInput('');
+  };
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom of chat
@@ -80,52 +92,59 @@ export default function SafeSpaceChat() {
 
                 return (
                   <div key={message.id} className="flex flex-col">
-                    {/* The text message box */}
-                    {message.content && (
-                       <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`flex ${isUser ? "justify-end" : "justify-start"} mb-2`}
-                        >
-                          <div
-                            className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                              isUser
-                                ? "bg-emerald-600 text-white rounded-br-sm"
-                                : "bg-white border border-neutral-100 shadow-sm text-neutral-700 rounded-bl-sm"
-                            }`}
-                          >
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                          </div>
-                      </motion.div>
-                    )}
-
-                    {/* Tool Invocations Array (Generative UI) */}
-                    {message.toolInvocations?.map((toolInvocation: any) => {
-                      const { toolName, toolCallId, state, args } = toolInvocation;
-
-                      if (state !== 'result') {
+                    {/* Parts processing for Vercel AI SDK 6.0 */}
+                    {message.parts?.map((part: any, index: number) => {
+                      if (part.type === 'text') {
                         return (
-                           <div key={toolCallId} className="flex justify-start mb-2">
-                             <div className="bg-neutral-50 border border-neutral-100 rounded-xl px-4 py-3 text-xs text-neutral-400 animate-pulse">
-                               Processing {toolName}...
-                             </div>
-                           </div>
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex ${isUser ? "justify-end" : "justify-start"} mb-2`}
+                          >
+                            <div
+                              className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                                isUser
+                                  ? "bg-emerald-600 text-white rounded-br-sm"
+                                  : "bg-white border border-neutral-100 shadow-sm text-neutral-700 rounded-bl-sm"
+                              }`}
+                            >
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap">{part.text}</p>
+                            </div>
+                          </motion.div>
                         );
                       }
 
-                      const result = toolInvocation.result;
-
-                      // Identify tool types and render beautiful UI
-                      if (result?.ui === 'BREATHING_WIDGET') {
-                        return <BreathingWidget key={toolCallId} message={result.message} />;
+                      // Tool: Breathing Widget
+                      if (part.type === 'tool-triggerBreathingExercise') {
+                        if (!part.output) {
+                          return (
+                            <div key={index} className="flex justify-start mb-2">
+                              <div className="bg-neutral-50 border border-neutral-100 rounded-xl px-4 py-3 text-xs text-neutral-400 animate-pulse">
+                                Processing...
+                              </div>
+                            </div>
+                          );
+                        }
+                        return <BreathingWidget key={index} message={part.output.message} />;
                       }
 
-                      if (result?.ui === 'SERVICE_CARD') {
+                      // Tool: Service Suggestion
+                      if (part.type === 'tool-suggestService') {
+                        if (!part.output) {
+                           return (
+                             <div key={index} className="flex justify-start mb-2">
+                               <div className="bg-neutral-50 border border-neutral-100 rounded-xl px-4 py-3 text-xs text-neutral-400 animate-pulse">
+                                 Looking up services...
+                               </div>
+                             </div>
+                           );
+                        }
                         return (
-                          <div key={toolCallId} className="bg-white border border-emerald-100/50 shadow-sm rounded-xl p-4 mb-4">
-                            <h4 className="text-emerald-800 font-medium mb-1 text-sm">{result.service}</h4>
+                          <div key={index} className="bg-white border border-emerald-100/50 shadow-sm rounded-xl p-4 mb-4">
+                            <h4 className="text-emerald-800 font-medium mb-1 text-sm">{part.output.service}</h4>
                             <p className="text-xs text-neutral-600 leading-relaxed">
-                              {result.reason}
+                              {part.output.reason}
                             </p>
                             <button className="mt-3 text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full font-medium hover:bg-emerald-100 transition-colors">
                               Learn More &rarr;
@@ -134,28 +153,30 @@ export default function SafeSpaceChat() {
                         );
                       }
 
-                      if (result?.ui === 'EMERGENCY_MODAL') {
-                        return (
-                          <div key={toolCallId} className="bg-rose-50 border border-rose-200 rounded-xl p-5 mb-4">
-                            <div className="flex items-center space-x-2 text-rose-700 font-semibold mb-3">
-                              <AlertCircle className="w-5 h-5" />
-                              <span className="text-sm">You are not alone.</span>
-                            </div>
-                            <p className="text-xs text-rose-800/80 mb-4 leading-relaxed">
-                              {result.reason} Please reach out immediately to professionals who can support you.
-                            </p>
-                            <div className="space-y-2">
-                              <a href="tel:988" className="flex items-center justify-center space-x-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg py-2.5 transition-colors">
-                                <Phone className="w-4 h-4" />
-                                <span className="text-sm font-medium">Call 988 Crisis Lifeline</span>
-                              </a>
-                              <a href="sms:741741" className="flex items-center justify-center space-x-2 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 rounded-lg py-2.5 transition-colors">
-                                <MessageCircle className="w-4 h-4" />
-                                <span className="text-sm font-medium">Text HOME to 741741</span>
-                              </a>
-                            </div>
-                          </div>
-                        );
+                      // Tool: Emergency Protocol
+                      if (part.type === 'tool-triggerEmergencyProtocol') {
+                         if (!part.output) return null;
+                         return (
+                           <div key={index} className="bg-rose-50 border border-rose-200 rounded-xl p-5 mb-4">
+                             <div className="flex items-center space-x-2 text-rose-700 font-semibold mb-3">
+                               <AlertCircle className="w-5 h-5" />
+                               <span className="text-sm">You are not alone.</span>
+                             </div>
+                             <p className="text-xs text-rose-800/80 mb-4 leading-relaxed">
+                               {part.output.reason} Please reach out immediately to professionals who can support you.
+                             </p>
+                             <div className="space-y-2">
+                               <a href="tel:988" className="flex items-center justify-center space-x-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg py-2.5 transition-colors">
+                                 <Phone className="w-4 h-4" />
+                                 <span className="text-sm font-medium">Call 988 Crisis Lifeline</span>
+                               </a>
+                               <a href="sms:741741" className="flex items-center justify-center space-x-2 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 rounded-lg py-2.5 transition-colors">
+                                 <MessageCircle className="w-4 h-4" />
+                                 <span className="text-sm font-medium">Text HOME to 741741</span>
+                               </a>
+                             </div>
+                           </div>
+                         );
                       }
 
                       return null;
