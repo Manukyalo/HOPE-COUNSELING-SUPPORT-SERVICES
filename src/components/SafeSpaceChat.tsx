@@ -182,25 +182,33 @@ export default function SafeSpaceChat() {
                       if (part.type === 'tool-triggerEmergencyProtocol') {
                          if (!part.output) return null;
                          return (
-                           <div key={index} className="bg-rose-50 border border-rose-200 rounded-xl p-5 mb-4">
-                             <div className="flex items-center space-x-2 text-rose-700 font-semibold mb-3">
+                           <motion.div 
+                             key={index}
+                             initial={{ opacity: 0, scale: 0.95 }}
+                             animate={{ opacity: 1, scale: 1 }}
+                             className="bg-[#fff1f2] border border-rose-200 rounded-2xl p-6 mb-6 shadow-sm relative overflow-hidden"
+                           >
+                             <div className="absolute top-0 right-0 p-3 opacity-10">
+                               <AlertCircle className="w-12 h-12 text-rose-600" />
+                             </div>
+                             <div className="flex items-center space-x-2 text-rose-700 font-bold mb-3">
                                <AlertCircle className="w-5 h-5" />
-                               <span className="text-sm">You are not alone.</span>
+                               <span className="text-sm font-instrument italic text-lg">You are safe here.</span>
                              </div>
-                             <p className="text-xs text-rose-800/80 mb-4 leading-relaxed">
-                               {part.output.reason} Please reach out immediately to professionals who can support you.
+                             <p className="text-xs text-rose-900/80 mb-5 leading-relaxed font-sans">
+                               {part.output.reason} We are here for you. Please reach out to these professional services immediately:
                              </p>
-                             <div className="space-y-2">
-                               <a href="tel:988" className="flex items-center justify-center space-x-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg py-2.5 transition-colors">
-                                 <Phone className="w-4 h-4" />
-                                 <span className="text-sm font-medium">Call 988 Crisis Lifeline</span>
+                             <div className="space-y-3">
+                               <a href="tel:988" className="flex items-center justify-center space-x-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl py-3 transition-all shadow-md active:scale-95 group">
+                                 <Phone className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                                 <span className="text-sm font-bold">Call 988 Crisis Lifeline</span>
                                </a>
-                               <a href="sms:741741" className="flex items-center justify-center space-x-2 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 rounded-lg py-2.5 transition-colors">
+                               <a href="sms:741741" className="flex items-center justify-center space-x-3 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 rounded-xl py-3 transition-all shadow-sm active:scale-95">
                                  <MessageCircle className="w-4 h-4" />
-                                 <span className="text-sm font-medium">Text HOME to 741741</span>
+                                 <span className="text-sm font-bold">Text HOME to 741741</span>
                                </a>
                              </div>
-                           </div>
+                           </motion.div>
                          );
                       }
 
