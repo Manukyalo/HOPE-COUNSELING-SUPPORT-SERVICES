@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import MobileStickyCTA from "@/components/MobileStickyCTA";
+import SafeSpaceChat from "@/components/SafeSpaceChat";
 
 const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
@@ -55,6 +56,7 @@ export default function RootLayout({
         <Navbar />
         {children}
         <WhatsAppButton />
+        <SafeSpaceChat />
         <MobileStickyCTA />
         <Footer />
       </body>
