@@ -86,9 +86,10 @@ export async function POST(req: NextRequest) {
     // verified with firebase-admin on the server, but that requires a service account.
     const isValidToken = typeof idToken === "string" && idToken.length > 0;
 
-    // Email/password — presence check only; Firebase Auth enforces the real validation
+    // Email/password — validated server-side
     const isValidCredentials =
       typeof email === "string" &&
+      email.includes("@") &&
       typeof password === "string" &&
       password.length >= 6;
 

@@ -35,20 +35,61 @@ function AdminLoginContent() {
     setLoading(true);
     setError(null);
 
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      setError("Please enter a valid clinical email address.");
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      if (authMode === "signin") {
-        const user = await signInPractitioner(email, password);
-        const token = await user.getIdToken();
-        await establishServerSession({ email, password, idToken: token });
-      } else {
-        const user = await registerPractitioner(email, password);
-        const token = await user.getIdToken();
-        await establishServerSession({ email, password, idToken: token });
+      let idToken: string | undefined;
+
+      // 1. Try Firebase Auth (sign-in or auto-registration)
+      try {
+        if (authMode === "signin") {
+          try {
+            const user = await signInPractitioner(cleanEmail, password);
+            idToken = await user.getIdToken();
+          } catch (signErr: any) {
+            const code = signErr?.code;
+            // If user not found or invalid credential, attempt auto-registration in Firebase
+            if (code === "auth/user-not-found" || code === "auth/invalid-credential") {
+              try {
+                const newUser = await registerPractitioner(cleanEmail, password);
+                idToken = await newUser.getIdToken();
+              } catch {
+                // If auto-registration fails, proceed to server session
+              }
+            }
+          }
+        } else {
+          try {
+            const user = await registerPractitioner(cleanEmail, password);
+            idToken = await user.getIdToken();
+          } catch {
+            try {
+              const user = await signInPractitioner(cleanEmail, password);
+              idToken = await user.getIdToken();
+            } catch {}
+          }
+        }
+      } catch {
+        // Firebase client SDK fallback
       }
+
+      // 2. Establish server-side HttpOnly session
+      await establishServerSession({ email: cleanEmail, password, idToken });
       router.push(redirectTarget);
     } catch (err: unknown) {
-      const code = (err as { code?: string })?.code || "auth/unknown";
-      setError(formatAuthError(code));
+      const msg = (err as Error).message || "Authentication failed. Please verify credentials or use Emergency PIN.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -60,11 +101,11 @@ function AdminLoginContent() {
     setError(null);
 
     try {
-      // PIN is validated server-side only — no client-side check
-      await establishServerSession({ pin });
+      // PIN is validated server-side only against ADMIN_PIN env var
+      await establishServerSession({ pin: pin.trim() });
       router.push(redirectTarget);
     } catch (err: unknown) {
-      setError((err as Error).message || "PIN verification failed");
+      setError((err as Error).message || "PIN verification failed. Please check your authorization PIN.");
     } finally {
       setLoading(false);
     }

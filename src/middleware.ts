@@ -37,6 +37,15 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Return explicit 404 for legacy public PWA assets
+  if (
+    pathname === "/manifest.json" ||
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/sw.js"
+  ) {
+    return new NextResponse(null, { status: 404 });
+  }
+
   // Security response headers
   const response = NextResponse.next();
   response.headers.set("X-Frame-Options", "DENY");
@@ -46,5 +55,11 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/admin/:path*",
+    "/manifest.json",
+    "/manifest.webmanifest",
+    "/sw.js",
+  ],
 };

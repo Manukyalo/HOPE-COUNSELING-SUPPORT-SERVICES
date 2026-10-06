@@ -26,9 +26,9 @@ export default function ClientExperiences() {
           </p>
         </div>
 
-        {/* Narrative Feedback Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 mb-12">
-          {/* Card 1: Students & Young Adults */}
+        {/* Narrative Feedback */}
+        <div className="max-w-3xl mx-auto mb-12">
+          {/* Students & Young Adults */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -70,54 +70,6 @@ export default function ClientExperiences() {
               </span>
               <span className="px-3 py-1 rounded-full bg-white text-[#2d6e5a] text-[11px] font-sans font-medium">
                 Coping & Confidence
-              </span>
-            </div>
-          </motion.div>
-
-          {/* Card 2: Maternity Support */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="bg-[#f9f7f4] rounded-3xl p-8 sm:p-10 border border-black/[0.04] shadow-sm hover:shadow-xl hover:shadow-[#0d2b22]/5 transition-all duration-300 flex flex-col justify-between group"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl p-3 rounded-2xl bg-white shadow-xs">🌷</span>
-                  <div>
-                    <h3 className="font-instrument text-2xl text-[#0d2b22]">
-                      Maternity Support
-                    </h3>
-                    <span className="font-sans text-[11px] uppercase tracking-wider text-[#7ecab0] font-semibold">
-                      Maternal & Perinatal Well-Being
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 text-sm md:text-base text-[#444] font-sans leading-relaxed">
-                <p className="bg-white/70 p-6 rounded-2xl border border-black/[0.02]">
-                  "Mothers shared appreciation for having a supportive space to express their feelings and concerns during a significant period of their lives. They valued the opportunity to talk openly, receive encouragement and gain practical insights that helped them feel more supported."
-                </p>
-                <div className="p-5 rounded-2xl bg-[#e0f4ec]/50 border border-[#7ecab0]/20">
-                  <p className="font-sans text-xs text-[#1e5c45] italic">
-                    Providing mothers with emotional grounding, maternal reassurance, and an empathetic ear during delicate life transitions.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 pt-5 border-t border-black/[0.05] flex flex-wrap gap-2">
-              <span className="px-3 py-1 rounded-full bg-white text-[#2d6e5a] text-[11px] font-sans font-medium">
-                Maternal Grounding
-              </span>
-              <span className="px-3 py-1 rounded-full bg-white text-[#2d6e5a] text-[11px] font-sans font-medium">
-                Open Expression
-              </span>
-              <span className="px-3 py-1 rounded-full bg-white text-[#2d6e5a] text-[11px] font-sans font-medium">
-                Practical Insights
               </span>
             </div>
           </motion.div>
