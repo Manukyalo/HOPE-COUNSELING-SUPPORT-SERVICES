@@ -77,20 +77,13 @@ export default function BookingFlow() {
 
     try {
       if (typeof window !== "undefined") {
-        // Persist to Firebase Firestore & local offline cache
+        // Persist directly to secure Firestore database
         import("@/services/booking-service").then(({ createBookingSession }) => {
           createBookingSession(newBooking);
         });
-
-        window.dispatchEvent(new CustomEvent("hope:new-booking", { detail: newBooking }));
-
-        // Fire native system notification if granted on this device
-        import("@/lib/pwa-notifications").then(({ sendBookingNotification }) => {
-          sendBookingNotification(newBooking);
-        });
       }
     } catch (e) {
-      console.warn("Storage tracking error", e);
+      console.warn("Booking submission error", e);
     }
 
     const text = `Hello Hope Counseling, I'd like to book a ${sName} session on ${selectedDate} (${selectedTime}). My name is ${formData.name}.`;

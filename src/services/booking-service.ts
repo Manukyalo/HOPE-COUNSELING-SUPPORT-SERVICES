@@ -46,7 +46,8 @@ function setLocalCache(data: BookingSession[]) {
 }
 
 /**
- * Creates a new booking in Firestore with offline synchronization.
+ * Creates a new booking in Firestore.
+ * Does NOT store in public localStorage to prevent client data exposure on shared devices.
  */
 export async function createBookingSession(
   booking: Omit<BookingSession, "createdAt"> & { createdAt?: string }
@@ -56,19 +57,7 @@ export async function createBookingSession(
     createdAt: booking.createdAt || new Date().toISOString(),
   };
 
-  // 1. Immediately cache locally
-  const current = getLocalCache();
-  const updated = [fullBooking, ...current.filter((b) => b.id !== fullBooking.id)];
-  setLocalCache(updated);
-
-  // 2. Broadcast across open tabs
-  if (typeof window !== "undefined" && "BroadcastChannel" in window) {
-    const channel = new BroadcastChannel("hope_admin_channel");
-    channel.postMessage({ type: "NEW_BOOKING", booking: fullBooking });
-    channel.close();
-  }
-
-  // 3. Persist to Firestore
+  // Persist directly to secure Firestore database
   try {
     const docRef = doc(db, COLLECTION_NAME, fullBooking.id);
     await setDoc(docRef, {
@@ -76,7 +65,7 @@ export async function createBookingSession(
       serverTimestamp: serverTimestamp(),
     });
   } catch (err) {
-    console.warn("Firestore sync pending (saved to offline cache):", err);
+    console.error("Firestore booking submission error:", err);
   }
 
   return fullBooking;

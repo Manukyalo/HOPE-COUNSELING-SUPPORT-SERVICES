@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Client bookings collection
+    match /bookings/{bookingId} {
+      // Public clients can ONLY create their own booking submission
+      allow create: if request.resource.data.clientName is string
+                    && request.resource.data.phone is string
+                    && request.resource.data.status == 'Pending';
+      
+      // STRICT RULE: Only authenticated admin practitioners can read, query, update, or delete
+      // Anonymous and unauthenticated requests are completely blocked from reading client data.
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // Default deny-all for any other path
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -258,13 +258,24 @@ export default function ClinicalAdminPortal() {
     }
   };
 
-  const handlePinUnlock = (e: React.FormEvent) => {
+  const handlePinUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin === "2580") {
-      setIsPinUnlocked(true);
-      setAuthError(null);
-    } else {
-      setAuthError("Invalid authorization PIN code.");
+    // PIN is validated server-side only via /api/admin/auth
+    try {
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
+      });
+      if (res.ok) {
+        setIsPinUnlocked(true);
+        setAuthError(null);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setAuthError(data.error || "Invalid authorization PIN code.");
+      }
+    } catch {
+      setAuthError("Network error. Please try again.");
     }
   };
 
@@ -292,15 +303,16 @@ export default function ClinicalAdminPortal() {
   };
 
   const handleTestAlert = () => {
+    // Uses a system-labelled test session — no PII or realistic-looking client data
     const testSession: BookingSession = {
-      id: "BK-" + Math.floor(1000 + Math.random() * 9000),
-      clientName: "Grace Wanjiku",
-      email: "wanjiku.grace@gmail.com",
-      phone: "+254712345678",
-      serviceId: "individual",
-      serviceName: "Individual Counselling — KSh 1,000",
-      date: "Thursday, October 8, 2026",
-      time: "Morning (10:00 AM)",
+      id: "SYS-TEST-" + Math.floor(1000 + Math.random() * 9000),
+      clientName: "[Notification Test]",
+      email: "system@hopecounseling.ke",
+      phone: "+2547XXXXXXXX",
+      serviceId: "initial",
+      serviceName: "System Notification Test",
+      date: new Date().toLocaleDateString("en-KE"),
+      time: new Date().toLocaleTimeString("en-KE"),
       status: "Pending",
       createdAt: new Date().toISOString(),
     };
@@ -380,67 +392,6 @@ export default function ClinicalAdminPortal() {
     return { total, pending, confirmed, completed, grossVolume, rankedServices };
   }, [sessions]);
 
-  // Seed sample clinical data
-  const handleSeedData = () => {
-    const samples: BookingSession[] = [
-      {
-        id: "HC-2819",
-        clientName: "Amina Mwangi",
-        email: "amina.mwangi@gmail.com",
-        phone: "+254712345678",
-        serviceId: "individual",
-        serviceName: "Individual Counselling — KSh 1,000",
-        date: "Wednesday, October 8, 2026",
-        time: "Morning (10:00 AM)",
-        status: "Pending",
-        notes: "Initial consultation regarding acute academic stress and career uncertainty.",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "HC-9102",
-        clientName: "Brian Omondi",
-        email: "brian.omondi@students.uonbi.ac.ke",
-        phone: "+254722998877",
-        serviceId: "student",
-        serviceName: "Student & Young Adult Support — KSh 700",
-        date: "Thursday, October 9, 2026",
-        time: "Afternoon (2:00 PM)",
-        status: "Confirmed",
-        notes: "Second session. Client shows positive coping response with mindfulness exercises.",
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-      },
-      {
-        id: "HC-4401",
-        clientName: "David & Sharon Kimani",
-        email: "d.kimani@outlook.com",
-        phone: "+254733445566",
-        serviceId: "couples",
-        serviceName: "Couples / Relationship Counselling — KSh 1,500",
-        date: "Friday, October 10, 2026",
-        time: "Evening (5:30 PM)",
-        status: "Pending",
-        notes: "Pre-session intake completed via telephone. Focus on constructive active listening.",
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-      },
-      {
-        id: "HC-7734",
-        clientName: "Faith Chebet",
-        email: "faith.chebet@gmail.com",
-        phone: "+254788112233",
-        serviceId: "personal-pkg",
-        serviceName: "Personal Growth Package — KSh 3,600",
-        date: "Monday, October 13, 2026",
-        time: "Morning (11:00 AM)",
-        status: "Completed",
-        notes: "Completed 4-week structured wellness framework. Client requested quarterly check-in.",
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-      },
-    ];
-
-    import("@/services/booking-service").then(({ createBookingSession }) => {
-      samples.forEach((s) => createBookingSession(s));
-    });
-  };
 
   // ─── AUTHENTICATION SCREEN ──────────────────────────────────────────────────
   if (!user && !isPinUnlocked) {
@@ -609,7 +560,7 @@ export default function ClinicalAdminPortal() {
                     required
                     value={pin}
                     onChange={(e) => setPin(e.target.value)}
-                    placeholder="Enter PIN (Default: 2580)"
+                    placeholder="Enter your authorization PIN"
                     className="w-full h-12 bg-white/[0.04] border border-white/10 focus:border-[#7ecab0] rounded-xl px-4 pl-10 font-mono tracking-widest text-center text-lg text-white outline-none transition-all"
                   />
                   <KeyRound className="w-4 h-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -924,14 +875,6 @@ export default function ClinicalAdminPortal() {
                     ? "Your clinical session ledger is empty. Incoming WhatsApp bookings will appear in realtime."
                     : "No sessions matched your search criteria."}
                 </p>
-                {sessions.length === 0 && (
-                  <button
-                    onClick={handleSeedData}
-                    className="px-4 py-2 bg-[#7ecab0] text-[#071a14] rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#9de4cd] transition-all shadow"
-                  >
-                    Load Sample Practice Manifest
-                  </button>
-                )}
               </div>
             ) : (
               <div className="space-y-3">

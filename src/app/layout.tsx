@@ -43,7 +43,6 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://hope-counseling-support-services.vercel.app"),
   title: "Hope Counseling Support Services | Nairobi, Kenya",
   description: "Professional psychological counseling in Nairobi, Kenya. Specializing in stress, anxiety, relationships, youth mentorship, and emotional support.",
-  manifest: "/manifest.json",
   robots: {
     index: true,
     follow: true,

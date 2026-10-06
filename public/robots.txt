@@ -1,0 +1,8 @@
+# Robots.txt for Hope Counseling Support Services
+User-agent: *
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+Allow: /
+
+Sitemap: https://hope-counseling-support-services.vercel.app/sitemap.xml
