@@ -1,336 +1,415 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const services = [
-  { id: "individual", name: "Individual Counselling — KSh 1,000", sub: "50–60 min · One-on-one personalized therapy & stress care" },
-  { id: "online", name: "Online Counselling — KSh 800", sub: "50–60 min · Confidential remote video or voice session" },
-  { id: "student", name: "Student & Young Adult Support — KSh 700", sub: "50–60 min · Subsidized rate for academic pressure & growth" },
-  { id: "couples", name: "Couples / Relationship Counselling — KSh 1,500", sub: "60 min · Rebuilding communication & mutual understanding" },
-  { id: "initial", name: "Initial Consultation — KSh 300", sub: "30 min · Gentle discovery session to explore your needs" },
-  { id: "student-pkg", name: "Student Wellness Package — KSh 2,500", sub: "4 sessions · Complete student support (Save KSh 300)" },
-  { id: "personal-pkg", name: "Personal Growth Package — KSh 3,600", sub: "4 sessions · Dedicated weekly personal development (Save KSh 400)" },
-  { id: "extended-pkg", name: "Extended Support Package — KSh 5,000", sub: "6 sessions · Comprehensive ongoing journey (Save KSh 1,000)" },
-];
-
-const timeRefs = ["Morning", "Afternoon", "Evening"];
+import { Calendar as CalendarIcon, Clock, User, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import MonthGrid from "./booking/MonthGrid";
+import TimeSlotPicker from "./booking/TimeSlotPicker";
+import BookingDetailsStep from "./booking/BookingDetailsStep";
+import BookingConfirmationStep from "./booking/BookingConfirmationStep";
+import {
+  DayAvailabilitySummary,
+  PublicSlotSummary,
+  BookingCreationResult,
+  SessionType,
+  DeliveryMode,
+} from "@/types/booking";
 
 export default function BookingFlow() {
-  const [step, setStep] = useState(1);
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    agreed: false,
-  });
+  // Steps: 1 = Pick Date, 2 = Pick Time, 3 = Client Details, 4 = Confirmation
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
-  const days = useMemo(() => {
-    const d = [];
+  // Month navigation (year and month for the primary visible month)
+  const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth() + 1);
+
+  // Availability map from server
+  const [availabilityMap, setAvailabilityMap] = useState<Record<string, DayAvailabilitySummary>>({});
+  const [calendarLoading, setCalendarLoading] = useState(true);
+
+  // Selection states
+  const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null);
+  const [daySlots, setDaySlots] = useState<PublicSlotSummary[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<PublicSlotSummary | null>(null);
+
+  // Submission state
+  const [submitting, setSubmitting] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingResult, setBookingResult] = useState<BookingCreationResult | null>(null);
+
+  // Compute min and max bookable dates in EAT
+  const { minDateStr, maxDateStr } = useMemo(() => {
     const now = new Date();
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(now);
-      date.setDate(now.getDate() + i);
-      d.push({
-        label: date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }),
-        short: date.toLocaleDateString("en-US", { weekday: "short" }),
-        num: date.getDate(),
-        isToday: i === 0,
-        isPast: false, // Simple logic for current week strip
-      });
+    // Min date: tomorrow in EAT
+    const tomorrow = new Date(now.getTime() + 24 * 3600 * 1000);
+    const minStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Nairobi",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(tomorrow);
+
+    // Max date: 60 days ahead
+    const maxDate = new Date(now.getTime() + 60 * 24 * 3600 * 1000);
+    const maxStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Nairobi",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(maxDate);
+
+    return { minDateStr: minStr, maxDateStr: maxStr };
+  }, []);
+
+  // Compute second month for desktop two-month view
+  const nextMonthObj = useMemo(() => {
+    if (currentMonth === 12) {
+      return { year: currentYear + 1, month: 1 };
     }
-    return d;
+    return { year: currentYear, month: currentMonth + 1 };
+  }, [currentYear, currentMonth]);
+
+  // Fetch month availability from server route
+  const fetchMonthAvailability = useCallback(async (year: number, month: number) => {
+    setCalendarLoading(true);
+    try {
+      const monthStr1 = `${year}-${String(month).padStart(2, "0")}`;
+      const nextM = month === 12 ? 1 : month + 1;
+      const nextY = month === 12 ? year + 1 : year;
+      const monthStr2 = `${nextY}-${String(nextM).padStart(2, "0")}`;
+
+      const [res1, res2] = await Promise.all([
+        fetch(`/api/booking/availability?month=${monthStr1}`),
+        fetch(`/api/booking/availability?month=${monthStr2}`),
+      ]);
+
+      const data1 = await res1.json();
+      const data2 = await res2.json();
+
+      setAvailabilityMap((prev) => ({
+        ...prev,
+        ...(data1.availability || {}),
+        ...(data2.availability || {}),
+      }));
+    } catch (e) {
+      console.error("[BookingFlow] Error fetching availability:", e);
+    } finally {
+      setCalendarLoading(false);
+    }
   }, []);
 
-  // Listen for direct selection from RatesCard
   useEffect(() => {
-    const handleSelect = (e: Event) => {
-      const customEvent = e as CustomEvent<{ serviceId: string }>;
-      if (customEvent.detail?.serviceId) {
-        setSelectedService(customEvent.detail.serviceId);
-        setStep(2);
-      }
-    };
-    window.addEventListener("hope:select-service", handleSelect);
-    return () => window.removeEventListener("hope:select-service", handleSelect);
-  }, []);
+    fetchMonthAvailability(currentYear, currentMonth);
+  }, [currentYear, currentMonth, fetchMonthAvailability]);
 
-  const handleWhatsApp = () => {
-    const sName = services.find(s => s.id === selectedService)?.name || "Counseling Session";
-    
-    // Save to localStorage for admin dashboard & analytics tracking
-    const newBooking = {
-      id: "BK-" + Math.random().toString(36).substring(2, 7).toUpperCase(),
-      clientName: formData.name,
-      email: formData.email,
-      phone: "+254" + formData.phone,
-      serviceId: selectedService || "general",
-      serviceName: sName,
-      date: selectedDate,
-      time: selectedTime,
-      status: "Pending" as const,
-      createdAt: new Date().toISOString(),
-    };
+  // Month navigation handlers
+  const handlePrevMonth = () => {
+    const today = new Date();
+    // Prevent navigating to past months
+    if (currentYear === today.getFullYear() && currentMonth <= today.getMonth() + 1) {
+      return;
+    }
+    if (currentMonth === 1) {
+      setCurrentYear((y) => y - 1);
+      setCurrentMonth(12);
+    } else {
+      setCurrentMonth((m) => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (currentMonth === 12) {
+      setCurrentYear((y) => y + 1);
+      setCurrentMonth(1);
+    } else {
+      setCurrentMonth((m) => m + 1);
+    }
+  };
+
+  // Date selection handler
+  const handleSelectDate = async (dateStr: string) => {
+    setSelectedDateStr(dateStr);
+    setSelectedSlot(null);
+    setBookingError(null);
+    setSlotsLoading(true);
+    setStep(2);
 
     try {
-      if (typeof window !== "undefined") {
-        // Persist directly to secure Firestore database
-        import("@/services/booking-service").then(({ createBookingSession }) => {
-          createBookingSession(newBooking);
-        });
+      const res = await fetch(`/api/booking/availability?date=${dateStr}`);
+      const data = await res.json();
+      if (res.ok && data.slots) {
+        setDaySlots(data.slots);
+      } else {
+        setDaySlots([]);
       }
-    } catch (e) {
-      console.warn("Booking submission error", e);
+    } catch {
+      setDaySlots([]);
+    } finally {
+      setSlotsLoading(false);
     }
+  };
 
-    const text = `Hello Hope Counseling, I'd like to book a ${sName} session on ${selectedDate} (${selectedTime}). My name is ${formData.name}.`;
-    window.open(`https://wa.me/254701279231?text=${encodeURIComponent(text)}`, "_blank");
+  // Slot selection handler
+  const handleSelectSlot = (slot: PublicSlotSummary) => {
+    setSelectedSlot(slot);
+    setBookingError(null);
+  };
+
+  // Final booking submission handler
+  const handleBookingSubmit = async (formData: {
+    clientName: string;
+    clientEmail: string;
+    clientPhone: string;
+    sessionType: SessionType;
+    deliveryMode: DeliveryMode;
+    notes?: string;
+    website_hp?: string;
+  }) => {
+    if (!selectedSlot || !selectedDateStr) return;
+
+    setSubmitting(true);
+    setBookingError(null);
+
+    try {
+      const res = await fetch("/api/booking/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slotId: selectedSlot.slotId,
+          startUtc: selectedSlot.startUtc,
+          ...formData,
+        }),
+      });
+
+      const data: BookingCreationResult = await res.json();
+
+      if (!res.ok || !data.success) {
+        if (data.code === "SLOT_CONFLICT") {
+          setBookingError("That slot was just taken by another client, please pick another available time.");
+          // Refresh slots for this date
+          handleSelectDate(selectedDateStr);
+          setStep(2);
+        } else {
+          setBookingError(data.error || "Booking could not be confirmed. Please try again.");
+        }
+      } else {
+        setBookingResult(data);
+        setStep(4);
+      }
+    } catch {
+      setBookingError("A network error occurred. Please check your connection and retry.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Reset entire flow
+  const handleReset = () => {
+    setStep(1);
+    setSelectedDateStr(null);
+    setSelectedSlot(null);
+    setBookingError(null);
+    setBookingResult(null);
+    fetchMonthAvailability(currentYear, currentMonth);
   };
 
   return (
-    <section id="book" className="py-24 md:py-40 bg-[#f9f7f4]">
-      <div className="container mx-auto px-6 max-w-[580px]">
-        
-        {/* Header */}
-        <div className="text-center mb-20">
-          <h2 className="font-playfair text-3xl text-[#0d2b22] mb-4">
+    <section id="book" className="py-20 md:py-32 bg-[#f9f7f4] relative">
+      <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
+        {/* Section Header */}
+        <div className="text-center mb-12 sm:mb-16">
+          <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-[#7ecab0] font-bold">
+            Online Booking System
+          </span>
+          <h2 className="font-playfair text-3xl sm:text-4xl text-[#0d2b22] mt-2 mb-3">
             Schedule Your Session
           </h2>
-          <p className="font-sans text-[13px] text-[#666] tracking-wide">
-            Initial consultation is only KSh 300. Confidential, empathetic, and without judgment.
+          <p className="font-sans text-xs sm:text-sm text-[#666] max-w-md mx-auto">
+            Book a confidential appointment in East Africa Time. Initial consultation is only KSh 300.
           </p>
         </div>
 
-        {/* Minimalist Progress Indicator */}
-        <div className="flex justify-center items-center gap-3 mb-16 relative">
-          <div className="absolute h-[1px] bg-black/[0.06] w-24 z-0" />
-          {[1, 2, 3].map((i) => (
-            <div 
-              key={i}
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-sans transition-all duration-500 z-10 relative ${
-                step === i 
-                  ? "border border-[#7ecab0] text-[#7ecab0] bg-[#f9f7f4]" 
-                  : step > i 
-                  ? "bg-[#7ecab0] text-white" 
-                  : "bg-black/[0.05] text-[#999]"
-              }`}
-            >
-              {i}
+        {/* 4-Step Progress Indicator */}
+        <div className="flex justify-center items-center gap-3 sm:gap-6 mb-10 sm:mb-14 relative">
+          <div className="absolute h-[1px] bg-black/[0.08] w-48 sm:w-80 z-0" />
+          {[
+            { num: 1, label: "Date" },
+            { num: 2, label: "Time" },
+            { num: 3, label: "Details" },
+            { num: 4, label: "Confirmed" },
+          ].map((s) => (
+            <div key={s.num} className="flex flex-col items-center gap-1.5 z-10">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-sans font-semibold transition-all duration-300 ${
+                  step === s.num
+                    ? "border-2 border-[#7ecab0] text-[#0d2b22] bg-white ring-4 ring-[#7ecab0]/20"
+                    : step > s.num
+                    ? "bg-[#0d2b22] text-[#7ecab0]"
+                    : "bg-white text-[#bbb] border border-black/[0.08]"
+                }`}
+              >
+                {step > s.num ? "✓" : s.num}
+              </div>
+              <span
+                className={`text-[10px] font-sans uppercase tracking-wider hidden sm:block ${
+                  step === s.num ? "font-bold text-[#0d2b22]" : "text-[#888]"
+                }`}
+              >
+                {s.label}
+              </span>
             </div>
           ))}
         </div>
 
-        {/* Form Content */}
-        <div className="relative min-h-[460px]">
-          <AnimatePresence mode="wait" initial={false}>
+        {/* Content Box */}
+        <div className="relative min-h-[500px]">
+          <AnimatePresence mode="wait">
+            {/* ─── STEP 1: PICK A DATE ────────────────────────────────────────── */}
             {step === 1 && (
               <motion.div
                 key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.28, ease: "easeInOut" }}
-                className="space-y-10"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6"
               >
-                <h3 className="font-playfair text-2xl text-[#0d2b22] text-center mb-12">
-                  What brings you here today?
-                </h3>
-                <div className="space-y-4">
-                  {services.map((s) => (
-                    <button
-                      key={s.id}
-                      onClick={() => setSelectedService(s.id)}
-                      className={`w-full p-6 text-left transition-all duration-300 relative overflow-hidden group ${
-                        selectedService === s.id
-                          ? "bg-[#f5f2ec]"
-                          : "hover:bg-[#f5f2ec]/50"
-                      }`}
-                    >
-                      {selectedService === s.id && (
-                        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#7ecab0]" />
-                      )}
-                      <p className="font-sans text-[15px] font-medium text-[#0d2b22] mb-1">
-                        {s.name}
-                      </p>
-                      <p className="font-sans text-[12px] text-[#888]">
-                        {s.sub}
-                      </p>
-                    </button>
-                  ))}
+                <div className="text-center space-y-1">
+                  <h3 className="font-playfair text-xl sm:text-2xl text-[#0d2b22]">
+                    Select a Date
+                  </h3>
+                  <p className="font-sans text-xs text-[#777]">
+                    Appointments can be booked from tomorrow up to 60 days in advance.
+                  </p>
                 </div>
-                {selectedService && (
-                  <div className="pt-8 text-center">
-                    <button
-                      onClick={() => setStep(2)}
-                      className="px-10 py-3.5 bg-[#0d2b22] text-[#7ecab0] rounded-full font-sans text-[11px] uppercase tracking-widest font-medium transition-all hover:bg-[#1a4a38]"
-                    >
-                      Continue
-                    </button>
+
+                {calendarLoading && Object.keys(availabilityMap).length === 0 ? (
+                  <div className="py-20 flex flex-col items-center justify-center gap-3 text-center">
+                    <Loader2 className="w-8 h-8 text-[#7ecab0] animate-spin" />
+                    <p className="font-sans text-xs text-[#888]">Loading calendar availability...</p>
                   </div>
+                ) : (
+                  <>
+                    {/* Desktop: Two Months Side-by-Side */}
+                    <div className="hidden md:grid md:grid-cols-2 gap-6">
+                      <MonthGrid
+                        year={currentYear}
+                        month={currentMonth}
+                        selectedDate={selectedDateStr}
+                        availabilityMap={availabilityMap}
+                        onSelectDate={handleSelectDate}
+                        onPrevMonth={handlePrevMonth}
+                        showPrevNav={true}
+                        showNextNav={false}
+                        minDateStr={minDateStr}
+                        maxDateStr={maxDateStr}
+                      />
+                      <MonthGrid
+                        year={nextMonthObj.year}
+                        month={nextMonthObj.month}
+                        selectedDate={selectedDateStr}
+                        availabilityMap={availabilityMap}
+                        onSelectDate={handleSelectDate}
+                        onNextMonth={handleNextMonth}
+                        showPrevNav={false}
+                        showNextNav={true}
+                        minDateStr={minDateStr}
+                        maxDateStr={maxDateStr}
+                      />
+                    </div>
+
+                    {/* Mobile: Single Month Swipeable Grid */}
+                    <div className="block md:hidden">
+                      <MonthGrid
+                        year={currentYear}
+                        month={currentMonth}
+                        selectedDate={selectedDateStr}
+                        availabilityMap={availabilityMap}
+                        onSelectDate={handleSelectDate}
+                        onPrevMonth={handlePrevMonth}
+                        onNextMonth={handleNextMonth}
+                        showPrevNav={true}
+                        showNextNav={true}
+                        minDateStr={minDateStr}
+                        maxDateStr={maxDateStr}
+                      />
+                    </div>
+
+                    {/* Calendar Legend */}
+                    <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-3 text-[11px] font-sans text-[#666]">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                        <span>Available</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                        <span>Few Slots Left</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs line-through text-[#aaa] font-semibold">15</span>
+                        <span>Fully Booked / Closed</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-md bg-[#0d2b22] ring-1 ring-[#7ecab0]" />
+                        <span>Selected</span>
+                      </div>
+                    </div>
+                  </>
                 )}
               </motion.div>
             )}
 
-            {step === 2 && (
+            {/* ─── STEP 2: PICK A TIME ────────────────────────────────────────── */}
+            {step === 2 && selectedDateStr && (
               <motion.div
                 key="step2"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.28, ease: "easeInOut" }}
-                className="space-y-12"
+                transition={{ duration: 0.25 }}
               >
-                <h3 className="font-playfair text-2xl text-[#0d2b22] text-center mb-12">
-                  When works for you?
-                </h3>
-                
-                {/* Date Strip */}
-                <div className="flex justify-between items-center gap-1 overflow-x-auto pb-4 scrollbar-hide">
-                  {days.map((d) => (
-                    <button
-                      key={d.label}
-                      onClick={() => setSelectedDate(d.label)}
-                      className={`flex-shrink-0 w-12 h-16 rounded-full flex flex-col items-center justify-center transition-all ${
-                        selectedDate === d.label
-                          ? "bg-[#0d2b22] text-[#7ecab0]"
-                          : d.isToday
-                          ? "bg-[#7ecab0]/10 text-[#7ecab0]"
-                          : "bg-transparent text-[#999] hover:bg-black/[0.02]"
-                      }`}
-                    >
-                      <span className="text-[10px] uppercase font-sans mb-1">{d.short}</span>
-                      <span className="text-[15px] font-playfair font-bold">{d.num}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Time Buttons */}
-                <div className="flex justify-center gap-8 py-8 border-y border-black/[0.03]">
-                  {timeRefs.map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setSelectedTime(t)}
-                      className={`font-sans text-[14px] transition-all py-1 px-4 rounded-md ${
-                        selectedTime === t
-                          ? "bg-[#0d2b22] text-white"
-                          : "text-[#888] hover:text-[#0d2b22]"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex justify-center gap-4 pt-4">
-                  <button
-                    onClick={() => setStep(1)}
-                    className="px-8 py-3 bg-[#0d2b22] text-[#7ecab0] rounded-full font-sans text-[11px] uppercase tracking-widest font-medium transition-all"
-                  >
-                    Back
-                  </button>
-                  <button
-                    disabled={!selectedDate || !selectedTime}
-                    onClick={() => setStep(3)}
-                    className="px-10 py-3.5 bg-[#0d2b22] text-[#7ecab0] rounded-full font-sans text-[11px] uppercase tracking-widest font-medium transition-all disabled:opacity-20"
-                  >
-                    Continue
-                  </button>
-                </div>
+                <TimeSlotPicker
+                  dateStr={selectedDateStr}
+                  slots={daySlots}
+                  selectedSlotId={selectedSlot?.slotId || null}
+                  onSelectSlot={handleSelectSlot}
+                  loading={slotsLoading}
+                  onBack={() => setStep(1)}
+                  onContinue={() => setStep(3)}
+                />
               </motion.div>
             )}
 
-            {step === 3 && (
+            {/* ─── STEP 3: DETAILS & CONFIRM PREVIEW ─────────────────────────── */}
+            {step === 3 && selectedDateStr && selectedSlot && (
               <motion.div
                 key="step3"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.28, ease: "easeInOut" }}
-                className="space-y-10"
+                transition={{ duration: 0.25 }}
               >
-                <h3 className="font-playfair text-2xl text-[#0d2b22] text-center mb-12">
-                  Almost there
-                </h3>
-                
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="font-sans text-[11px] text-[#999] uppercase tracking-widest ml-1">Full Name</label>
-                    <input
-                      type="text"
-                      className="w-full h-12 bg-white border-b border-black/[0.08] px-0 font-sans text-[15px] focus:border-[#7ecab0] outline-none transition-all placeholder:text-[#ddd]"
-                      placeholder="Jane Doe"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="font-sans text-[11px] text-[#999] uppercase tracking-widest ml-1">Email Address</label>
-                    <input
-                      type="email"
-                      className="w-full h-12 bg-white border-b border-black/[0.08] px-0 font-sans text-[15px] focus:border-[#7ecab0] outline-none transition-all placeholder:text-[#ddd]"
-                      placeholder="jane@example.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="font-sans text-[11px] text-[#999] uppercase tracking-widest ml-1">Phone Number</label>
-                    <div className="flex items-center border-b border-black/[0.08] focus-within:border-[#7ecab0] transition-all">
-                      <span className="font-sans text-[15px] text-[#0d2b22] pr-2">+254</span>
-                      <input
-                        type="tel"
-                        className="w-full h-12 bg-transparent px-0 font-sans text-[15px] outline-none transition-all placeholder:text-[#ddd]"
-                        placeholder="7XX XXX XXX"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </div>
+                <BookingDetailsStep
+                  selectedDateStr={selectedDateStr}
+                  selectedSlot={selectedSlot}
+                  onBack={() => setStep(2)}
+                  onSubmit={handleBookingSubmit}
+                  submitting={submitting}
+                  errorMessage={bookingError}
+                />
+              </motion.div>
+            )}
 
-                <div className="bg-[#f5f2ec]/50 p-6 rounded-2xl italic font-sans text-xs text-[#888] leading-relaxed">
-                  All consultations at Hope Counseling are strictly confidential. We adhere to clinical ethical standards to protect your privacy. By proceeding, you acknowledge that this is for non-emergency support.
-                </div>
-
-                <label className="flex items-center gap-3 cursor-pointer select-none group">
-                  <div className={`w-5 h-5 border rounded flex items-center justify-center transition-all ${
-                    formData.agreed ? "bg-[#7ecab0] border-[#7ecab0]" : "border-black/[0.1] bg-white group-hover:border-[#7ecab0]/50"
-                  }`}>
-                    {formData.agreed && (
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <input
-                    type="checkbox"
-                    className="hidden"
-                    checked={formData.agreed}
-                    onChange={(e) => setFormData({ ...formData, agreed: e.target.checked })}
-                  />
-                  <span className="font-sans text-[12px] text-[#666]">
-                    I understand and accept the terms
-                  </span>
-                </label>
-
-                <div className="flex justify-center gap-4 pt-4">
-                  <button
-                    onClick={() => setStep(2)}
-                    className="px-8 py-3 bg-[#0d2b22] text-[#7ecab0] rounded-full font-sans text-[11px] uppercase tracking-widest font-medium transition-all"
-                  >
-                    Back
-                  </button>
-                  <button
-                    disabled={!formData.name || !formData.email || !formData.phone || !formData.agreed}
-                    onClick={handleWhatsApp}
-                    className="px-10 py-3.5 bg-[#0d2b22] text-[#7ecab0] rounded-full font-sans text-[11px] uppercase tracking-widest font-medium shadow-xl shadow-[#0d2b22]/10 transition-all disabled:opacity-20"
-                  >
-                    Send to WhatsApp
-                  </button>
-                </div>
+            {/* ─── STEP 4: CONFIRMATION SUCCESS ─────────────────────────────── */}
+            {step === 4 && bookingResult && (
+              <motion.div
+                key="step4"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <BookingConfirmationStep result={bookingResult} onReset={handleReset} />
               </motion.div>
             )}
           </AnimatePresence>

@@ -1,15 +1,11 @@
-import {
-  collection,
-  doc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { AvailabilityRules, BlockedDate } from "@/types/booking";
+
+export type BookingSessionStatus =
+  | "Pending"
+  | "Confirmed"
+  | "Completed"
+  | "Cancelled"
+  | "no_show";
 
 export interface BookingSession {
   id: string;
@@ -18,18 +14,21 @@ export interface BookingSession {
   phone: string;
   serviceId: string;
   serviceName: string;
+  sessionType?: string;
+  deliveryMode?: string;
   date: string | null;
   time: string | null;
-  status: "Pending" | "Confirmed" | "Completed" | "Cancelled";
+  timeFormatted?: string | null;
+  price?: number;
+  currency?: string;
+  status: BookingSessionStatus;
   notes?: string;
   createdAt: string;
   updatedAt?: string;
 }
 
 const LOCAL_STORAGE_KEY = "hope_admin_bookings";
-const COLLECTION_NAME = "bookings";
 
-// Helpers for resilient offline local fallback
 function getLocalCache(): BookingSession[] {
   if (typeof window === "undefined") return [];
   try {
@@ -46,112 +45,127 @@ function setLocalCache(data: BookingSession[]) {
 }
 
 /**
- * Creates a new booking in Firestore.
- * Does NOT store in public localStorage to prevent client data exposure on shared devices.
+ * Normalizes booking record from server API
  */
-export async function createBookingSession(
-  booking: Omit<BookingSession, "createdAt"> & { createdAt?: string }
-): Promise<BookingSession> {
-  const fullBooking: BookingSession = {
-    ...booking,
-    createdAt: booking.createdAt || new Date().toISOString(),
+function normalizeSession(b: Record<string, unknown>): BookingSession {
+  const rawStatus = (b.status as string) || "Pending";
+  // Capitalize for compatibility with existing admin UI
+  let status: BookingSession["status"] = "Pending";
+  const lower = rawStatus.toLowerCase();
+  if (lower === "confirmed") status = "Confirmed";
+  else if (lower === "completed") status = "Completed";
+  else if (lower === "cancelled") status = "Cancelled";
+  else if (lower === "no_show") status = "no_show";
+
+  return {
+    id: (b.id as string) || "",
+    clientName: (b.clientName as string) || "Anonymous",
+    email: (b.clientEmail || b.email || "") as string,
+    phone: (b.clientPhone || b.phone || "") as string,
+    serviceId: (b.serviceId || b.sessionType || "individual") as string,
+    serviceName: (b.serviceName || b.sessionType || "Individual Counselling") as string,
+    sessionType: (b.sessionType || "individual") as string,
+    deliveryMode: (b.deliveryMode || "online") as string,
+    date: (b.date as string) || null,
+    time: (b.timeFormatted || b.time || "") as string,
+    timeFormatted: (b.timeFormatted || b.time || "") as string,
+    price: typeof b.price === "number" ? b.price : 1000,
+    currency: (b.currency as string) || "KES",
+    status,
+    notes: (b.notes as string) || "",
+    createdAt: (b.createdAt as string) || new Date().toISOString(),
+    updatedAt: (b.updatedAt as string) || undefined,
   };
-
-  // Persist directly to secure Firestore database
-  try {
-    const docRef = doc(db, COLLECTION_NAME, fullBooking.id);
-    await setDoc(docRef, {
-      ...fullBooking,
-      serverTimestamp: serverTimestamp(),
-    });
-  } catch (err) {
-    console.error("Firestore booking submission error:", err);
-  }
-
-  return fullBooking;
 }
 
 /**
- * Subscribes to real-time booking sessions from Firestore.
- * Automatically falls back to local cache if offline or connecting.
+ * Fetches bookings list from server API (protected by admin session cookie)
+ */
+export async function fetchAdminBookings(status = "all", search = ""): Promise<BookingSession[]> {
+  try {
+    const params = new URLSearchParams();
+    if (status && status !== "all") params.append("status", status.toLowerCase());
+    if (search) params.append("search", search);
+
+    const res = await fetch(`/api/admin/bookings?${params.toString()}`);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    if (data.bookings && Array.isArray(data.bookings)) {
+      const normalized = data.bookings.map(normalizeSession);
+      setLocalCache(normalized);
+      return normalized;
+    }
+    return getLocalCache();
+  } catch (err) {
+    console.warn("[booking-service] API fetch failed, falling back to cache:", err);
+    return getLocalCache();
+  }
+}
+
+/**
+ * Subscribes to booking updates using an efficient polling interval
  */
 export function subscribeToBookingSessions(
   onUpdate: (bookings: BookingSession[]) => void,
   onError?: (err: Error) => void
 ): () => void {
-  // Deliver cached data immediately for zero-delay UI rendering
+  // Provide cached data immediately
   const cached = getLocalCache();
   if (cached.length > 0) {
     onUpdate(cached);
   }
 
-  try {
-    const q = query(collection(db, COLLECTION_NAME), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const remoteBookings: BookingSession[] = [];
-        snapshot.forEach((d) => {
-          remoteBookings.push(d.data() as BookingSession);
-        });
+  let active = true;
 
-        // Merge remote with local to avoid losing offline entries
-        const local = getLocalCache();
-        const mergedMap = new Map<string, BookingSession>();
+  const load = async () => {
+    try {
+      const bookings = await fetchAdminBookings();
+      if (active) onUpdate(bookings);
+    } catch (e) {
+      if (onError) onError(e as Error);
+    }
+  };
 
-        // Local first
-        local.forEach((b) => mergedMap.set(b.id, b));
-        // Remote overwrites with source of truth
-        remoteBookings.forEach((b) => mergedMap.set(b.id, b));
+  load();
+  const intervalId = setInterval(load, 8000); // Poll every 8s
 
-        const finalMerged = Array.from(mergedMap.values()).sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-        setLocalCache(finalMerged);
-        onUpdate(finalMerged);
-      },
-      (error) => {
-        console.warn("Firestore realtime listener fallback to cache:", error);
-        onUpdate(getLocalCache());
-        if (onError) onError(error);
-      }
-    );
-
-    return unsubscribe;
-  } catch (err) {
-    console.warn("Firestore query setup error, using local cache:", err);
-    onUpdate(getLocalCache());
-    return () => {};
-  }
+  return () => {
+    active = false;
+    clearInterval(intervalId);
+  };
 }
 
 /**
- * Updates status of a session in Firestore and local cache.
+ * Updates session status via server route
  */
 export async function updateSessionStatus(
   id: string,
   status: BookingSession["status"]
 ): Promise<void> {
-  // Update local cache
   const local = getLocalCache().map((b) =>
     b.id === id ? { ...b, status, updatedAt: new Date().toISOString() } : b
   );
   setLocalCache(local);
 
   try {
-    const docRef = doc(db, COLLECTION_NAME, id);
-    await updateDoc(docRef, {
-      status,
-      updatedAt: new Date().toISOString(),
+    const res = await fetch("/api/admin/bookings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId: id, status: status.toLowerCase() }),
     });
+    if (!res.ok) {
+      console.warn("[booking-service] Server rejected status update:", await res.text());
+    }
   } catch (err) {
-    console.warn("Firestore status update pending:", err);
+    console.warn("[booking-service] Status update network error:", err);
   }
 }
 
 /**
- * Updates practitioner confidential notes for a session.
+ * Updates session notes via server route
  */
 export async function updateSessionNotes(id: string, notes: string): Promise<void> {
   const local = getLocalCache().map((b) =>
@@ -160,27 +174,90 @@ export async function updateSessionNotes(id: string, notes: string): Promise<voi
   setLocalCache(local);
 
   try {
-    const docRef = doc(db, COLLECTION_NAME, id);
-    await updateDoc(docRef, {
-      notes,
-      updatedAt: new Date().toISOString(),
+    const res = await fetch("/api/admin/bookings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId: id, notes }),
     });
+    if (!res.ok) {
+      console.warn("[booking-service] Server rejected notes update:", await res.text());
+    }
   } catch (err) {
-    console.warn("Firestore notes update pending:", err);
+    console.warn("[booking-service] Notes update network error:", err);
   }
 }
 
 /**
- * Deletes a session from Firestore and local cache.
+ * Deletes or cancels session via server route
  */
 export async function deleteSession(id: string): Promise<void> {
-  const local = getLocalCache().filter((b) => b.id !== id);
-  setLocalCache(local);
+  await updateSessionStatus(id, "Cancelled");
+}
 
+/**
+ * Availability & Blocked Dates Admin APIs
+ */
+export async function fetchAvailabilitySettings(): Promise<{
+  rules: AvailabilityRules | null;
+  blockedDates: BlockedDate[];
+}> {
   try {
-    const docRef = doc(db, COLLECTION_NAME, id);
-    await deleteDoc(docRef);
+    const res = await fetch("/api/admin/availability");
+    if (!res.ok) throw new Error("Failed to fetch availability");
+    const data = await res.json();
+    return { rules: data.rules || null, blockedDates: data.blockedDates || [] };
   } catch (err) {
-    console.warn("Firestore delete pending:", err);
+    console.error("[booking-service] fetchAvailabilitySettings error:", err);
+    return { rules: null, blockedDates: [] };
+  }
+}
+
+export async function saveAvailabilityRules(rules: AvailabilityRules): Promise<boolean> {
+  try {
+    const res = await fetch("/api/admin/availability", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "update_rules", rules }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error("[booking-service] saveAvailabilityRules error:", err);
+    return false;
+  }
+}
+
+export async function addBlockedDate(blockedDate: {
+  startDate: string;
+  endDate: string;
+  reason: string;
+  allDay: boolean;
+  startTime?: string;
+  endTime?: string;
+}): Promise<BlockedDate | null> {
+  try {
+    const res = await fetch("/api/admin/availability", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "add_blocked_date", blockedDate }),
+    });
+    const data = await res.json();
+    return data.blockedDate || null;
+  } catch (err) {
+    console.error("[booking-service] addBlockedDate error:", err);
+    return null;
+  }
+}
+
+export async function deleteBlockedDate(blockedDateId: string): Promise<boolean> {
+  try {
+    const res = await fetch("/api/admin/availability", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete_blocked_date", blockedDateId }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error("[booking-service] deleteBlockedDate error:", err);
+    return false;
   }
 }

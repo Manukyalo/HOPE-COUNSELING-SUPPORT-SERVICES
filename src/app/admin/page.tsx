@@ -38,6 +38,8 @@ import {
   deleteSession,
   BookingSession,
 } from "@/services/booking-service";
+import AvailabilitySettingsTab from "@/components/admin/AvailabilitySettingsTab";
+import BlockedDatesTab from "@/components/admin/BlockedDatesTab";
 import {
   signInPractitioner,
   registerPractitioner,
@@ -97,6 +99,13 @@ const STATUS_CONFIG: Record<
     border: "border-rose-500/20",
     dot: "bg-rose-400",
   },
+  no_show: {
+    label: "No Show",
+    bg: "bg-amber-500/10",
+    text: "text-amber-300",
+    border: "border-amber-500/20",
+    dot: "bg-amber-400",
+  },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -140,7 +149,7 @@ export default function ClinicalAdminPortal() {
   const [selectedSession, setSelectedSession] = useState<BookingSession | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState<"manifest" | "analytics">("manifest");
+  const [activeTab, setActiveTab] = useState<"manifest" | "availability" | "blocked" | "analytics">("manifest");
   const [notesDraft, setNotesDraft] = useState("");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
 
@@ -796,7 +805,7 @@ export default function ClinicalAdminPortal() {
 
         {/* View Selection Tabs */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setActiveTab("manifest")}
               className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${
@@ -807,6 +816,28 @@ export default function ClinicalAdminPortal() {
             >
               <FileText className="w-3.5 h-3.5" />
               <span>Session Manifest</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("availability")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === "availability"
+                  ? "bg-[#7ecab0] text-[#071a14] shadow-md shadow-[#7ecab0]/20"
+                  : "bg-white/[0.04] text-white/60 hover:text-white border border-white/10"
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Schedule & Hours</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("blocked")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === "blocked"
+                  ? "bg-[#7ecab0] text-[#071a14] shadow-md shadow-[#7ecab0]/20"
+                  : "bg-white/[0.04] text-white/60 hover:text-white border border-white/10"
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Blocked Dates</span>
             </button>
             <button
               onClick={() => setActiveTab("analytics")}
@@ -1067,6 +1098,12 @@ export default function ClinicalAdminPortal() {
             </div>
           </div>
         )}
+
+        {/* ── TAB 3: SCHEDULE & HOURS ── */}
+        {activeTab === "availability" && <AvailabilitySettingsTab />}
+
+        {/* ── TAB 4: BLOCKED DATES ── */}
+        {activeTab === "blocked" && <BlockedDatesTab />}
       </main>
 
       {/* ── CLIENT DOSSIER & CLINICAL NOTES SLIDE-OVER MODAL ── */}
@@ -1157,6 +1194,57 @@ export default function ClinicalAdminPortal() {
                     </button>
                   </div>
                 </div>
+              </div>
+
+              {/* Status Update Quick Bar */}
+              <div className="py-3 px-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-wrap items-center gap-2">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-white/40 mr-1">
+                  Change Status:
+                </span>
+                {selectedSession.status !== "Confirmed" && (
+                  <button
+                    onClick={async () => {
+                      await updateSessionStatus(selectedSession.id, "Confirmed");
+                      setSelectedSession({ ...selectedSession, status: "Confirmed" });
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 text-xs font-semibold transition-all"
+                  >
+                    Confirm
+                  </button>
+                )}
+                {selectedSession.status !== "Completed" && (
+                  <button
+                    onClick={async () => {
+                      await updateSessionStatus(selectedSession.id, "Completed");
+                      setSelectedSession({ ...selectedSession, status: "Completed" });
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 text-xs font-semibold transition-all"
+                  >
+                    Complete
+                  </button>
+                )}
+                {selectedSession.status !== "Cancelled" && (
+                  <button
+                    onClick={async () => {
+                      await updateSessionStatus(selectedSession.id, "Cancelled");
+                      setSelectedSession({ ...selectedSession, status: "Cancelled" });
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 text-xs font-semibold transition-all"
+                  >
+                    Cancel Slot
+                  </button>
+                )}
+                {selectedSession.status !== "no_show" && (
+                  <button
+                    onClick={async () => {
+                      await updateSessionStatus(selectedSession.id, "no_show");
+                      setSelectedSession({ ...selectedSession, status: "no_show" });
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 text-xs font-semibold transition-all"
+                  >
+                    No Show
+                  </button>
+                )}
               </div>
 
               {/* Footer Actions */}

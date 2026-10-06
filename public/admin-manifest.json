@@ -3,11 +3,13 @@
   "name": "Hope Counseling Practitioner Workspace",
   "short_name": "HC Admin",
   "description": "Confidential clinical portal and session management workspace for Hope Counseling Support Services.",
-  "start_url": "/admin",
-  "scope": "/admin/",
+  "start_url": "/admin/login",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#071a14",
   "theme_color": "#071a14",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -38,3 +40,4 @@
   "lang": "en-KE",
   "dir": "ltr"
 }
+

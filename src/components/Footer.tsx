@@ -47,7 +47,7 @@ export default function Footer() {
             <div className="flex flex-col gap-4 md:items-end w-full md:w-auto">
               <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-[#7ecab0] mb-2 font-medium">Connect</span>
               <ul className="space-y-3 font-sans text-xs uppercase tracking-widest text-[#f5f2ec]/60 md:text-right">
-                <li><a href="https://instagram.com" target="_blank" className="hover:text-[#7ecab0] transition-colors">Instagram</a></li>
+                <li><a href="https://www.instagram.com/drama9luckycharm?stkn=ajEydzR6MXJsNmtr" target="_blank" rel="noopener noreferrer" className="hover:text-[#7ecab0] transition-colors">Instagram</a></li>
                 <li><a href={whatsappLink} target="_blank" className="hover:text-[#7ecab0] transition-colors">WhatsApp</a></li>
                 <li><a href="mailto:amayakari5924@gmail.com" className="hover:text-[#7ecab0] transition-colors">Email</a></li>
               </ul>
