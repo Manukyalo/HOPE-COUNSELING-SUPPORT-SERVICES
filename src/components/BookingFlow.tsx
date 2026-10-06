@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const services = [
@@ -8,7 +8,7 @@ const services = [
   { id: "online", name: "Online Counselling — KSh 800", sub: "50–60 min · Confidential remote video or voice session" },
   { id: "student", name: "Student & Young Adult Support — KSh 700", sub: "50–60 min · Subsidized rate for academic pressure & growth" },
   { id: "couples", name: "Couples / Relationship Counselling — KSh 1,500", sub: "60 min · Rebuilding communication & mutual understanding" },
-  { id: "initial", name: "Initial Consultation — KSh 500", sub: "30 min · Gentle discovery session to explore your needs" },
+  { id: "initial", name: "Initial Consultation — KSh 300", sub: "30 min · Gentle discovery session to explore your needs" },
   { id: "student-pkg", name: "Student Wellness Package — KSh 2,500", sub: "4 sessions · Complete student support (Save KSh 300)" },
   { id: "personal-pkg", name: "Personal Growth Package — KSh 3,600", sub: "4 sessions · Dedicated weekly personal development (Save KSh 400)" },
   { id: "extended-pkg", name: "Extended Support Package — KSh 5,000", sub: "6 sessions · Comprehensive ongoing journey (Save KSh 1,000)" },
@@ -45,9 +45,47 @@ export default function BookingFlow() {
     return d;
   }, []);
 
+  // Listen for direct selection from RatesCard
+  useEffect(() => {
+    const handleSelect = (e: Event) => {
+      const customEvent = e as CustomEvent<{ serviceId: string }>;
+      if (customEvent.detail?.serviceId) {
+        setSelectedService(customEvent.detail.serviceId);
+        setStep(2);
+      }
+    };
+    window.addEventListener("hope:select-service", handleSelect);
+    return () => window.removeEventListener("hope:select-service", handleSelect);
+  }, []);
+
   const handleWhatsApp = () => {
-    const sName = services.find(s => s.id === selectedService)?.name;
-    const text = `Hello, I'd like to book a ${sName} session on ${selectedDate} (${selectedTime}). My name is ${formData.name}.`;
+    const sName = services.find(s => s.id === selectedService)?.name || "Counseling Session";
+    
+    // Save to localStorage for admin dashboard & analytics tracking
+    const newBooking = {
+      id: "BK-" + Math.random().toString(36).substring(2, 7).toUpperCase(),
+      clientName: formData.name,
+      email: formData.email,
+      phone: "+254" + formData.phone,
+      serviceId: selectedService,
+      serviceName: sName,
+      date: selectedDate,
+      time: selectedTime,
+      status: "Pending",
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      if (typeof window !== "undefined") {
+        const existing = JSON.parse(localStorage.getItem("hope_admin_bookings") || "[]");
+        localStorage.setItem("hope_admin_bookings", JSON.stringify([newBooking, ...existing]));
+        window.dispatchEvent(new CustomEvent("hope:new-booking", { detail: newBooking }));
+      }
+    } catch (e) {
+      console.warn("Storage tracking error", e);
+    }
+
+    const text = `Hello Hope Counseling, I'd like to book a ${sName} session on ${selectedDate} (${selectedTime}). My name is ${formData.name}.`;
     window.open(`https://wa.me/254701279231?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -58,10 +96,10 @@ export default function BookingFlow() {
         {/* Header */}
         <div className="text-center mb-20">
           <h2 className="font-playfair text-3xl text-[#0d2b22] mb-4">
-            Schedule a Free Consultation
+            Schedule Your Session
           </h2>
           <p className="font-sans text-[13px] text-[#666] tracking-wide">
-            Your first session costs nothing. No pressure, no commitment.
+            Initial consultation is only KSh 300. Confidential, empathetic, and without judgment.
           </p>
         </div>
 
@@ -253,7 +291,7 @@ export default function BookingFlow() {
                 </div>
 
                 <div className="bg-[#f5f2ec]/50 p-6 rounded-2xl italic font-sans text-xs text-[#888] leading-relaxed">
-                  All consultations at Hope Counseling are strictly confidential. We adhere to clinical ethical standards to protect your privacy. By proceeding, you acknowledge that this is for non-emergency support. The first session is a free 45-minute alignment call.
+                  All consultations at Hope Counseling are strictly confidential. We adhere to clinical ethical standards to protect your privacy. By proceeding, you acknowledge that this is for non-emergency support.
                 </div>
 
                 <label className="flex items-center gap-3 cursor-pointer select-none group">

@@ -84,14 +84,6 @@ export default function MeetCounselor() {
                 </p>
               </blockquote>
 
-              <div className="pt-2">
-                <p className="font-sans text-[13px] text-[#444] flex items-center gap-3">
-                  <span>10+ Specializations</span>
-                  <span className="text-[#ccc]">•</span>
-                  <span>Free First Session</span>
-                </p>
-              </div>
-
               <div className="pt-4">
                 <a 
                   href="#book"

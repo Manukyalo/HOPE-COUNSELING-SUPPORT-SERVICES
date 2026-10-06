@@ -68,8 +68,8 @@ const sessionRates: SessionRate[] = [
     emoji: "🌱",
     title: "Initial Consultation",
     duration: "30 minutes",
-    price: 500,
-    priceLabel: "KSh 500",
+    price: 300,
+    priceLabel: "KSh 300",
     category: "session",
     badge: "Discovery",
     description: "A gentle introductory session to discuss your concerns, ask questions, and determine if our approach aligns with your needs.",
@@ -160,6 +160,20 @@ export default function RatesCard() {
   const buildWhatsAppLink = (serviceName: string, rate: string) => {
     const text = `Hello Hope Counseling, I would like to book the "${serviceName}" (${rate}). Could you share the next available dates?`;
     return `https://wa.me/254701279231?text=${encodeURIComponent(text)}`;
+  };
+
+  const handleBookNow = (serviceId: string) => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("hope:select-service", { detail: { serviceId } })
+      );
+      const bookElem = document.getElementById("book");
+      if (bookElem) {
+        bookElem.scrollIntoView({ behavior: "smooth" });
+      } else {
+        window.location.hash = "book";
+      }
+    }
   };
 
   return (
@@ -278,14 +292,23 @@ export default function RatesCard() {
                     </ul>
                   </div>
 
-                  <a
-                    href={buildWhatsAppLink(item.title, item.priceLabel)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full text-center py-2.5 px-4 rounded-xl border border-[#0d2b22]/15 text-[#0d2b22] hover:bg-[#0d2b22] hover:text-white font-sans text-xs font-medium tracking-wide transition-all duration-200"
-                  >
-                    Book This Session →
-                  </a>
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={() => handleBookNow(item.id)}
+                      className="flex-1 text-center py-2.5 px-3 rounded-xl bg-[#0d2b22] text-[#7ecab0] hover:bg-[#1a4a38] font-sans text-xs font-semibold tracking-wide transition-all duration-200 shadow-sm"
+                    >
+                      Book This Session →
+                    </button>
+                    <a
+                      href={buildWhatsAppLink(item.title, item.priceLabel)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Quick message on WhatsApp"
+                      className="py-2.5 px-3 rounded-xl border border-[#0d2b22]/15 text-[#0d2b22] hover:bg-[#0d2b22] hover:text-white text-xs transition-colors flex items-center justify-center"
+                    >
+                      💬
+                    </a>
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -425,18 +448,31 @@ export default function RatesCard() {
                     </ul>
                   </div>
 
-                  <a
-                    href={buildWhatsAppLink(pkg.title, pkg.priceLabel)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`w-full py-3.5 px-6 rounded-full font-sans text-xs font-semibold tracking-wider uppercase text-center transition-all duration-300 block ${
-                      pkg.popular
-                        ? "bg-[#7ecab0] text-[#0d2b22] hover:bg-[#a8e6cf] hover:shadow-lg hover:shadow-[#7ecab0]/20"
-                        : "bg-[#0d2b22] text-white hover:bg-[#1a4a38]"
-                    }`}
-                  >
-                    Choose Package →
-                  </a>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleBookNow(pkg.id)}
+                      className={`flex-1 py-3.5 px-5 rounded-full font-sans text-xs font-semibold tracking-wider uppercase text-center transition-all duration-300 ${
+                        pkg.popular
+                          ? "bg-[#7ecab0] text-[#0d2b22] hover:bg-[#a8e6cf] hover:shadow-lg hover:shadow-[#7ecab0]/20"
+                          : "bg-[#0d2b22] text-white hover:bg-[#1a4a38]"
+                      }`}
+                    >
+                      Select Package →
+                    </button>
+                    <a
+                      href={buildWhatsAppLink(pkg.title, pkg.priceLabel)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Quick question on WhatsApp"
+                      className={`px-4 rounded-full flex items-center justify-center transition-all ${
+                        pkg.popular
+                          ? "bg-white/10 text-white hover:bg-white/20"
+                          : "border border-black/15 text-[#0d2b22] hover:bg-[#f5f2ec]"
+                      }`}
+                    >
+                      💬
+                    </a>
+                  </div>
                 </motion.div>
               ))}
             </div>

@@ -32,7 +32,7 @@ export default function About() {
             </div>
 
             <p className="font-sans text-sm md:text-base text-[#666] leading-relaxed mb-12">
-              Based in Thika, Hope Counseling Support Services provides a sanctuary for mental healing and personal growth. We offer professional psychological support tailored to your unique journey, ensuring you feel seen, heard, and supported every step of the way.
+              Based in Nairobi, Kenya, Hope Counseling Support Services provides a sanctuary for mental healing and personal growth. We offer professional psychological support tailored to your unique journey, ensuring you feel seen, heard, and supported every step of the way.
             </p>
 
             <div className="mb-12 animate-fade-rise-delay-2">

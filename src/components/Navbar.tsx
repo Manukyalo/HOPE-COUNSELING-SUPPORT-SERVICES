@@ -161,7 +161,7 @@ export default function Navbar() {
 
             <div className="p-10 text-center border-t border-white/5">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#f5f2ec]/40 font-sans">
-                Thika, Kenya · Since 2024
+                Nairobi, Kenya · Since 2025
               </p>
             </div>
           </motion.div>

@@ -22,7 +22,7 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.1 }}
           >
             <span className="font-sans text-[10px] uppercase tracking-[0.15em] text-[#7ecab0] mb-4 block font-medium">
-              Thika, Kenya · Since 2024
+              Nairobi, Kenya · Since 2025
             </span>
             <h1 className="font-playfair text-4xl md:text-[52px] text-[#f5f2ec] leading-[1.15] mb-6">
               Your Mind Deserves <br />

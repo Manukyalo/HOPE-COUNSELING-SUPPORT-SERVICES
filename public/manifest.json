@@ -1,0 +1,26 @@
+{
+  "name": "Hope Counseling Support Services",
+  "short_name": "Hope Counseling",
+  "description": "Professional psychological counseling in Nairobi, Kenya.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9f7f4",
+  "theme_color": "#0d2b22",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/footer.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/footer.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "medical", "lifestyle"],
+  "lang": "en-KE"
+}

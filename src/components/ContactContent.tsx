@@ -186,7 +186,7 @@ export default function ContactContent() {
               {/* Location */}
               <div className="pl-6 border-l-2 border-[#7ecab0] space-y-1">
                 <span className="font-sans text-[10px] uppercase tracking-[0.15em] text-[#7ecab0] font-medium">Where we are</span>
-                <p className="block font-playfair text-xl md:text-2xl text-[#0d2b22]">Thika, Kiambu County, Kenya</p>
+                <p className="block font-playfair text-xl md:text-2xl text-[#0d2b22]">Nairobi, Kenya</p>
                 <p className="font-sans text-[12px] text-[#888]">Exact address shared on booking confirmation</p>
               </div>
 
@@ -232,14 +232,14 @@ export default function ContactContent() {
           <h2 className="font-playfair text-2xl text-[#0d2b22]">Find Us</h2>
           <div className="w-full h-[320px] rounded-[16px] overflow-hidden">
             <iframe
-              src="https://maps.google.com/maps?q=Thika,Kenya&output=embed"
+              src="https://maps.google.com/maps?q=Nairobi,Kenya&output=embed"
               width="100%"
               height="100%"
               style={{ border: 0 }}
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Hope Counseling Location - Thika"
+              title="Hope Counseling Location - Nairobi"
             ></iframe>
           </div>
         </div>

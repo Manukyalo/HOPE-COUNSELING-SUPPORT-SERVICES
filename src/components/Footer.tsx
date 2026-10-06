@@ -23,7 +23,7 @@ export default function Footer() {
           <div className="flex flex-col">
             <span className="font-playfair text-2xl mb-6">Hope Counseling</span>
             <p className="font-sans text-[11px] text-[#f5f2ec]/40 leading-relaxed max-w-[200px] uppercase tracking-wider">
-              © 2026 Hope Counseling Support Services. Professional psychological support in Thika, Kenya.
+              © 2025 Hope Counseling Support Services. Professional psychological support in Nairobi, Kenya.
             </p>
           </div>
 

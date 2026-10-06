@@ -18,7 +18,7 @@ const faqs = [
   },
   {
     question: "Do you offer online sessions?",
-    answer: "Yes. If you're not in Thika or prefer to speak from home, we offer sessions via video call. You'll need a stable internet connection and a private space where you can speak freely. Get in touch and we'll sort out the details."
+    answer: "Yes. If you're outside Nairobi or prefer to speak from home, we offer sessions via video call. You'll need a stable internet connection and a private space where you can speak freely. Get in touch and we'll sort out the details."
   },
   {
     question: "Do you work with teenagers?",
@@ -49,12 +49,12 @@ const faqs = [
 const testimonials = [
   {
     quote: "Hope Counseling changed how I navigate stress. The techniques are practical and the support is genuinely empathetic.",
-    author: "Quinter",
-    role: "Individual Client"
+    author: "Client",
+    role: "Individual Therapy Client"
   },
   {
     quote: "Our relationship sessions gave us the tools to communicate again. It's like we finally speak the same language.",
-    author: "Asnath",
+    author: "Client",
     role: "Relationship Counseling"
   }
 ];

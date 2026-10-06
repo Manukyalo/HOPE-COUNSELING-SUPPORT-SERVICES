@@ -6,7 +6,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import MobileStickyCTA from "@/components/MobileStickyCTA";
-import SafeSpaceChat from "@/components/SafeSpaceChat";
 
 const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
@@ -35,14 +34,24 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://hope-counseling-support-services.vercel.app"),
-  title: "Hope Counseling Support Services | Thika, Kenya",
-  description: "Professional psychological counseling in Thika, Kenya. Specializing in stress, anxiety, relationships, youth mentorship, and emotional support.",
+  title: "Hope Counseling Support Services | Nairobi, Kenya",
+  description: "Professional psychological counseling in Nairobi, Kenya. Specializing in stress, anxiety, relationships, youth mentorship, and emotional support.",
+  manifest: "/manifest.json",
   robots: {
     index: true,
     follow: true,
   },
   alternates: {
     canonical: "/",
+  },
+  openGraph: {
+    title: "Hope Counseling Support Services | Nairobi, Kenya",
+    description: "A safe, empathetic space for healing and growth. Book a session today.",
+    url: "https://hope-counseling-support-services.vercel.app",
+    siteName: "Hope Counseling Support Services",
+    images: ["/footer.jpeg"],
+    locale: "en_KE",
+    type: "website",
   },
 };
 
@@ -57,7 +66,6 @@ export default function RootLayout({
         <Navbar />
         {children}
         <WhatsAppButton />
-        <SafeSpaceChat />
         <MobileStickyCTA />
         <Footer />
         <Analytics />
