@@ -67,11 +67,11 @@ export default function BookingFlow() {
       clientName: formData.name,
       email: formData.email,
       phone: "+254" + formData.phone,
-      serviceId: selectedService,
+      serviceId: selectedService || "general",
       serviceName: sName,
       date: selectedDate,
       time: selectedTime,
-      status: "Pending",
+      status: "Pending" as const,
       createdAt: new Date().toISOString(),
     };
 
@@ -80,6 +80,18 @@ export default function BookingFlow() {
         const existing = JSON.parse(localStorage.getItem("hope_admin_bookings") || "[]");
         localStorage.setItem("hope_admin_bookings", JSON.stringify([newBooking, ...existing]));
         window.dispatchEvent(new CustomEvent("hope:new-booking", { detail: newBooking }));
+        
+        // Broadcast across tabs/windows
+        if ("BroadcastChannel" in window) {
+          const channel = new BroadcastChannel("hope_admin_channel");
+          channel.postMessage({ type: "NEW_BOOKING", booking: newBooking });
+          channel.close();
+        }
+
+        // Fire native system notification if granted on this device
+        import("@/lib/pwa-notifications").then(({ sendBookingNotification }) => {
+          sendBookingNotification(newBooking);
+        });
       }
     } catch (e) {
       console.warn("Storage tracking error", e);

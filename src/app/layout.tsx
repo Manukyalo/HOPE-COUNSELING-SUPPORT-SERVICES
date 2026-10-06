@@ -1,4 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+
+export const viewport: Viewport = {
+  themeColor: "#0d2b22",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 import { Instrument_Serif, Inter, Playfair_Display, DM_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
@@ -44,16 +51,28 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   openGraph: {
     title: "Hope Counseling Support Services | Nairobi, Kenya",
     description: "A safe, empathetic space for healing and growth. Book a session today.",
     url: "https://hope-counseling-support-services.vercel.app",
     siteName: "Hope Counseling Support Services",
-    images: ["/footer.jpeg"],
+    images: ["/icons/icon-512.png"],
     locale: "en_KE",
     type: "website",
   },
 };
+
+import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 
 export default function RootLayout({
   children,
@@ -68,6 +87,7 @@ export default function RootLayout({
         <WhatsAppButton />
         <MobileStickyCTA />
         <Footer />
+        <PwaInstallPrompt />
         <Analytics />
       </body>
     </html>
