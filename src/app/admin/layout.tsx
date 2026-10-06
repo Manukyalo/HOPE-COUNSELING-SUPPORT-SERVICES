@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import AdminPWARegister from "@/components/AdminPWARegister";
 
 export const metadata: Metadata = {
   title: "Practitioner Portal | Hope Counseling Support Services",
@@ -12,10 +13,15 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   manifest: "/admin-manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "HC Admin",
+  },
 };
 
 export const viewport = {
-  themeColor: "#0a221b",
+  themeColor: "#071a14",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -23,5 +29,10 @@ export const viewport = {
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen bg-[#071a14] text-white selection:bg-[#7ecab0] selection:text-[#071a14]">{children}</div>;
+  return (
+    <div className="min-h-screen bg-[#071a14] text-white selection:bg-[#7ecab0] selection:text-[#071a14]">
+      <AdminPWARegister />
+      {children}
+    </div>
+  );
 }

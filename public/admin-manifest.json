@@ -4,7 +4,7 @@
   "short_name": "HC Admin",
   "description": "Confidential clinical portal and session management workspace for Hope Counseling Support Services.",
   "start_url": "/admin",
-  "scope": "/admin",
+  "scope": "/admin/",
   "display": "standalone",
   "background_color": "#071a14",
   "theme_color": "#071a14",
