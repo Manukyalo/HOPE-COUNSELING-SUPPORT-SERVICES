@@ -11,7 +11,7 @@ export default function ApproachContent() {
       <section className="relative h-[60vh] flex items-center justify-center overflow-hidden bg-[#0d2b22]">
         <div className="absolute inset-0 z-0 opacity-40">
           <Image
-            src="/ma.jpeg"
+            src="/footer.jpeg"
             alt="Our Approach"
             fill
             className="object-cover"
@@ -78,7 +78,7 @@ export default function ApproachContent() {
             >
               <div className="aspect-[4/5] rounded-[30px] overflow-hidden shadow-2xl relative z-10 grayscale-[0.2]">
                 <Image
-                  src="/ma.jpeg"
+                  src="/footer.jpeg"
                   alt="Collaboration"
                   fill
                   className="object-cover"

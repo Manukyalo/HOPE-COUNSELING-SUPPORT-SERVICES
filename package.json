@@ -15,6 +15,7 @@
     "@21st-sdk/agent": "^0.0.16",
     "@ai-sdk/anthropic": "^3.0.68",
     "@ai-sdk/react": "^3.0.156",
+    "@vercel/analytics": "^2.0.1",
     "ai": "^6.0.154",
     "clsx": "^2.1.1",
     "framer-motion": "^11.18.2",

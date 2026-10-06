@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: "Our Approach to Healing | Hope Counseling",
     description: "Empathy-first counseling built on trust, science, and genuine human connection. Based in Thika, Kenya.",
     url: "https://hope-counseling-support-services.vercel.app/approach",
-    images: ["/ma.jpeg"],
+    images: ["/footer.jpeg"],
   },
   alternates: {
     canonical: "/approach",

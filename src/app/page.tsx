@@ -1,5 +1,7 @@
 import CinematicHero from "@/components/CinematicHero";
 import Services from "@/components/Services";
+import RatesCard from "@/components/RatesCard";
+import ClientExperiences from "@/components/ClientExperiences";
 import BookingFlow from "@/components/BookingFlow";
 import About from "@/components/About";
 import MeetCounselor from "@/components/MeetCounselor";
@@ -18,7 +20,7 @@ export const metadata: Metadata = {
     siteName: "Hope Counseling",
     images: [
       {
-        url: "/ma.jpeg",
+        url: "/footer.jpeg",
         width: 1200,
         height: 630,
         alt: "Hope Counseling Support Services",
@@ -31,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Hope Counseling Support Services",
     description: "Professional mental wellness counseling in Thika, Kenya.",
-    images: ["/ma.jpeg"],
+    images: ["/footer.jpeg"],
   },
 };
 
@@ -71,6 +73,10 @@ export default function Home() {
       <MeetCounselor />
 
       <Services />
+
+      <RatesCard />
+
+      <ClientExperiences />
 
       <ExtraFeatures />
 

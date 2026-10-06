@@ -86,11 +86,12 @@ export default function CinematicHero() {
           Hope Counseling<sup className="text-[10px] ml-0.5 opacity-60">®</sup>
         </Link>
         
-        <div className="hidden md:flex items-center gap-10 font-inter text-[13px] tracking-wide uppercase">
+        <div className="hidden md:flex items-center gap-8 font-inter text-[13px] tracking-wide uppercase">
           <Link href="/" className="text-white hover:opacity-70 transition-opacity">Home</Link>
           <Link href="/#services" className="text-white/60 hover:text-[#7ecab0] transition-colors">Services</Link>
+          <Link href="/#rates" className="text-white/60 hover:text-[#7ecab0] transition-colors">Rates Card</Link>
+          <Link href="/#feedback" className="text-white/60 hover:text-[#7ecab0] transition-colors">Experiences</Link>
           <Link href="/approach" className="text-white/60 hover:text-[#7ecab0] transition-colors">Approach</Link>
-          <Link href="/about" className="text-white/60 hover:text-[#7ecab0] transition-colors">About</Link>
           <Link href="/contact" className="text-white/60 hover:text-[#7ecab0] transition-colors">Reach Us</Link>
         </div>
 

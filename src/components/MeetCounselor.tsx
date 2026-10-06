@@ -23,7 +23,7 @@ export default function MeetCounselor() {
               
               <div className="relative z-10 aspect-[3/4] w-[320px] md:w-[380px] lg:w-full rounded-[18px] overflow-hidden grayscale-[0.1] hover:grayscale-0 transition-all duration-700">
                 <Image
-                  src="/ma.jpeg"
+                  src="/footer.jpeg"
                   alt="Maryann Wangari"
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"

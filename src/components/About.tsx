@@ -62,7 +62,7 @@ export default function About() {
           >
             <div className="aspect-[4/5] rounded-[20px] overflow-hidden shadow-2xl relative z-10">
               <Image
-                src="/ma.jpeg"
+                src="/footer.jpeg"
                 alt="Hope Counseling Support Services"
                 fill
                 className="object-cover"

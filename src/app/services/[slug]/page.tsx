@@ -185,7 +185,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
         openGraph: {
             title: seo?.title,
             description: seo?.description,
-            images: ["/ma.jpeg"],
+            images: ["/footer.jpeg"],
             url: `https://hope-counseling-support-services.vercel.app/services/${params.slug}`,
         }
     };

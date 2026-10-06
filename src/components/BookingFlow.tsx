@@ -4,11 +4,14 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const services = [
-  { id: "stress", name: "Stress & Anxiety", sub: "For when the pressure feels unmanageable" },
-  { id: "relationship", name: "Relationship Counseling", sub: "For couples or individuals navigating conflict" },
-  { id: "youth", name: "Youth Mentorship", sub: "For teenagers and young adults finding their footing" },
-  { id: "academic", name: "Academic Guidance", sub: "For students feeling overwhelmed or directionless" },
-  { id: "emotional", name: "Emotional Support", sub: "For those who just need to be heard" },
+  { id: "individual", name: "Individual Counselling — KSh 1,000", sub: "50–60 min · One-on-one personalized therapy & stress care" },
+  { id: "online", name: "Online Counselling — KSh 800", sub: "50–60 min · Confidential remote video or voice session" },
+  { id: "student", name: "Student & Young Adult Support — KSh 700", sub: "50–60 min · Subsidized rate for academic pressure & growth" },
+  { id: "couples", name: "Couples / Relationship Counselling — KSh 1,500", sub: "60 min · Rebuilding communication & mutual understanding" },
+  { id: "initial", name: "Initial Consultation — KSh 500", sub: "30 min · Gentle discovery session to explore your needs" },
+  { id: "student-pkg", name: "Student Wellness Package — KSh 2,500", sub: "4 sessions · Complete student support (Save KSh 300)" },
+  { id: "personal-pkg", name: "Personal Growth Package — KSh 3,600", sub: "4 sessions · Dedicated weekly personal development (Save KSh 400)" },
+  { id: "extended-pkg", name: "Extended Support Package — KSh 5,000", sub: "6 sessions · Comprehensive ongoing journey (Save KSh 1,000)" },
 ];
 
 const timeRefs = ["Morning", "Afternoon", "Evening"];

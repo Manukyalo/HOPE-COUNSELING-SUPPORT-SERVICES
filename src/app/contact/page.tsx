@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Contact Us | Hope Counseling Support Services",
         description: "Get in touch for professional counseling in Thika, Kenya.",
-        images: ["/ma.jpeg"],
+        images: ["/footer.jpeg"],
         url: "https://hope-counseling-support-services.vercel.app/contact",
     }
 };

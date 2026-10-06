@@ -46,6 +46,18 @@ export default function Navbar() {
                 Services
               </Link>
               <Link
+                href="/#rates"
+                className="font-sans text-[11px] uppercase tracking-[0.05em] text-[#f5f2ec]/60 transition-colors hover:text-[#7ecab0]"
+              >
+                Rates Card
+              </Link>
+              <Link
+                href="/#feedback"
+                className="font-sans text-[11px] uppercase tracking-[0.05em] text-[#f5f2ec]/60 transition-colors hover:text-[#7ecab0]"
+              >
+                Experiences
+              </Link>
+              <Link
                 href="/approach"
                 className="font-sans text-[11px] uppercase tracking-[0.05em] text-[#f5f2ec]/60 transition-colors hover:text-[#7ecab0]"
               >
@@ -109,6 +121,20 @@ export default function Navbar() {
                 className="font-playfair text-3xl text-[#f5f2ec]"
               >
                 Services
+              </Link>
+              <Link
+                href="/#rates"
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-playfair text-3xl text-[#f5f2ec]"
+              >
+                Rates Card
+              </Link>
+              <Link
+                href="/#feedback"
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-playfair text-3xl text-[#f5f2ec]"
+              >
+                Experiences
               </Link>
               <Link
                 href="/approach"

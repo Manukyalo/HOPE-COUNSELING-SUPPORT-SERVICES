@@ -34,6 +34,8 @@ export default function Footer() {
               <ul className="space-y-3 font-sans text-xs uppercase tracking-widest text-[#f5f2ec]/60">
                 <li><Link href="/#about" className="hover:text-[#7ecab0] transition-colors">About</Link></li>
                 <li><Link href="/#services" className="hover:text-[#7ecab0] transition-colors">Services</Link></li>
+                <li><Link href="/#rates" className="hover:text-[#7ecab0] transition-colors">Rates Card</Link></li>
+                <li><Link href="/#feedback" className="hover:text-[#7ecab0] transition-colors">Client Experiences</Link></li>
                 <li><Link href="/approach" className="hover:text-[#7ecab0] transition-colors">Approach</Link></li>
                 <li><Link href="/contact" className="hover:text-[#7ecab0] transition-colors">Contact</Link></li>
                 <li><Link href="/#book" className="hover:text-[#7ecab0] transition-colors">Booking</Link></li>

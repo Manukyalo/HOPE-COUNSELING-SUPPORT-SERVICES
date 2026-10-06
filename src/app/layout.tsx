@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Instrument_Serif, Inter, Playfair_Display, DM_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -59,7 +60,8 @@ export default function RootLayout({
         <SafeSpaceChat />
         <MobileStickyCTA />
         <Footer />
+        <Analytics />
       </body>
     </html>
-);
+  );
 }

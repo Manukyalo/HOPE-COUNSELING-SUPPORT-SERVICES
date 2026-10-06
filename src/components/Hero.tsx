@@ -57,7 +57,7 @@ export default function Hero() {
             className="absolute inset-0 z-0"
           >
             <Image
-              src="/ma.jpeg"
+              src="/footer.jpeg"
               alt="Hope Counseling Session"
               fill
               className="object-cover saturate-[0.7] rounded-l-[40px] md:rounded-l-none"
