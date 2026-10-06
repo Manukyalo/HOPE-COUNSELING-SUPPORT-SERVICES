@@ -8,7 +8,7 @@ import {
   DeliveryMode,
 } from "@/types/booking";
 import { DEFAULT_AVAILABILITY_RULES, SERVICE_DETAILS, TIMEZONE_EAT } from "./booking-constants";
-import { getAdminDb } from "./firebase-admin";
+import { getAdminDb, hasAdminCredentials } from "./firebase-admin";
 import { QueryDocumentSnapshot, Transaction, DocumentSnapshot, DocumentData } from "firebase-admin/firestore";
 import crypto from "crypto";
 
@@ -65,9 +65,20 @@ export function getEatDayOfWeek(dateStr: string): number {
 }
 
 /**
+ * Determines whether the counselor has active bookable weekly hours configured.
+ */
+export function isScheduleConfigured(rules: AvailabilityRules): boolean {
+  if (!rules || !rules.weeklySchedule) return false;
+  return Object.values(rules.weeklySchedule).some((day) => day && day.enabled);
+}
+
+/**
  * Loads current availability rules from Firestore, or returns defaults
  */
 export async function getAvailabilityRules(): Promise<AvailabilityRules> {
+  if (!hasAdminCredentials()) {
+    return DEFAULT_AVAILABILITY_RULES;
+  }
   try {
     const db = getAdminDb();
     const docSnap = await db.collection(RULES_COLLECTION).doc("primary").get();
@@ -84,6 +95,9 @@ export async function getAvailabilityRules(): Promise<AvailabilityRules> {
  * Loads all blocked dates from Firestore
  */
 export async function getBlockedDates(): Promise<BlockedDate[]> {
+  if (!hasAdminCredentials()) {
+    return [];
+  }
   try {
     const db = getAdminDb();
     const snap = await db.collection(BLOCKED_DATES_COLLECTION).get();
@@ -204,19 +218,19 @@ export function generateDayRawSlots(
  */
 export async function getMonthAvailability(
   yearMonth: string // "YYYY-MM"
-): Promise<Record<string, DayAvailabilitySummary>> {
+): Promise<{ availability: Record<string, DayAvailabilitySummary>; isConfigured: boolean }> {
   const rules = await getAvailabilityRules();
+  const isConfigured = isScheduleConfigured(rules);
   const blockedDates = await getBlockedDates();
 
   const [year, month] = yearMonth.split("-").map(Number);
   const now = new Date();
-  const todayEatStr = formatToEatDateString(now);
 
-  // Min advance cut-off
+  // Min advance cut-off (e.g. 12 hours)
   const minAdvanceMillis = (rules.minAdvanceHours || 12) * 60 * 60 * 1000;
   const earliestBookableUtc = new Date(now.getTime() + minAdvanceMillis);
 
-  // Max advance cut-off
+  // Max advance cut-off (e.g. 60 days)
   const maxAdvanceMillis = (rules.bookingWindowDays || 60) * 24 * 60 * 60 * 1000;
   const latestBookableUtc = new Date(now.getTime() + maxAdvanceMillis);
 
@@ -224,31 +238,33 @@ export async function getMonthAvailability(
   const lastDayOfMonth = new Date(year, month, 0).getDate();
   const results: Record<string, DayAvailabilitySummary> = {};
 
-  // Fetch taken slots for this month from DB
+  // Fetch taken slots for this month from DB (if credentials available)
   const monthStartUtc = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0)).toISOString();
   const monthEndUtc = new Date(Date.UTC(year, month, 1, 23, 59, 59)).toISOString();
 
   const takenSlotsMap = new Set<string>();
 
-  try {
-    const db = getAdminDb();
-    const slotsSnap = await db
-      .collection(SLOTS_COLLECTION)
-      .where("startUtc", ">=", monthStartUtc)
-      .where("startUtc", "<=", monthEndUtc)
-      .get();
+  if (hasAdminCredentials()) {
+    try {
+      const db = getAdminDb();
+      const slotsSnap = await db
+        .collection(SLOTS_COLLECTION)
+        .where("startUtc", ">=", monthStartUtc)
+        .where("startUtc", "<=", monthEndUtc)
+        .get();
 
-    const nowIso = now.toISOString();
-    slotsSnap.docs.forEach((doc: QueryDocumentSnapshot) => {
-      const data = doc.data();
-      if (data.status === "active") {
-        takenSlotsMap.add(doc.id);
-      } else if (data.status === "held" && data.holdExpiresAt && data.holdExpiresAt > nowIso) {
-        takenSlotsMap.add(doc.id);
-      }
-    });
-  } catch (err) {
-    console.warn("[booking-engine] Error querying active slots:", err);
+      const nowIso = now.toISOString();
+      slotsSnap.docs.forEach((doc: QueryDocumentSnapshot) => {
+        const data = doc.data();
+        if (data.status === "active") {
+          takenSlotsMap.add(doc.id);
+        } else if (data.status === "held" && data.holdExpiresAt && data.holdExpiresAt > nowIso) {
+          takenSlotsMap.add(doc.id);
+        }
+      });
+    } catch (err) {
+      console.warn("[booking-engine] Error querying active slots:", err);
+    }
   }
 
   for (let day = 1; day <= lastDayOfMonth; day++) {
@@ -265,39 +281,48 @@ export async function getMonthAvailability(
       continue;
     }
 
-    // Filter slots based on booking window & taken state
     let availableCount = 0;
-    const totalSlotsCount = rawSlots.length;
+    let bookedCount = 0;
+    let windowSlotsCount = 0;
 
     for (const slot of rawSlots) {
       const slotDate = new Date(slot.startUtc);
-      // If before earliest advance or past max window
+      // Filter slots outside the allowable booking window
       if (slotDate < earliestBookableUtc || slotDate > latestBookableUtc) {
         continue;
       }
 
+      windowSlotsCount++;
       const deterministicSlotId = `${rules.counselorId}_${slot.startUtc}`;
-      if (!takenSlotsMap.has(deterministicSlotId)) {
+      if (takenSlotsMap.has(deterministicSlotId)) {
+        bookedCount++;
+      } else {
         availableCount++;
       }
     }
 
     let status: DayAvailabilitySummary["status"] = "available";
-    if (availableCount === 0) {
+    if (windowSlotsCount === 0) {
+      // All slots on this day are in the past or beyond the 60-day window
+      status = "unavailable";
+    } else if (availableCount === 0) {
+      // Slots existed in window, but ALL of them are booked
       status = "fully_booked";
     } else if (availableCount <= 2) {
       status = "limited";
+    } else {
+      status = "available";
     }
 
     results[dateStr] = {
       date: dateStr,
       status,
       availableSlotsCount: availableCount,
-      totalSlotsCount,
+      totalSlotsCount: windowSlotsCount,
     };
   }
 
-  return results;
+  return { availability: results, isConfigured };
 }
 
 /**
@@ -319,50 +344,53 @@ export async function getDaySlots(dateStr: string): Promise<PublicSlotSummary[]>
   const maxAdvanceMillis = (rules.bookingWindowDays || 60) * 24 * 60 * 60 * 1000;
   const latestBookableUtc = new Date(now.getTime() + maxAdvanceMillis);
 
-  // Fetch active slots for this day from DB
+  // Fetch active slots for this day from DB (if credentials available)
   const startOfDayUtc = new Date(parseEatDate(dateStr).getTime() - 4 * 3600 * 1000).toISOString();
   const endOfDayUtc = new Date(parseEatDate(dateStr).getTime() + 32 * 3600 * 1000).toISOString();
 
   const takenSlotsMap = new Set<string>();
 
-  try {
-    const db = getAdminDb();
-    const slotsSnap = await db
-      .collection(SLOTS_COLLECTION)
-      .where("startUtc", ">=", startOfDayUtc)
-      .where("startUtc", "<=", endOfDayUtc)
-      .get();
+  if (hasAdminCredentials()) {
+    try {
+      const db = getAdminDb();
+      const slotsSnap = await db
+        .collection(SLOTS_COLLECTION)
+        .where("startUtc", ">=", startOfDayUtc)
+        .where("startUtc", "<=", endOfDayUtc)
+        .get();
 
-    const nowIso = now.toISOString();
-    slotsSnap.docs.forEach((doc: QueryDocumentSnapshot) => {
-      const data = doc.data();
-      if (data.status === "active") {
-        takenSlotsMap.add(doc.id);
-      } else if (data.status === "held" && data.holdExpiresAt && data.holdExpiresAt > nowIso) {
-        takenSlotsMap.add(doc.id);
-      }
-    });
-  } catch (err) {
-    console.warn("[booking-engine] Error querying day active slots:", err);
+      const nowIso = now.toISOString();
+      slotsSnap.docs.forEach((doc: QueryDocumentSnapshot) => {
+        const data = doc.data();
+        if (data.status === "active") {
+          takenSlotsMap.add(doc.id);
+        } else if (data.status === "held" && data.holdExpiresAt && data.holdExpiresAt > nowIso) {
+          takenSlotsMap.add(doc.id);
+        }
+      });
+    } catch (err) {
+      console.warn("[booking-engine] Error querying day active slots:", err);
+    }
   }
 
-  return rawSlots.map((slot) => {
-    const slotDate = new Date(slot.startUtc);
-    const deterministicSlotId = `${rules.counselorId}_${slot.startUtc}`;
+  return rawSlots
+    .filter((slot) => {
+      const slotDate = new Date(slot.startUtc);
+      return slotDate >= earliestBookableUtc && slotDate <= latestBookableUtc;
+    })
+    .map((slot) => {
+      const deterministicSlotId = `${rules.counselorId}_${slot.startUtc}`;
+      const isAlreadyBooked = takenSlotsMap.has(deterministicSlotId);
 
-    const isPastWindow = slotDate < earliestBookableUtc || slotDate > latestBookableUtc;
-    const isAlreadyBooked = takenSlotsMap.has(deterministicSlotId);
-    const isAvailable = !isPastWindow && !isAlreadyBooked;
-
-    return {
-      slotId: deterministicSlotId,
-      startUtc: slot.startUtc,
-      endUtc: slot.endUtc,
-      timeFormatted: slot.timeFormatted,
-      isAvailable,
-      remainingCapacity: isAvailable ? 1 : 0,
-    };
-  });
+      return {
+        slotId: deterministicSlotId,
+        startUtc: slot.startUtc,
+        endUtc: slot.endUtc,
+        timeFormatted: slot.timeFormatted,
+        isAvailable: !isAlreadyBooked,
+        remainingCapacity: !isAlreadyBooked ? 1 : 0,
+      };
+    });
 }
 
 /**

@@ -26,6 +26,8 @@ export default function BookingFlow() {
   // Availability map from server
   const [availabilityMap, setAvailabilityMap] = useState<Record<string, DayAvailabilitySummary>>({});
   const [calendarLoading, setCalendarLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
 
   // Selection states
   const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null);
@@ -38,26 +40,35 @@ export default function BookingFlow() {
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingResult, setBookingResult] = useState<BookingCreationResult | null>(null);
 
-  // Compute min and max bookable dates in EAT
+  // Compute min and max bookable dates in EAT (Africa/Nairobi)
   const { minDateStr, maxDateStr } = useMemo(() => {
     const now = new Date();
-    // Min date: tomorrow in EAT
-    const tomorrow = new Date(now.getTime() + 24 * 3600 * 1000);
+    // Today in East Africa Time
+    const todayEatStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Nairobi",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(now);
+    const [y, m, d] = todayEatStr.split("-").map(Number);
+
+    // Min date: Tomorrow in EAT
+    const tomorrowEat = new Date(Date.UTC(y, m - 1, d + 1, 12, 0, 0));
     const minStr = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Africa/Nairobi",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-    }).format(tomorrow);
+    }).format(tomorrowEat);
 
-    // Max date: 60 days ahead
-    const maxDate = new Date(now.getTime() + 60 * 24 * 3600 * 1000);
+    // Max date: 60 days ahead in EAT
+    const maxEat = new Date(Date.UTC(y, m - 1, d + 60, 12, 0, 0));
     const maxStr = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Africa/Nairobi",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-    }).format(maxDate);
+    }).format(maxEat);
 
     return { minDateStr: minStr, maxDateStr: maxStr };
   }, []);
@@ -73,6 +84,7 @@ export default function BookingFlow() {
   // Fetch month availability from server route
   const fetchMonthAvailability = useCallback(async (year: number, month: number) => {
     setCalendarLoading(true);
+    setFetchError(null);
     try {
       const monthStr1 = `${year}-${String(month).padStart(2, "0")}`;
       const nextM = month === 12 ? 1 : month + 1;
@@ -84,8 +96,15 @@ export default function BookingFlow() {
         fetch(`/api/booking/availability?month=${monthStr2}`),
       ]);
 
+      if (!res1.ok || !res2.ok) {
+        throw new Error("Unable to load appointment schedule");
+      }
+
       const data1 = await res1.json();
       const data2 = await res2.json();
+
+      const configured = (data1.isConfigured !== false) && (data2.isConfigured !== false);
+      setIsConfigured(configured);
 
       setAvailabilityMap((prev) => ({
         ...prev,
@@ -94,6 +113,7 @@ export default function BookingFlow() {
       }));
     } catch (e) {
       console.error("[BookingFlow] Error fetching availability:", e);
+      setFetchError("We couldn't load available dates. Please check your internet connection and try again.");
     } finally {
       setCalendarLoading(false);
     }
@@ -289,6 +309,63 @@ export default function BookingFlow() {
                     <Loader2 className="w-8 h-8 text-[#7ecab0] animate-spin" />
                     <p className="font-sans text-xs text-[#888]">Loading calendar availability...</p>
                   </div>
+                ) : fetchError && Object.keys(availabilityMap).length === 0 ? (
+                  <div className="py-14 px-6 text-center bg-white rounded-2xl border border-rose-100 p-8 shadow-xs max-w-lg mx-auto">
+                    <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center mx-auto mb-3 text-rose-500">
+                      <AlertCircle className="w-6 h-6" />
+                    </div>
+                    <h4 className="font-playfair text-lg font-semibold text-[#0d2b22]">
+                      We couldn&apos;t load available dates
+                    </h4>
+                    <p className="font-sans text-xs text-[#666] mt-1.5 max-w-sm mx-auto leading-relaxed">
+                      {fetchError}
+                    </p>
+                    <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => fetchMonthAvailability(currentYear, currentMonth)}
+                        className="px-6 py-2.5 rounded-full bg-[#0d2b22] text-[#7ecab0] hover:bg-[#1a4a38] text-xs font-sans uppercase tracking-wider font-semibold transition-all shadow-sm"
+                      >
+                        Retry
+                      </button>
+                      <a
+                        href="https://wa.me/254701279231?text=Hello%20Hope%20Counseling,%20I%20would%20like%20to%20book%20a%20therapy%20session."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-6 py-2.5 rounded-full border border-black/15 text-[#0d2b22] hover:bg-black/5 text-xs font-sans uppercase tracking-wider font-medium transition-all"
+                      >
+                        Book via WhatsApp
+                      </a>
+                    </div>
+                  </div>
+                ) : isConfigured === false ? (
+                  <div className="py-14 px-6 text-center bg-white rounded-2xl border border-black/[0.06] p-8 shadow-xs max-w-lg mx-auto">
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-3 text-[#0d2b22]">
+                      <CalendarIcon className="w-6 h-6 text-[#7ecab0]" />
+                    </div>
+                    <h4 className="font-playfair text-xl font-semibold text-[#0d2b22]">
+                      Online booking opens soon, please contact us
+                    </h4>
+                    <p className="font-sans text-xs text-[#666] mt-2 max-w-sm mx-auto leading-relaxed">
+                      Our practitioner availability schedule is currently being finalized. For immediate confidential appointment scheduling or urgent inquiries, please contact our clinical desk directly.
+                    </p>
+                    <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                      <a
+                        href="https://wa.me/254701279231?text=Hello%20Hope%20Counseling,%20I%20would%20like%20to%20schedule%20a%20counseling%20session."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-6 py-2.5 rounded-full bg-[#0d2b22] text-[#7ecab0] hover:bg-[#1a4a38] text-xs font-sans uppercase tracking-wider font-semibold transition-all shadow-sm"
+                      >
+                        Chat on WhatsApp
+                      </a>
+                      <a
+                        href="tel:+254701279231"
+                        className="px-6 py-2.5 rounded-full border border-black/15 text-[#0d2b22] hover:bg-black/5 text-xs font-sans uppercase tracking-wider font-medium transition-all"
+                      >
+                        Call +254 701 279 231
+                      </a>
+                    </div>
+                  </div>
                 ) : (
                   <>
                     {/* Desktop: Two Months Side-by-Side */}
@@ -334,26 +411,6 @@ export default function BookingFlow() {
                         minDateStr={minDateStr}
                         maxDateStr={maxDateStr}
                       />
-                    </div>
-
-                    {/* Calendar Legend */}
-                    <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-3 text-[11px] font-sans text-[#666]">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                        <span>Available</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                        <span>Few Slots Left</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs line-through text-[#aaa] font-semibold">15</span>
-                        <span>Fully Booked / Closed</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-md bg-[#0d2b22] ring-1 ring-[#7ecab0]" />
-                        <span>Selected</span>
-                      </div>
                     </div>
                   </>
                 )}

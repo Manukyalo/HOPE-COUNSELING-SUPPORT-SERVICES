@@ -2,14 +2,9 @@ import { App, getApps, initializeApp, cert, ServiceAccount } from "firebase-admi
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 import { getAuth, Auth } from "firebase-admin/auth";
 
-/**
- * Lazy initialization of Firebase Admin SDK.
- * CRITICAL: Environment variables are read only when getAdminDb() or getAdminAuth()
- * is called at request time — never at module evaluation time.
- * This guarantees Next.js build-time page rendering will never fail.
- */
-
 let adminApp: App | null = null;
+let adminDb: Firestore | null = null;
+let adminAuth: Auth | null = null;
 
 function getServiceAccount(): ServiceAccount | null {
   const jsonKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
@@ -34,7 +29,6 @@ function getServiceAccount(): ServiceAccount | null {
   let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
   if (projectId && clientEmail && privateKey) {
-    // Convert escaped newlines
     if (privateKey.includes("\\n")) {
       privateKey = privateKey.replace(/\\n/g, "\n");
     }
@@ -46,6 +40,18 @@ function getServiceAccount(): ServiceAccount | null {
   }
 
   return null;
+}
+
+/**
+ * Indicates if explicit service account credentials have been configured.
+ * When false, avoids long ADC metadata lookup timeouts.
+ */
+export function hasAdminCredentials(): boolean {
+  return (
+    getServiceAccount() !== null ||
+    process.env.FIREBASE_AUTH_EMULATOR_HOST !== undefined ||
+    process.env.FIRESTORE_EMULATOR_HOST !== undefined
+  );
 }
 
 export function getAdminApp(): App {
@@ -70,7 +76,6 @@ export function getAdminApp(): App {
       projectId,
     });
   } else {
-    // Initialized with project ID (works if ADC / emulator / ambient credentials present)
     adminApp = initializeApp({
       projectId,
     });
@@ -80,14 +85,21 @@ export function getAdminApp(): App {
 }
 
 export function getAdminDb(): Firestore {
+  if (adminDb) return adminDb;
+
   const app = getAdminApp();
-  const db = getFirestore(app);
-  // Ensure timestamps are correctly handled
-  db.settings({ ignoreUndefinedProperties: true });
-  return db;
+  adminDb = getFirestore(app);
+  try {
+    adminDb.settings({ ignoreUndefinedProperties: true });
+  } catch {
+    // Ignore if already configured
+  }
+  return adminDb;
 }
 
 export function getAdminAuth(): Auth {
+  if (adminAuth) return adminAuth;
   const app = getAdminApp();
-  return getAuth(app);
+  adminAuth = getAuth(app);
+  return adminAuth;
 }

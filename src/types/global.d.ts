@@ -53,6 +53,8 @@ declare module 'next/navigation' {
     export function usePathname(): any;
     export function useSearchParams(): any;
     export function notFound(): never;
+    export function redirect(url: string, type?: any): never;
+    export function permanentRedirect(url: string, type?: any): never;
 }
 
 // Global process definition for the IDE

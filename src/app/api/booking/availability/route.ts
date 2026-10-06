@@ -27,8 +27,8 @@ export async function GET(req: NextRequest) {
           { status: 400 }
         );
       }
-      const availability = await getMonthAvailability(month);
-      return NextResponse.json({ success: true, month, availability });
+      const { availability, isConfigured } = await getMonthAvailability(month);
+      return NextResponse.json({ success: true, month, availability, isConfigured });
     }
 
     // Default: return current and next month availability
@@ -44,9 +44,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      isConfigured: currentMonthData.isConfigured || nextMonthData.isConfigured,
       months: {
-        [currentMonth]: currentMonthData,
-        [nextMonth]: nextMonthData,
+        [currentMonth]: currentMonthData.availability,
+        [nextMonth]: nextMonthData.availability,
       },
     });
   } catch (err: unknown) {

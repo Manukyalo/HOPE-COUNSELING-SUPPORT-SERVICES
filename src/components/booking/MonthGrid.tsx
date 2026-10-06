@@ -118,18 +118,21 @@ export default function MonthGrid({
           const isToday = todayStr === dateStr;
 
           const isPastOrOutOfWindow = dateStr < minDateStr || dateStr > maxDateStr;
-          const isUnavailable =
-            isPastOrOutOfWindow ||
-            !dayInfo ||
-            dayInfo.status === "unavailable" ||
-            dayInfo.status === "fully_booked";
+          const isFullyBooked = !isPastOrOutOfWindow && dayInfo?.status === "fully_booked";
+          const isUnavailable = isPastOrOutOfWindow || !dayInfo || dayInfo.status === "unavailable";
+          const isLimited = !isPastOrOutOfWindow && dayInfo?.status === "limited";
+          const isAvailable = !isPastOrOutOfWindow && dayInfo?.status === "available";
 
           const availableSlots = dayInfo?.availableSlotsCount || 0;
-          const isLimited = dayInfo?.status === "limited";
+          const isDisabled = isUnavailable || isFullyBooked;
 
           let ariaLabel = `${monthName} ${dayNum}`;
-          if (isUnavailable) {
-            ariaLabel += " - Fully booked or unavailable";
+          if (isPastOrOutOfWindow) {
+            ariaLabel += " - Not bookable (outside booking window)";
+          } else if (isFullyBooked) {
+            ariaLabel += " - Fully booked (all slots taken)";
+          } else if (isUnavailable) {
+            ariaLabel += " - Unavailable / Practitioner not scheduled";
           } else {
             ariaLabel += ` - ${availableSlots} slots available`;
           }
@@ -138,28 +141,38 @@ export default function MonthGrid({
             <button
               key={dateStr}
               type="button"
-              disabled={isUnavailable}
+              disabled={isDisabled}
               onClick={() => onSelectDate(dateStr)}
               aria-label={ariaLabel}
               aria-pressed={isSelected}
               className={`relative h-12 sm:h-14 rounded-xl flex flex-col items-center justify-center p-1 transition-all group ${
                 isSelected
                   ? "bg-[#0d2b22] text-[#7ecab0] shadow-md shadow-[#0d2b22]/20 ring-2 ring-[#7ecab0]"
+                  : isFullyBooked
+                  ? "text-rose-400 bg-rose-50/50 border border-rose-200/40 cursor-not-allowed opacity-75"
                   : isUnavailable
-                  ? "text-[#ccc] bg-black/[0.01] cursor-not-allowed opacity-50"
+                  ? "text-[#aaa] bg-black/[0.01] cursor-not-allowed opacity-50"
+                  : isLimited
+                  ? "text-[#0d2b22] bg-[#fdfbf7] hover:bg-amber-50 hover:border-amber-300 border border-amber-200/60 shadow-xs"
                   : "text-[#0d2b22] bg-[#fdfbf7] hover:bg-[#7ecab0]/15 hover:border-[#7ecab0]/40 border border-black/[0.04]"
               } ${isToday && !isSelected ? "ring-1 ring-inset ring-[#0d2b22]/30 font-semibold" : ""}`}
             >
               <span
                 className={`text-xs sm:text-sm font-sans ${
-                  isSelected ? "font-bold text-white" : isUnavailable ? "line-through" : "font-medium"
+                  isSelected
+                    ? "font-bold text-white"
+                    : isFullyBooked
+                    ? "line-through text-rose-400 font-normal"
+                    : isDisabled
+                    ? "text-[#aaa] font-normal"
+                    : "font-semibold text-[#0d2b22]"
                 }`}
               >
                 {dayNum}
               </span>
 
               {/* Status slot badge / indicator */}
-              {!isUnavailable && (
+              {!isDisabled && (
                 <div className="mt-0.5 flex items-center justify-center">
                   {isSelected ? (
                     <span className="text-[9px] font-sans font-medium text-[#7ecab0] leading-none">
@@ -168,29 +181,57 @@ export default function MonthGrid({
                   ) : isLimited ? (
                     <div className="flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                      <span className="text-[9px] font-sans text-amber-700 hidden sm:inline leading-none">
+                      <span className="text-[9px] font-sans text-amber-700 font-medium hidden sm:inline leading-none">
                         {availableSlots} left
                       </span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      <span className="text-[9px] font-sans text-[#0d2b22]/70 hidden sm:inline leading-none">
-                        {availableSlots}
+                      <span className="text-[9px] font-sans text-emerald-800 font-medium hidden sm:inline leading-none">
+                        {availableSlots} slots
                       </span>
                     </div>
                   )}
                 </div>
               )}
 
+              {/* Fully booked label */}
+              {isFullyBooked && (
+                <span className="text-[8px] text-rose-500 font-sans font-medium leading-none mt-0.5">
+                  Full
+                </span>
+              )}
+
+              {/* Past / out-of-window dash */}
               {isUnavailable && isPastOrOutOfWindow && (
-                <span className="text-[8px] text-[#bbb] font-sans leading-none mt-0.5 sm:hidden">
+                <span className="text-[8px] text-[#ccc] font-sans leading-none mt-0.5">
                   —
                 </span>
               )}
             </button>
           );
         })}
+      </div>
+
+      {/* Calendar Legend */}
+      <div className="mt-4 pt-3 border-t border-black/[0.05] flex flex-wrap items-center justify-between gap-2 text-[11px] font-sans text-stone-600">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          <span>Available</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-amber-500" />
+          <span>Limited</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-rose-400" />
+          <span>Fully Booked</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-stone-300" />
+          <span>Unavailable</span>
+        </div>
       </div>
     </div>
   );

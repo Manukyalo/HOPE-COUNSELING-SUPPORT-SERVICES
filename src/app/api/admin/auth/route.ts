@@ -1,168 +1,232 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import {
+  COOKIE_NAME,
+  SESSION_MAX_AGE_SECONDS,
+  getSessionSecret,
+  createSessionToken,
+  verifySessionToken,
+} from "@/lib/admin-auth";
+import { getAdminAuth } from "@/lib/firebase-admin";
 
 // Prevent Next.js from statically evaluating this route at build time.
-// All secret reads happen inside request handlers, never at module scope.
 export const dynamic = "force-dynamic";
 
-const COOKIE_NAME = "admin_session";
-const MIN_SECRET_LENGTH = 32;
+// ─── Rate limiting ────────────────────────────────────────────────────────────
+// Sliding window: max 5 attempts per IP per 15 minutes.
+// After 5 failures the IP is locked for 15 minutes.
+interface RateLimitEntry {
+  count: number;
+  lockedUntil: number | null;
+  windowStart: number;
+}
 
-/** Read and validate ADMIN_SESSION_SECRET at request time. Fail closed on any issue. */
-function getSessionSecret(): string | null {
-  const secret = process.env.ADMIN_SESSION_SECRET;
-  if (!secret || secret.length < MIN_SECRET_LENGTH) {
-    console.error(
-      "[admin/auth] ADMIN_SESSION_SECRET is missing or shorter than " +
-        MIN_SECRET_LENGTH +
-        " characters. Set it in your environment."
-    );
-    return null;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 min
+const RATE_LIMIT_MAX = 5;
+const LOCK_DURATION_MS = 15 * 60 * 1000;
+
+const loginAttempts = new Map<string, RateLimitEntry>();
+
+function checkLoginRateLimit(ip: string): { allowed: boolean; retryAfterMs?: number } {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+
+  if (!entry) {
+    loginAttempts.set(ip, { count: 0, lockedUntil: null, windowStart: now });
+    return { allowed: true };
   }
-  return secret;
-}
 
-/** Read ADMIN_PIN at request time. Returns null if not configured. */
-function getAdminPin(): string | null {
-  const pin = process.env.ADMIN_PIN;
-  if (!pin) {
-    console.error("[admin/auth] ADMIN_PIN is not set in environment.");
-    return null;
+  if (entry.lockedUntil && now < entry.lockedUntil) {
+    return { allowed: false, retryAfterMs: entry.lockedUntil - now };
   }
-  return pin;
-}
 
-function createSessionToken(email: string, secret: string): string {
-  const timestamp = Date.now();
-  const payload = `${email}:${timestamp}`;
-  const hmac = crypto.createHmac("sha256", secret).update(payload).digest("hex");
-  return `${Buffer.from(payload).toString("base64")}.${hmac}`;
-}
-
-function verifySessionToken(token: string, secret: string): string | null {
-  try {
-    const [encodedPayload, signature] = token.split(".");
-    if (!encodedPayload || !signature) return null;
-
-    const payload = Buffer.from(encodedPayload, "base64").toString("utf8");
-    const expectedHmac = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
-      .digest("hex");
-
-    const sigBuf = Buffer.from(signature);
-    const expectedBuf = Buffer.from(expectedHmac);
-
-    // Constant-time comparison — lengths must match first to avoid allocation attacks
-    if (sigBuf.length !== expectedBuf.length) return null;
-    if (!crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
-
-    const [email] = payload.split(":");
-    return email ?? null;
-  } catch {
-    return null;
+  // Reset window if expired
+  if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    loginAttempts.set(ip, { count: 0, lockedUntil: null, windowStart: now });
+    return { allowed: true };
   }
+
+  return { allowed: entry.count < RATE_LIMIT_MAX };
 }
 
+function recordLoginFailure(ip: string): void {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+
+  if (!entry) {
+    loginAttempts.set(ip, { count: 1, lockedUntil: null, windowStart: now });
+    return;
+  }
+
+  entry.count += 1;
+  if (entry.count >= RATE_LIMIT_MAX) {
+    entry.lockedUntil = now + LOCK_DURATION_MS;
+    console.warn(`[admin/auth] IP ${ip} locked after ${entry.count} failed attempts.`);
+  }
+  loginAttempts.set(ip, entry);
+}
+
+function clearLoginFailures(ip: string): void {
+  loginAttempts.delete(ip);
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getClientIp(req: NextRequest): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
+
+/** Identical error for wrong-email AND wrong-password — prevents user enumeration */
+const INVALID_CREDENTIALS_ERROR = "Invalid credentials. Please try again.";
+
+function unauthorizedResponse(message = INVALID_CREDENTIALS_ERROR) {
+  return NextResponse.json(
+    { error: message, code: "UNAUTHORIZED", status: 401 },
+    { status: 401 }
+  );
+}
+
+function setSessionCookie(response: NextResponse, token: string) {
+  response.cookies.set({
+    name: COOKIE_NAME,
+    value: token,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: SESSION_MAX_AGE_SECONDS,
+  });
+}
+
+// ─── POST /api/admin/auth — Login ─────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   const secret = getSessionSecret();
   if (!secret) {
     return NextResponse.json(
-      { error: "Authentication service unavailable", code: "SERVICE_ERROR", status: 500 },
-      { status: 500 }
+      { error: "Authentication service unavailable.", code: "SERVICE_ERROR" },
+      { status: 503 }
     );
   }
 
+  const ip = getClientIp(req);
+  const { allowed, retryAfterMs } = checkLoginRateLimit(ip);
+
+  if (!allowed) {
+    const retryAfterSec = retryAfterMs ? Math.ceil(retryAfterMs / 1000) : 900;
+    return NextResponse.json(
+      {
+        error: `Too many failed attempts. Please wait ${Math.ceil(retryAfterSec / 60)} minutes before trying again.`,
+        code: "RATE_LIMITED",
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(retryAfterSec) },
+      }
+    );
+  }
+
+  let body: Record<string, unknown>;
   try {
-    const body = await req.json();
-    const { email, password, pin, idToken } = body;
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body.", code: "BAD_REQUEST" }, { status: 400 });
+  }
 
-    // PIN auth — validated server-side only against env var, never a hardcoded value
-    const adminPin = getAdminPin();
-    const isValidPin = adminPin !== null && typeof pin === "string" && pin === adminPin;
+  const { idToken, pin } = body;
 
-    // Firebase ID token auth — presence is sufficient for session creation; Firebase
-    // SDK already verified the token client-side. For defence-in-depth this should be
-    // verified with firebase-admin on the server, but that requires a service account.
-    const isValidToken = typeof idToken === "string" && idToken.length > 0;
+  // ── Path 1: Firebase ID Token (email/password auth via Firebase client SDK) ─
+  if (typeof idToken === "string" && idToken.length > 0) {
+    try {
+      const auth = getAdminAuth();
+      const decoded = await auth.verifyIdToken(idToken, /* checkRevoked= */ true);
 
-    // Email/password — validated server-side
-    const isValidCredentials =
-      typeof email === "string" &&
-      email.includes("@") &&
-      typeof password === "string" &&
-      password.length >= 6;
+      // Only allow verified Firebase users with an email
+      if (!decoded.email) {
+        recordLoginFailure(ip);
+        return unauthorizedResponse();
+      }
 
-    if (!isValidPin && !isValidToken && !isValidCredentials) {
-      return NextResponse.json(
-        { error: "Invalid credentials or authorization payload", code: "UNAUTHORIZED", status: 401 },
-        { status: 401 }
-      );
+      clearLoginFailures(ip);
+      const token = createSessionToken(decoded.email, secret);
+      const res = NextResponse.json({ success: true, user: decoded.email }, { status: 200 });
+      setSessionCookie(res, token);
+      return res;
+    } catch (err) {
+      console.error("[admin/auth] Firebase token verification failed:", err);
+      recordLoginFailure(ip);
+      return unauthorizedResponse();
+    }
+  }
+
+  // ── Path 2: Emergency PIN ─────────────────────────────────────────────────
+  if (typeof pin === "string" && pin.length > 0) {
+    const adminPin = process.env.ADMIN_PIN;
+    if (!adminPin) {
+      // PIN auth not configured — fail closed
+      return unauthorizedResponse();
     }
 
-    const sessionUser =
-      typeof email === "string" && email.length > 0
-        ? email
-        : "practitioner@hopecounseling.ke";
+    // Timing-safe PIN comparison
+    const pinBuf = Buffer.from(pin.trim());
+    const adminPinBuf = Buffer.from(adminPin);
 
+    const pinsMatch =
+      pinBuf.length === adminPinBuf.length &&
+      crypto.timingSafeEqual(pinBuf, adminPinBuf);
+
+    if (!pinsMatch) {
+      recordLoginFailure(ip);
+      console.warn(`[admin/auth] Failed PIN attempt from IP: ${ip}`);
+      return unauthorizedResponse();
+    }
+
+    clearLoginFailures(ip);
+    const sessionUser = "practitioner@hopecounseling.ke";
     const token = createSessionToken(sessionUser, secret);
-
-    const response = NextResponse.json(
-      { success: true, user: sessionUser },
-      { status: 200 }
-    );
-
-    response.cookies.set({
-      name: COOKIE_NAME,
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-      maxAge: 60 * 60 * 12, // 12 hours
-    });
-
-    return response;
-  } catch (err) {
-    console.error("[admin/auth] POST error:", err);
-    return NextResponse.json(
-      { error: "Server authentication error", code: "INTERNAL_ERROR", status: 500 },
-      { status: 500 }
-    );
+    const res = NextResponse.json({ success: true, user: sessionUser }, { status: 200 });
+    setSessionCookie(res, token);
+    return res;
   }
+
+  // No valid auth method provided
+  recordLoginFailure(ip);
+  return unauthorizedResponse();
 }
 
+// ─── GET /api/admin/auth — Check session ─────────────────────────────────────
 export async function GET(req: NextRequest) {
   const secret = getSessionSecret();
   if (!secret) {
     return NextResponse.json(
-      { authenticated: false, error: "Authentication service unavailable", code: "SERVICE_ERROR", status: 500 },
-      { status: 500 }
+      { authenticated: false, code: "SERVICE_ERROR" },
+      { status: 503 }
     );
   }
 
-  const sessionCookie = req.cookies.get(COOKIE_NAME)?.value;
-  if (!sessionCookie) {
-    return NextResponse.json(
-      { authenticated: false, error: "No active session", code: "UNAUTHORIZED", status: 401 },
-      { status: 401 }
-    );
+  const token = req.cookies.get(COOKIE_NAME)?.value;
+  if (!token) {
+    return NextResponse.json({ authenticated: false, code: "UNAUTHORIZED" }, { status: 401 });
   }
 
-  const email = verifySessionToken(sessionCookie, secret);
-  if (!email) {
-    return NextResponse.json(
-      { authenticated: false, error: "Invalid or expired session", code: "UNAUTHORIZED", status: 401 },
-      { status: 401 }
-    );
+  const payload = verifySessionToken(token, secret);
+  if (!payload) {
+    return NextResponse.json({ authenticated: false, code: "UNAUTHORIZED" }, { status: 401 });
   }
 
-  return NextResponse.json({ authenticated: true, user: email }, { status: 200 });
+  return NextResponse.json(
+    { authenticated: true, user: payload.email, expiresAt: payload.exp },
+    { status: 200 }
+  );
 }
 
+// ─── DELETE /api/admin/auth — Logout ─────────────────────────────────────────
 export async function DELETE() {
-  const response = NextResponse.json({ success: true, message: "Logged out" });
-  response.cookies.set({
+  const res = NextResponse.json({ success: true, message: "Logged out" });
+  res.cookies.set({
     name: COOKIE_NAME,
     value: "",
     httpOnly: true,
@@ -170,6 +234,7 @@ export async function DELETE() {
     sameSite: "strict",
     path: "/",
     maxAge: 0,
+    expires: new Date(0),
   });
-  return response;
+  return res;
 }

@@ -31,11 +31,20 @@ export function middleware(request: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-admin-pathname", pathname);
+
   // ── 3. Admin page auth ────────────────────────────────────────────────────
   if (pathname.startsWith("/admin")) {
     // Login page itself is always public
     if (pathname === "/admin/login") {
-      return NextResponse.next();
+      const response = NextResponse.next({
+        request: { headers: requestHeaders },
+      });
+      response.headers.set("X-Frame-Options", "DENY");
+      response.headers.set("X-Content-Type-Options", "nosniff");
+      response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+      return response;
     }
 
     const sessionCookie = request.cookies.get("admin_session")?.value;
@@ -49,7 +58,9 @@ export function middleware(request: NextRequest) {
   // ── 4. Admin API auth ─────────────────────────────────────────────────────
   if (pathname.startsWith("/api/admin")) {
     if (pathname === "/api/admin/auth") {
-      return NextResponse.next();
+      return NextResponse.next({
+        request: { headers: requestHeaders },
+      });
     }
 
     const sessionCookie = request.cookies.get("admin_session")?.value;
@@ -62,7 +73,9 @@ export function middleware(request: NextRequest) {
   }
 
   // ── 5. Security headers on everything else ────────────────────────────────
-  const response = NextResponse.next();
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
