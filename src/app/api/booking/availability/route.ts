@@ -51,11 +51,17 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (err: unknown) {
-    const error = err as Error;
-    console.error("[api/booking/availability] Error:", error);
+    const error = err as Error & { code?: string };
+    console.error("[api/booking/availability] Server error during availability calculation:", {
+      name: error?.name || "Error",
+      message: error?.message || "Unknown error",
+      code: error?.code || "INTERNAL_ERROR",
+      stack: error?.stack,
+    });
     return NextResponse.json(
       { error: "Failed to load availability", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }
 }
+
