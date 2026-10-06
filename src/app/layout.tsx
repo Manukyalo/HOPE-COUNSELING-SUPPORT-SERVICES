@@ -1,6 +1,6 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 
-export const viewport: Viewport = {
+export const viewport = {
   themeColor: "#0d2b22",
   width: "device-width",
   initialScale: 1,
@@ -72,7 +72,7 @@ export const metadata: Metadata = {
   },
 };
 
-import PwaInstallPrompt from "@/components/PwaInstallPrompt";
+import WebsiteShell from "@/components/WebsiteShell";
 
 export default function RootLayout({
   children,
@@ -82,12 +82,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${inter.variable} ${instrumentSerif.variable} ${playfair.variable} ${dmSans.variable} font-inter antialiased bg-[#f9f7f4] text-[#0d2b22]`}>
-        <Navbar />
-        {children}
-        <WhatsAppButton />
-        <MobileStickyCTA />
-        <Footer />
-        <PwaInstallPrompt />
+        <WebsiteShell>{children}</WebsiteShell>
         <Analytics />
       </body>
     </html>

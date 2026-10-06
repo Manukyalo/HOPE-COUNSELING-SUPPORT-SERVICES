@@ -77,16 +77,12 @@ export default function BookingFlow() {
 
     try {
       if (typeof window !== "undefined") {
-        const existing = JSON.parse(localStorage.getItem("hope_admin_bookings") || "[]");
-        localStorage.setItem("hope_admin_bookings", JSON.stringify([newBooking, ...existing]));
+        // Persist to Firebase Firestore & local offline cache
+        import("@/services/booking-service").then(({ createBookingSession }) => {
+          createBookingSession(newBooking);
+        });
+
         window.dispatchEvent(new CustomEvent("hope:new-booking", { detail: newBooking }));
-        
-        // Broadcast across tabs/windows
-        if ("BroadcastChannel" in window) {
-          const channel = new BroadcastChannel("hope_admin_channel");
-          channel.postMessage({ type: "NEW_BOOKING", booking: newBooking });
-          channel.close();
-        }
 
         // Fire native system notification if granted on this device
         import("@/lib/pwa-notifications").then(({ sendBookingNotification }) => {
