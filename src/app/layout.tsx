@@ -60,6 +60,7 @@ export const metadata: Metadata = {
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
+  manifest: "/manifest.json",
   openGraph: {
     title: "Hope Counseling Support Services | Nairobi, Kenya",
     description: "A safe, empathetic space for healing and growth. Book a session today.",

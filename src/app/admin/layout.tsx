@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     icon: "/icons/icon-192.png",
     apple: "/apple-touch-icon.png",
   },
+  manifest: "/admin-manifest.json",
 };
 
 export const viewport = {
