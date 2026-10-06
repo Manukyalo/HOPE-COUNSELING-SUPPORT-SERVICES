@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, KeyRound, AlertCircle, RefreshCw } from "lucide-react";
 import { signInPractitioner, registerPractitioner, formatAuthError } from "@/services/auth-service";
 
-export default function AdminLoginPage() {
+function AdminLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTarget = searchParams.get("redirect") || "/admin";
@@ -218,5 +218,19 @@ export default function AdminLoginPage() {
         )}
       </motion.div>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#071a14] flex items-center justify-center p-4">
+          <div className="w-8 h-8 rounded-full border-2 border-[#7ecab0] border-t-transparent animate-spin" />
+        </div>
+      }
+    >
+      <AdminLoginContent />
+    </Suspense>
   );
 }

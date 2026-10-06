@@ -7,6 +7,7 @@ declare namespace JSX {
 declare module 'react' {
     export type ReactNode = any;
     export type ReactElement = any;
+    export const Suspense: any;
     export function useState<T>(initialState: T | (() => T)): [T, (action: T | ((prevState: T) => T)) => void];
     export function useEffect(effect: () => void | (() => void), deps?: any[]): void;
     export function useMemo<T>(factory: () => T, deps: any[]): T;
