@@ -5,6 +5,7 @@ import { getAvailabilityRules, getBlockedDates } from "@/lib/booking-engine";
 import { AvailabilityRules, BlockedDate } from "@/types/booking";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   const adminEmail = verifyAdminSession(req);

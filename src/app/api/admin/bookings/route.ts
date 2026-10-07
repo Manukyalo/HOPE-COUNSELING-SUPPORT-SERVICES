@@ -5,6 +5,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { Booking, BookingStatus } from "@/types/booking";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   const adminEmail = verifyAdminSession(req);

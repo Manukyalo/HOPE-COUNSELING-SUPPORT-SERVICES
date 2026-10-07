@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDaySlots, getMonthAvailability } from "@/lib/booking-engine";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   try {

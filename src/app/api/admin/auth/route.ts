@@ -11,6 +11,7 @@ import { getAdminAuth } from "@/lib/firebase-admin";
 
 // Prevent Next.js from statically evaluating this route at build time.
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 // ─── Rate limiting ────────────────────────────────────────────────────────────
 // Sliding window: max 5 attempts per IP per 15 minutes.

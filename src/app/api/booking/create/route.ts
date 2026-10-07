@@ -4,6 +4,7 @@ import { bookSlotTransaction } from "@/lib/booking-engine";
 import { notifyCounselorNewBooking, sendClientConfirmationSms } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 // Zod validation schema for incoming booking request
 const createBookingSchema = z.object({
