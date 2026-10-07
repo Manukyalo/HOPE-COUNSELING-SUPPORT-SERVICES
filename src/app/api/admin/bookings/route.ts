@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { QueryDocumentSnapshot } from "firebase-admin/firestore";
-import { verifyAdminSession } from "@/lib/admin-auth";
+import { verifyAdmin } from "@/lib/admin-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { Booking, BookingStatus } from "@/types/booking";
 
@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  const adminEmail = verifyAdminSession(req);
-  if (!adminEmail) {
+  const admin = await verifyAdmin(req);
+  if (!admin) {
     return NextResponse.json(
       { error: "Unauthorized access", code: "UNAUTHORIZED" },
       { status: 401 }
@@ -64,8 +64,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const adminEmail = verifyAdminSession(req);
-  if (!adminEmail) {
+  const admin = await verifyAdmin(req);
+  if (!admin) {
     return NextResponse.json(
       { error: "Unauthorized access", code: "UNAUTHORIZED" },
       { status: 401 }
@@ -146,6 +146,102 @@ export async function PATCH(req: NextRequest) {
     console.error("[api/admin/bookings] PATCH error:", err);
     return NextResponse.json(
       { error: "Failed to update booking", code: "INTERNAL_ERROR" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const admin = await verifyAdmin(req);
+  if (!admin) {
+    return NextResponse.json(
+      { error: "Unauthorized access", code: "UNAUTHORIZED" },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const { searchParams } = new URL(req.url);
+    let bookingId = searchParams.get("id") || searchParams.get("bookingId");
+
+    if (!bookingId) {
+      try {
+        const body = await req.json();
+        bookingId = body.bookingId || body.id;
+      } catch {
+        // Query param used or empty body
+      }
+    }
+
+    if (!bookingId) {
+      return NextResponse.json(
+        { error: "Booking ID is required", code: "BAD_REQUEST" },
+        { status: 400 }
+      );
+    }
+
+    const db = getAdminDb();
+    const deletePromises: Promise<unknown>[] = [];
+
+    // 1. Direct document check by document ID
+    const bookingDocRef = db.collection("bookings").doc(bookingId);
+    const bSnap = await bookingDocRef.get();
+
+    if (bSnap.exists) {
+      const booking = bSnap.data() as Booking;
+      deletePromises.push(bookingDocRef.delete());
+
+      // Release reserved slot document if present
+      if (booking.slotId) {
+        deletePromises.push(db.collection("slots").doc(booking.slotId).delete());
+      }
+
+      // Release deterministic slot lock if present
+      const timeVal = booking.time || booking.timeFormatted;
+      if (booking.date && timeVal) {
+        const slotKey = `${booking.date}_${timeVal}`;
+        deletePromises.push(db.collection("slotLocks").doc(slotKey).delete());
+      }
+    }
+
+    // 2. Query fallback: also clean up any documents indexed by referenceCode or id field
+    const [byRefSnap, byIdSnap] = await Promise.all([
+      db.collection("bookings").where("referenceCode", "==", bookingId).get(),
+      db.collection("bookings").where("id", "==", bookingId).get(),
+    ]);
+
+    const matchingDocs = [...byRefSnap.docs, ...byIdSnap.docs];
+    for (const doc of matchingDocs) {
+      if (doc.id !== bookingId) {
+        const booking = doc.data() as Booking;
+        deletePromises.push(doc.ref.delete());
+        if (booking.slotId) {
+          deletePromises.push(db.collection("slots").doc(booking.slotId).delete());
+        }
+        const timeVal = booking.time || booking.timeFormatted;
+        if (booking.date && timeVal) {
+          const slotKey = `${booking.date}_${timeVal}`;
+          deletePromises.push(db.collection("slotLocks").doc(slotKey).delete());
+        }
+      }
+    }
+
+    // Ensure the targeted doc is deleted even if it was partially created
+    if (!bSnap.exists) {
+      deletePromises.push(bookingDocRef.delete());
+    }
+
+    await Promise.allSettled(deletePromises);
+
+    return NextResponse.json({
+      success: true,
+      deletedId: bookingId,
+      message: "Booking deleted successfully",
+    });
+  } catch (err) {
+    console.error("[api/admin/bookings] DELETE error:", err);
+    return NextResponse.json(
+      { error: "Failed to delete booking", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

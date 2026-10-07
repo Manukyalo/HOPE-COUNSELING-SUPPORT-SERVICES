@@ -30,9 +30,11 @@ import {
   KeyRound,
   Save,
   MessageSquare,
+  Trash2,
 } from "lucide-react";
 import {
   subscribeToBookingSessions,
+  fetchAdminBookings,
   updateSessionStatus,
   updateSessionNotes,
   deleteSession,
@@ -162,13 +164,24 @@ export default function ClinicalAdminPortal() {
 
   // ── Auth initialization ─────────────────────────────────────────────────────
   useEffect(() => {
-    const unsub = onPractitionerAuthStateChanged((firebaseUser) => {
+    const unsub = onPractitionerAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           displayName: firebaseUser.displayName || "Counselor",
         });
+        // Sync httpOnly admin session cookie with server
+        try {
+          const idToken = await firebaseUser.getIdToken();
+          await fetch("/api/admin/auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idToken }),
+          });
+        } catch (err) {
+          console.warn("[admin] Failed to sync session cookie:", err);
+        }
       } else {
         setUser(null);
       }
@@ -225,7 +238,13 @@ export default function ClinicalAdminPortal() {
     setAuthLoading(true);
     setAuthError(null);
     try {
-      await signInPractitioner(email, password);
+      const userCred = await signInPractitioner(email, password);
+      const idToken = await userCred.getIdToken();
+      await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code || "auth/unknown";
       setAuthError(formatAuthError(code));
@@ -359,10 +378,48 @@ export default function ClinicalAdminPortal() {
     setIsSavingNotes(false);
   };
 
-  const handleDeleteSession = async (id: string) => {
-    if (!window.confirm("Permanently archive this session record?")) return;
-    await deleteSession(id);
-    if (selectedSession?.id === id) setSelectedSession(null);
+  const handleDeleteSession = async (id: string, clientName?: string) => {
+    const nameStr = clientName ? ` for "${clientName}"` : "";
+    if (
+      !window.confirm(
+        `Are you sure you want to permanently delete this booking${nameStr}? This action cannot be undone and will free up any reserved slot.`
+      )
+    ) {
+      return;
+    }
+
+    // Optimistically remove from state so it immediately disappears from UI
+    setSessions((prev) => prev.filter((s) => s.id !== id && s.referenceCode !== id));
+    if (selectedSession?.id === id || selectedSession?.referenceCode === id) {
+      setSelectedSession(null);
+    }
+
+    const success = await deleteSession(id);
+    if (!success) {
+      alert("Failed to delete booking from database. Please verify your connection.");
+      const refreshed = await fetchAdminBookings();
+      setSessions(refreshed);
+    }
+  };
+
+  const handlePurgeCancelled = async () => {
+    const cancelled = sessions.filter((s) => s.status === "Cancelled");
+    if (cancelled.length === 0) return;
+    if (
+      !window.confirm(
+        `Permanently delete all ${cancelled.length} cancelled booking(s)? This will permanently clear them from the database.`
+      )
+    ) {
+      return;
+    }
+
+    const cancelledIds = cancelled.map((s) => s.id);
+    setSessions((prev) => prev.filter((s) => s.status !== "Cancelled"));
+    if (selectedSession && selectedSession.status === "Cancelled") {
+      setSelectedSession(null);
+    }
+
+    await Promise.allSettled(cancelledIds.map((id) => deleteSession(id)));
   };
 
   // ── Filtered & Computed Analytics ──────────────────────────────────────────
@@ -891,8 +948,23 @@ export default function ClinicalAdminPortal() {
                   <option value="Pending">Pending Review ({stats.pending})</option>
                   <option value="Confirmed">Confirmed ({stats.confirmed})</option>
                   <option value="Completed">Completed ({stats.completed})</option>
-                  <option value="Cancelled">Cancelled</option>
+                  <option value="Cancelled">
+                    Cancelled ({sessions.filter((s) => s.status === "Cancelled").length})
+                  </option>
                 </select>
+
+                {sessions.some((s) => s.status === "Cancelled") && (
+                  <button
+                    type="button"
+                    onClick={handlePurgeCancelled}
+                    className="h-11 px-3 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 text-xs font-medium rounded-xl flex items-center gap-1.5 transition-all"
+                    title="Permanently delete all cancelled bookings"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span className="hidden md:inline">Purge Cancelled</span>
+                    <span>({sessions.filter((s) => s.status === "Cancelled").length})</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1030,6 +1102,17 @@ export default function ClinicalAdminPortal() {
                         >
                           <span>Dossier</span>
                           <ChevronRight className="w-3.5 h-3.5 text-white/50" />
+                        </button>
+
+                        {/* Permanent Delete Button directly on card */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSession(session.id, session.clientName)}
+                          title="Permanently delete booking"
+                          className="h-9 px-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-medium transition-all flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Delete</span>
                         </button>
                       </div>
                     </motion.div>
@@ -1255,10 +1338,11 @@ export default function ClinicalAdminPortal() {
               {/* Footer Actions */}
               <div className="pt-4 border-t border-white/10 flex items-center justify-between">
                 <button
-                  onClick={() => handleDeleteSession(selectedSession.id)}
-                  className="text-rose-400 hover:text-rose-300 text-xs font-medium hover:underline"
+                  onClick={() => handleDeleteSession(selectedSession.id, selectedSession.clientName)}
+                  className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
                 >
-                  Archive Session Record
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Booking Permanently</span>
                 </button>
 
                 <a

@@ -1,6 +1,6 @@
 import { AvailabilityRules, BlockedDate } from "@/types/booking";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 
 export type BookingSessionStatus =
   | "Pending"
@@ -101,7 +101,11 @@ export async function fetchAdminBookings(status = "all", search = ""): Promise<B
     if (status && status !== "all") params.append("status", status.toLowerCase());
     if (search) params.append("search", search);
 
-    const res = await fetch(`/api/admin/bookings?${params.toString()}`, { cache: "no-store" });
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/admin/bookings?${params.toString()}`, {
+      cache: "no-store",
+      headers,
+    });
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }
@@ -201,6 +205,21 @@ export async function markSessionSeen(id: string): Promise<void> {
   }
 }
 
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  try {
+    if (typeof window !== "undefined" && auth.currentUser) {
+      const token = await auth.currentUser.getIdToken();
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  } catch {
+    // If getting Firebase token fails, server checks httpOnly session cookie
+  }
+  return headers;
+}
+
 /**
  * Updates session status via server route
  */
@@ -214,9 +233,10 @@ export async function updateSessionStatus(
   setLocalCache(local);
 
   try {
+    const headers = await getAuthHeaders();
     const res = await fetch("/api/admin/bookings", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ bookingId: id, status: status.toLowerCase() }),
     });
     if (!res.ok) {
@@ -237,9 +257,10 @@ export async function updateSessionNotes(id: string, notes: string): Promise<voi
   setLocalCache(local);
 
   try {
+    const headers = await getAuthHeaders();
     const res = await fetch("/api/admin/bookings", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ bookingId: id, notes }),
     });
     if (!res.ok) {
@@ -251,10 +272,30 @@ export async function updateSessionNotes(id: string, notes: string): Promise<voi
 }
 
 /**
- * Deletes or cancels session via server route
+ * Permanently deletes session from Firestore via server route and cleans local cache
  */
-export async function deleteSession(id: string): Promise<void> {
-  await updateSessionStatus(id, "Cancelled");
+export async function deleteSession(id: string): Promise<boolean> {
+  // Purge from local cache immediately
+  const local = getLocalCache().filter((b) => b.id !== id && b.referenceCode !== id);
+  setLocalCache(local);
+
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/admin/bookings?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers,
+      body: JSON.stringify({ bookingId: id }),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn("[booking-service] Server rejected delete:", errText);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("[booking-service] Delete network error:", err);
+    return false;
+  }
 }
 
 /**

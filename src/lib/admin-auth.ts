@@ -133,3 +133,37 @@ export function verifyAdminSession(req: NextRequest): AdminSessionPayload | null
 export function verifyAdminSessionEmail(req: NextRequest): string | null {
   return verifyAdminSession(req)?.email ?? null;
 }
+
+/**
+ * Verifies admin request via either signed httpOnly session cookie or Bearer Firebase ID token.
+ */
+export async function verifyAdmin(req: NextRequest): Promise<AdminSessionPayload | null> {
+  // 1. Try session cookie first
+  const cookieSession = verifyAdminSession(req);
+  if (cookieSession) return cookieSession;
+
+  // 2. Fall back to Firebase ID token in Authorization header
+  const authHeader = req.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const idToken = authHeader.substring(7).trim();
+    if (idToken) {
+      try {
+        const { getAdminAuth } = await import("./firebaseAdmin");
+        const adminAuth = getAdminAuth();
+        const decoded = await adminAuth.verifyIdToken(idToken);
+        if (decoded?.email) {
+          return {
+            email: decoded.email,
+            role: "admin",
+            iat: (decoded.auth_time || 0) * 1000,
+            exp: (decoded.exp || 0) * 1000,
+          };
+        }
+      } catch (err) {
+        console.warn("[admin-auth] Bearer token verification failed:", err);
+      }
+    }
+  }
+
+  return null;
+}
