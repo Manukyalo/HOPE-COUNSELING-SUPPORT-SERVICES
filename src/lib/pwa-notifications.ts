@@ -12,14 +12,49 @@ export interface BookingNotificationPayload {
 }
 
 /**
- * Requests browser permission for notifications.
+ * Registers an admin device token with the server to receive push notifications.
+ */
+export async function registerAdminDevice(token: string): Promise<boolean> {
+  try {
+    const res = await fetch("/api/admin/devices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token,
+        platform: typeof navigator !== "undefined" ? navigator.platform || "web" : "web",
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "browser",
+      }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error("Error registering admin device token:", err);
+    return false;
+  }
+}
+
+/**
+ * Requests browser permission for notifications and registers admin service worker.
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (typeof window === "undefined" || !("Notification" in window)) {
     return "denied";
   }
   try {
-    return await Notification.requestPermission();
+    const permission = await Notification.requestPermission();
+    if (permission === "granted" && "serviceWorker" in navigator) {
+      try {
+        await navigator.serviceWorker.register("/admin-sw.js", { scope: "/admin" });
+        let deviceId = localStorage.getItem("hc_admin_device_id");
+        if (!deviceId) {
+          deviceId = "device_" + Math.random().toString(36).substring(2) + "_" + Date.now();
+          localStorage.setItem("hc_admin_device_id", deviceId);
+        }
+        await registerAdminDevice(deviceId);
+      } catch (swErr) {
+        console.warn("ServiceWorker registration warning:", swErr);
+      }
+    }
+    return permission;
   } catch (error) {
     console.error("Error requesting notification permission:", error);
     return "denied";
