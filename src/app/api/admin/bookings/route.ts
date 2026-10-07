@@ -105,12 +105,20 @@ export async function PATCH(req: NextRequest) {
       updates.notes = notes;
     }
 
+    if (body.adminSeen !== undefined) {
+      updates.adminSeen = Boolean(body.adminSeen);
+    }
+
     if (status) {
       updates.status = status as BookingStatus;
 
       // If status changed to cancelled, release deterministic slot lock
       if (status === "cancelled" && booking.status !== "cancelled") {
-        await db.collection("slots").doc(booking.slotId).delete().catch(() => {});
+        const slotKey = `${booking.date}_${booking.time || booking.timeFormatted}`;
+        await Promise.allSettled([
+          db.collection("slots").doc(booking.slotId).delete(),
+          db.collection("slotLocks").doc(slotKey).delete(),
+        ]);
       }
 
       // If status changed to confirmed from cancelled, lock slot if available

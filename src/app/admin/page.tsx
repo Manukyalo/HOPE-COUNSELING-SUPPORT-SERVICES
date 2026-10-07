@@ -36,6 +36,7 @@ import {
   updateSessionStatus,
   updateSessionNotes,
   deleteSession,
+  markSessionSeen,
   BookingSession,
 } from "@/services/booking-service";
 import AvailabilitySettingsTab from "@/components/admin/AvailabilitySettingsTab";
@@ -341,10 +342,13 @@ export default function ClinicalAdminPortal() {
 
   // ── Clinical Operations ────────────────────────────────────────────────────
   const handleStatusChange = async (id: string, status: BookingSession["status"]) => {
-    await updateSessionStatus(id, status);
+    setSessions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, status, updatedAt: new Date().toISOString() } : s))
+    );
     if (selectedSession && selectedSession.id === id) {
       setSelectedSession((prev) => (prev ? { ...prev, status } : null));
     }
+    await updateSessionStatus(id, status);
   };
 
   const handleSaveNotes = async () => {
@@ -903,7 +907,7 @@ export default function ClinicalAdminPortal() {
                 </h3>
                 <p className="text-xs text-white/50 max-w-sm mx-auto mb-6">
                   {sessions.length === 0
-                    ? "Your clinical session ledger is empty. Incoming WhatsApp bookings will appear in realtime."
+                    ? "Your clinical session ledger is empty. New client bookings will appear here in real time."
                     : "No sessions matched your search criteria."}
                 </p>
               </div>
@@ -920,8 +924,13 @@ export default function ClinicalAdminPortal() {
                       {/* Left: Client info & Schedule */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                          {session.adminSeen === false && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-emerald-400 text-black shadow-sm animate-pulse">
+                              NEW
+                            </span>
+                          )}
                           <span className="font-mono text-[10px] text-white/40 tracking-wider">
-                            {session.id}
+                            {session.referenceCode || session.id}
                           </span>
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusMeta.bg} ${statusMeta.text} ${statusMeta.border}`}
@@ -929,6 +938,11 @@ export default function ClinicalAdminPortal() {
                             <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`} />
                             {statusMeta.label}
                           </span>
+                          {session.deliveryMode && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/[0.06] text-white/70 border border-white/5">
+                              {session.deliveryMode === "online" ? "Online Video" : "In-Person Clinic"}
+                            </span>
+                          )}
                           <span className="text-[11px] text-white/40 font-sans ml-auto md:ml-0">
                             {formatDate(session.createdAt)}
                           </span>
@@ -1008,6 +1022,9 @@ export default function ClinicalAdminPortal() {
                           onClick={() => {
                             setSelectedSession(session);
                             setNotesDraft(session.notes || "");
+                            if (session.adminSeen === false) {
+                              markSessionSeen(session.id);
+                            }
                           }}
                           className="h-9 px-3 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/10 text-white text-xs font-medium transition-all flex items-center gap-1"
                         >
@@ -1203,10 +1220,7 @@ export default function ClinicalAdminPortal() {
                 </span>
                 {selectedSession.status !== "Confirmed" && (
                   <button
-                    onClick={async () => {
-                      await updateSessionStatus(selectedSession.id, "Confirmed");
-                      setSelectedSession({ ...selectedSession, status: "Confirmed" });
-                    }}
+                    onClick={() => handleStatusChange(selectedSession.id, "Confirmed")}
                     className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 text-xs font-semibold transition-all"
                   >
                     Confirm
@@ -1214,10 +1228,7 @@ export default function ClinicalAdminPortal() {
                 )}
                 {selectedSession.status !== "Completed" && (
                   <button
-                    onClick={async () => {
-                      await updateSessionStatus(selectedSession.id, "Completed");
-                      setSelectedSession({ ...selectedSession, status: "Completed" });
-                    }}
+                    onClick={() => handleStatusChange(selectedSession.id, "Completed")}
                     className="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 text-xs font-semibold transition-all"
                   >
                     Complete
@@ -1225,10 +1236,7 @@ export default function ClinicalAdminPortal() {
                 )}
                 {selectedSession.status !== "Cancelled" && (
                   <button
-                    onClick={async () => {
-                      await updateSessionStatus(selectedSession.id, "Cancelled");
-                      setSelectedSession({ ...selectedSession, status: "Cancelled" });
-                    }}
+                    onClick={() => handleStatusChange(selectedSession.id, "Cancelled")}
                     className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 text-xs font-semibold transition-all"
                   >
                     Cancel Slot
@@ -1236,10 +1244,7 @@ export default function ClinicalAdminPortal() {
                 )}
                 {selectedSession.status !== "no_show" && (
                   <button
-                    onClick={async () => {
-                      await updateSessionStatus(selectedSession.id, "no_show");
-                      setSelectedSession({ ...selectedSession, status: "no_show" });
-                    }}
+                    onClick={() => handleStatusChange(selectedSession.id, "no_show")}
                     className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 text-xs font-semibold transition-all"
                   >
                     No Show

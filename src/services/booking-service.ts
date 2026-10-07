@@ -1,4 +1,6 @@
 import { AvailabilityRules, BlockedDate } from "@/types/booking";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export type BookingSessionStatus =
   | "Pending"
@@ -9,6 +11,7 @@ export type BookingSessionStatus =
 
 export interface BookingSession {
   id: string;
+  referenceCode?: string;
   clientName: string;
   email: string;
   phone: string;
@@ -22,6 +25,7 @@ export interface BookingSession {
   price?: number;
   currency?: string;
   status: BookingSessionStatus;
+  adminSeen?: boolean;
   notes?: string;
   createdAt: string;
   updatedAt?: string;
@@ -45,7 +49,7 @@ function setLocalCache(data: BookingSession[]) {
 }
 
 /**
- * Normalizes booking record from server API
+ * Normalizes booking record from server API or Firestore document snapshot
  */
 function normalizeSession(b: Record<string, unknown>): BookingSession {
   const rawStatus = (b.status as string) || "Pending";
@@ -57,13 +61,22 @@ function normalizeSession(b: Record<string, unknown>): BookingSession {
   else if (lower === "cancelled") status = "Cancelled";
   else if (lower === "no_show") status = "no_show";
 
+  const clientObj = (b.client as Record<string, unknown>) || {};
+  const clientName = (clientObj.name as string) || (b.clientName as string) || "Anonymous";
+  const email = (clientObj.email as string) || (b.clientEmail as string) || (b.email as string) || "";
+  const phone = (clientObj.phone as string) || (b.clientPhone as string) || (b.phone as string) || "";
+  const notes = (b.notes as string) || (clientObj.notes as string) || "";
+  const referenceCode = (b.referenceCode as string) || (b.id as string) || "";
+  const adminSeen = b.adminSeen !== false; // defaults to true unless explicitly false
+
   return {
     id: (b.id as string) || "",
-    clientName: (b.clientName as string) || "Anonymous",
-    email: (b.clientEmail || b.email || "") as string,
-    phone: (b.clientPhone || b.phone || "") as string,
+    referenceCode,
+    clientName,
+    email,
+    phone,
     serviceId: (b.serviceId || b.sessionType || "individual") as string,
-    serviceName: (b.serviceName || b.sessionType || "Individual Counselling") as string,
+    serviceName: (b.service as string) || (b.serviceName as string) || (b.sessionType as string) || "Individual Counselling",
     sessionType: (b.sessionType || "individual") as string,
     deliveryMode: (b.deliveryMode || "online") as string,
     date: (b.date as string) || null,
@@ -72,7 +85,8 @@ function normalizeSession(b: Record<string, unknown>): BookingSession {
     price: typeof b.price === "number" ? b.price : 1000,
     currency: (b.currency as string) || "KES",
     status,
-    notes: (b.notes as string) || "",
+    adminSeen: b.adminSeen === true ? true : (b.adminSeen === false ? false : true),
+    notes,
     createdAt: (b.createdAt as string) || new Date().toISOString(),
     updatedAt: (b.updatedAt as string) || undefined,
   };
@@ -87,7 +101,7 @@ export async function fetchAdminBookings(status = "all", search = ""): Promise<B
     if (status && status !== "all") params.append("status", status.toLowerCase());
     if (search) params.append("search", search);
 
-    const res = await fetch(`/api/admin/bookings?${params.toString()}`);
+    const res = await fetch(`/api/admin/bookings?${params.toString()}`, { cache: "no-store" });
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }
@@ -106,7 +120,7 @@ export async function fetchAdminBookings(status = "all", search = ""): Promise<B
 }
 
 /**
- * Subscribes to booking updates using an efficient polling interval
+ * Subscribes to booking updates using live Firestore onSnapshot with fallback polling
  */
 export function subscribeToBookingSessions(
   onUpdate: (bookings: BookingSession[]) => void,
@@ -119,23 +133,72 @@ export function subscribeToBookingSessions(
   }
 
   let active = true;
+  let unsubscribeFirestore: (() => void) | null = null;
+  let pollingIntervalId: NodeJS.Timeout | null = null;
 
-  const load = async () => {
-    try {
-      const bookings = await fetchAdminBookings();
-      if (active) onUpdate(bookings);
-    } catch (e) {
-      if (onError) onError(e as Error);
-    }
+  const startPolling = () => {
+    if (pollingIntervalId || !active) return;
+    const load = async () => {
+      try {
+        const bookings = await fetchAdminBookings();
+        if (active) onUpdate(bookings);
+      } catch (e) {
+        if (onError) onError(e as Error);
+      }
+    };
+    load();
+    pollingIntervalId = setInterval(load, 8000);
   };
 
-  load();
-  const intervalId = setInterval(load, 8000); // Poll every 8s
+  // Attach Firestore live onSnapshot listener
+  try {
+    const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
+    unsubscribeFirestore = onSnapshot(
+      q,
+      (snapshot) => {
+        if (!active) return;
+        const list: BookingSession[] = [];
+        snapshot.forEach((docSnap) => {
+          list.push(normalizeSession({ id: docSnap.id, ...docSnap.data() }));
+        });
+        setLocalCache(list);
+        onUpdate(list);
+      },
+      (error) => {
+        console.warn("[booking-service] Firestore onSnapshot fallback to polling:", error.message);
+        startPolling();
+      }
+    );
+  } catch (err) {
+    console.warn("[booking-service] onSnapshot initialization error, fallback to polling:", err);
+    startPolling();
+  }
 
   return () => {
     active = false;
-    clearInterval(intervalId);
+    if (unsubscribeFirestore) unsubscribeFirestore();
+    if (pollingIntervalId) clearInterval(pollingIntervalId);
   };
+}
+
+/**
+ * Marks a booking session as seen by admin to clear the "NEW" badge
+ */
+export async function markSessionSeen(id: string): Promise<void> {
+  const local = getLocalCache().map((b) =>
+    b.id === id ? { ...b, adminSeen: true } : b
+  );
+  setLocalCache(local);
+
+  try {
+    await fetch("/api/admin/bookings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId: id, adminSeen: true }),
+    });
+  } catch (err) {
+    console.warn("[booking-service] markSessionSeen error:", err);
+  }
 }
 
 /**
