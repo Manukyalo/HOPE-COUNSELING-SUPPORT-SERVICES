@@ -1,4 +1,5 @@
-// Utility for sending native Web & Service Worker notifications to device
+// FCM Push Notifications & Service Worker Management for Admin PWA
+import { app } from "@/lib/firebase";
 
 export interface BookingNotificationPayload {
   id: string;
@@ -9,6 +10,30 @@ export interface BookingNotificationPayload {
   serviceName: string;
   date: string | null;
   time: string | null;
+}
+
+export interface AdminDeviceRecord {
+  id: string;
+  tokenSnippet: string;
+  platform: string;
+  userAgent: string;
+  createdAt: string | null;
+  lastSeenAt: string | null;
+  adminEmail: string;
+}
+
+export interface TestPushResult {
+  id: string;
+  tokenSnippet: string;
+  userAgent: string;
+  status: "sent" | "failed";
+  errorCode?: string;
+  errorMessage?: string;
+}
+
+interface ExtendedNotificationOptions extends NotificationOptions {
+  renotify?: boolean;
+  vibrate?: number[];
 }
 
 /**
@@ -27,36 +52,163 @@ export async function registerAdminDevice(token: string): Promise<boolean> {
     });
     return res.ok;
   } catch (err) {
-    console.error("Error registering admin device token:", err);
+    console.error("[pwa-notifications] Error registering admin device token:", err);
     return false;
   }
 }
 
 /**
- * Requests browser permission for notifications and registers admin service worker.
+ * Fetches all currently registered admin devices.
+ */
+export async function fetchAdminDevices(): Promise<AdminDeviceRecord[]> {
+  try {
+    const res = await fetch("/api/admin/devices");
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.devices || [];
+  } catch (err) {
+    console.error("[pwa-notifications] Error fetching admin devices:", err);
+    return [];
+  }
+}
+
+/**
+ * Unregisters an admin device.
+ */
+export async function deleteAdminDevice(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/admin/devices?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    return res.ok;
+  } catch (err) {
+    console.error("[pwa-notifications] Error deleting admin device:", err);
+    return false;
+  }
+}
+
+/**
+ * Triggers server-side test multicast push to all registered admin devices.
+ */
+export async function sendTestPushNotification(): Promise<{
+  success: boolean;
+  message: string;
+  results: TestPushResult[];
+}> {
+  try {
+    const res = await fetch("/api/admin/push/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await res.json();
+    return {
+      success: Boolean(data.success),
+      message: data.message || (data.success ? "Test push sent" : "Test push failed"),
+      results: data.results || [],
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "Network error sending test notification",
+      results: [],
+    };
+  }
+}
+
+/**
+ * Initializes FCM messaging and registers the admin device token.
+ */
+export async function syncAdminPushDeviceToken(): Promise<string | null> {
+  if (typeof window === "undefined" || !("Notification" in window)) {
+    return null;
+  }
+
+  if (Notification.permission !== "granted") {
+    return null;
+  }
+
+  try {
+    const { getMessaging, getToken, onMessage, isSupported } = await import("firebase/messaging");
+    const supported = await isSupported();
+    if (!supported) {
+      console.warn("[pwa-notifications] FCM is not supported in this browser environment.");
+      return null;
+    }
+
+    if (!("serviceWorker" in navigator)) {
+      return null;
+    }
+
+    // Register /firebase-messaging-sw.js for background push
+    const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+      scope: "/",
+    });
+    await navigator.serviceWorker.ready;
+
+    const messaging = getMessaging(app);
+    const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+
+    const currentToken = await getToken(messaging, {
+      vapidKey: vapidKey || undefined,
+      serviceWorkerRegistration: swReg,
+    });
+
+    if (currentToken) {
+      localStorage.setItem("hc_fcm_token", currentToken);
+      await registerAdminDevice(currentToken);
+
+      // Listen for foreground messages while admin dashboard is open
+      onMessage(messaging, (payload) => {
+        const title = payload.notification?.title || "🌸 New Booking";
+        const body = payload.notification?.body || "A new client session was booked.";
+
+        // Dispatch local custom event for live dashboard banner
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("hope:fcm-foreground-message", { detail: payload })
+          );
+        }
+
+        // Show local browser notification if permitted
+        if (Notification.permission === "granted" && swReg.showNotification) {
+          const swOpts: ExtendedNotificationOptions = {
+            body,
+            icon: "/icons/icon-192.png",
+            badge: "/icons/icon-192.png",
+            tag: payload.data?.bookingId || "new-booking",
+            renotify: true,
+            data: { url: "/admin" },
+          };
+          swReg.showNotification(title, swOpts);
+        }
+      });
+
+      return currentToken;
+    }
+
+    return null;
+  } catch (err) {
+    console.error("[pwa-notifications] Error synchronizing FCM device token:", err);
+    return null;
+  }
+}
+
+/**
+ * Requests browser permission for notifications and initializes FCM.
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (typeof window === "undefined" || !("Notification" in window)) {
     return "denied";
   }
+
   try {
     const permission = await Notification.requestPermission();
-    if (permission === "granted" && "serviceWorker" in navigator) {
-      try {
-        await navigator.serviceWorker.register("/admin-sw.js", { scope: "/admin" });
-        let deviceId = localStorage.getItem("hc_admin_device_id");
-        if (!deviceId) {
-          deviceId = "device_" + Math.random().toString(36).substring(2) + "_" + Date.now();
-          localStorage.setItem("hc_admin_device_id", deviceId);
-        }
-        await registerAdminDevice(deviceId);
-      } catch (swErr) {
-        console.warn("ServiceWorker registration warning:", swErr);
-      }
+    if (permission === "granted") {
+      await syncAdminPushDeviceToken();
     }
     return permission;
   } catch (error) {
-    console.error("Error requesting notification permission:", error);
+    console.error("[pwa-notifications] Error requesting notification permission:", error);
     return "denied";
   }
 }
@@ -72,8 +224,7 @@ export function isNotificationGranted(): boolean {
 }
 
 /**
- * Sends a native system notification to the admin's device (desktop or mobile).
- * Contains full booking details: Name, Service, Date, Time, Contact.
+ * Sends a local fallback notification if service worker is active.
  */
 export async function sendBookingNotification(booking: BookingNotificationPayload) {
   if (typeof window === "undefined" || !("Notification" in window)) {
@@ -87,15 +238,13 @@ export async function sendBookingNotification(booking: BookingNotificationPayloa
   const title = `🌸 New Booking: ${booking.clientName}`;
   const dateStr = booking.date ? `${booking.date} (${booking.time || "TBD"})` : "Flexible Date";
   const contactStr = [booking.phone, booking.email].filter(Boolean).join(" · ");
-  
   const body = `Session: ${booking.serviceName}\n📅 ${dateStr}\n📞 ${contactStr}`;
 
-  // Preferred: Show via Service Worker Registration (supports vibration & background click-to-open)
   if ("serviceWorker" in navigator) {
     try {
       const reg = await navigator.serviceWorker.ready;
       if (reg && reg.showNotification) {
-        await (reg.showNotification as (title: string, options?: unknown) => Promise<void>)(title, {
+        const swOpts: ExtendedNotificationOptions = {
           body,
           icon: "/icons/icon-192.png",
           badge: "/icons/icon-192.png",
@@ -106,15 +255,15 @@ export async function sendBookingNotification(booking: BookingNotificationPayloa
             url: "/admin",
             bookingId: booking.id,
           },
-        });
+        };
+        await reg.showNotification(title, swOpts);
         return;
       }
     } catch (e) {
-      console.warn("ServiceWorker notification failed, falling back to Notification constructor:", e);
+      console.warn("[pwa-notifications] SW notification failed:", e);
     }
   }
 
-  // Fallback: Desktop / standard Notification object
   try {
     const notification = new Notification(title, {
       body,
@@ -128,6 +277,6 @@ export async function sendBookingNotification(booking: BookingNotificationPayloa
       window.location.href = "/admin";
     };
   } catch (e) {
-    console.warn("Standard notification constructor failed:", e);
+    console.warn("[pwa-notifications] Fallback Notification failed:", e);
   }
 }

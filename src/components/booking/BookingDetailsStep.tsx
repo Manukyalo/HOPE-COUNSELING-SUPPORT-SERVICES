@@ -243,7 +243,7 @@ export default function BookingDetailsStep({
 
           <div>
             <label className="font-sans text-[11px] uppercase tracking-wider font-semibold text-[#555] block mb-1">
-              Phone Number (M-Pesa / SMS) *
+              WhatsApp / Phone Number *
             </label>
             <div className="relative">
               <input
@@ -254,6 +254,12 @@ export default function BookingDetailsStep({
                 placeholder="07XX XXX XXX or +254..."
                 className="w-full h-11 px-3.5 rounded-xl bg-white border border-black/[0.1] font-sans text-sm text-[#0d2b22] focus:border-[#7ecab0] focus:ring-1 focus:ring-[#7ecab0] outline-none transition-all placeholder:text-[#bbb]"
               />
+            </div>
+            <div className="mt-1.5 p-2 rounded-lg bg-[#0d2b22]/[0.04] border border-[#7ecab0]/40 flex items-start gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2d6e5a] mt-1 shrink-0" />
+              <p className="font-sans text-[11px] text-[#0d2b22] font-medium leading-tight">
+                <span className="font-semibold text-[#2d6e5a]">Verified WhatsApp Number:</span> Please ensure this is your active WhatsApp line (<span className="underline">Safaricom</span> or <span className="underline">Airtel</span>) so our practitioner can confirm your session and share consultation details.
+              </p>
             </div>
           </div>
         </div>

@@ -31,6 +31,8 @@ import {
   Save,
   MessageSquare,
   Trash2,
+  Smartphone,
+  Send,
 } from "lucide-react";
 import {
   subscribeToBookingSessions,
@@ -55,6 +57,12 @@ import {
 import {
   sendBookingNotification,
   requestNotificationPermission,
+  syncAdminPushDeviceToken,
+  fetchAdminDevices,
+  deleteAdminDevice,
+  sendTestPushNotification,
+  AdminDeviceRecord,
+  TestPushResult,
 } from "@/lib/pwa-notifications";
 
 // ─── Constants & Metadata ─────────────────────────────────────────────────────
@@ -152,15 +160,27 @@ export default function ClinicalAdminPortal() {
   const [selectedSession, setSelectedSession] = useState<BookingSession | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState<"manifest" | "availability" | "blocked" | "analytics">("manifest");
+  const [activeTab, setActiveTab] = useState<
+    "manifest" | "availability" | "blocked" | "analytics" | "devices"
+  >("manifest");
   const [notesDraft, setNotesDraft] = useState("");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
 
-  // Notifications & PWA
+  // Notifications, FCM & PWA
   const [notifState, setNotifState] = useState<NotificationPermission>("default");
   const [liveBanner, setLiveBanner] = useState<BookingSession | null>(null);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
+
+  // Devices & Push Test State
+  const [devices, setDevices] = useState<AdminDeviceRecord[]>([]);
+  const [isLoadingDevices, setIsLoadingDevices] = useState(false);
+  const [isSendingTestPush, setIsSendingTestPush] = useState(false);
+  const [testPushFeedback, setTestPushFeedback] = useState<{
+    success: boolean;
+    message: string;
+    results: TestPushResult[];
+  } | null>(null);
 
   // ── Auth initialization ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -209,9 +229,23 @@ export default function ClinicalAdminPortal() {
     };
   }, []);
 
-  // ── Real-time Firestore sync ────────────────────────────────────────────────
+  const loadDevices = useCallback(async () => {
+    setIsLoadingDevices(true);
+    const list = await fetchAdminDevices();
+    setDevices(list);
+    setIsLoadingDevices(false);
+  }, []);
+
+  // ── Real-time Firestore sync & FCM sync ─────────────────────────────────────
   useEffect(() => {
     if (!user && !isPinUnlocked) return;
+
+    // Automatic FCM token registration & refresh on page load / login
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      syncAdminPushDeviceToken().then(() => loadDevices());
+    } else {
+      loadDevices();
+    }
 
     const unsubscribe = subscribeToBookingSessions((updated) => {
       setSessions(updated);
@@ -226,11 +260,35 @@ export default function ClinicalAdminPortal() {
     };
     window.addEventListener("hope:new-booking", handleCustomBooking);
 
+    const handleFcmForeground = (e: Event) => {
+      const custom = e as CustomEvent<{
+        notification?: { title?: string; body?: string };
+        data?: Record<string, string>;
+      }>;
+      const d = custom.detail?.data;
+      if (d?.bookingId) {
+        setLiveBanner({
+          id: d.bookingId,
+          clientName: d.clientName || "Client",
+          email: "",
+          phone: d.clientPhone || "",
+          serviceId: "initial",
+          serviceName: d.service || "Counseling Session",
+          date: d.date || "Scheduled Date",
+          time: d.time || "Scheduled Time",
+          status: "Pending",
+          createdAt: new Date().toISOString(),
+        });
+      }
+    };
+    window.addEventListener("hope:fcm-foreground-message", handleFcmForeground);
+
     return () => {
       unsubscribe();
       window.removeEventListener("hope:new-booking", handleCustomBooking);
+      window.removeEventListener("hope:fcm-foreground-message", handleFcmForeground);
     };
-  }, [user, isPinUnlocked]);
+  }, [user, isPinUnlocked, loadDevices]);
 
   // ── Auth Actions ────────────────────────────────────────────────────────────
   const handleEmailSignIn = async (e: React.FormEvent) => {
@@ -318,35 +376,33 @@ export default function ClinicalAdminPortal() {
     const res = await requestNotificationPermission();
     setNotifState(res);
     if (res === "granted") {
-      sendBookingNotification({
-        id: "PWA-VERIFY",
-        clientName: "Hope Clinical System",
-        email: "counselor@hopecounseling.ke",
-        phone: "+254701279231",
-        serviceId: "initial",
-        serviceName: "Realtime Notification Engine Active",
-        date: "Today",
-        time: "Active",
-      });
+      await syncAdminPushDeviceToken();
+      await loadDevices();
     }
   };
 
-  const handleTestAlert = () => {
-    // Uses a system-labelled test session — no PII or realistic-looking client data
-    const testSession: BookingSession = {
-      id: "SYS-TEST-" + Math.floor(1000 + Math.random() * 9000),
-      clientName: "[Notification Test]",
-      email: "system@hopecounseling.ke",
-      phone: "+2547XXXXXXXX",
-      serviceId: "initial",
-      serviceName: "System Notification Test",
-      date: new Date().toLocaleDateString("en-KE"),
-      time: new Date().toLocaleTimeString("en-KE"),
-      status: "Pending",
-      createdAt: new Date().toISOString(),
-    };
-    setLiveBanner(testSession);
-    sendBookingNotification(testSession);
+  const handleSendServerTestPush = async () => {
+    setIsSendingTestPush(true);
+    setTestPushFeedback(null);
+    try {
+      const res = await sendTestPushNotification();
+      setTestPushFeedback(res);
+      await loadDevices();
+    } catch {
+      setTestPushFeedback({
+        success: false,
+        message: "Failed to send test push notification",
+        results: [],
+      });
+    } finally {
+      setIsSendingTestPush(false);
+    }
+  };
+
+  const handleDeleteDevice = async (id: string) => {
+    if (!window.confirm("Unregister this push notification device?")) return;
+    await deleteAdminDevice(id);
+    await loadDevices();
   };
 
   const handleInstallPwa = async () => {
@@ -786,12 +842,17 @@ export default function ClinicalAdminPortal() {
               </button>
             ) : (
               <button
-                onClick={handleTestAlert}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-xs font-medium transition-all"
-                title="Send test alert to device"
+                onClick={handleSendServerTestPush}
+                disabled={isSendingTestPush}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-xs font-medium transition-all disabled:opacity-50"
+                title="Send server push test to registered devices"
               >
-                <BellRing className="w-3.5 h-3.5 text-[#7ecab0]" />
-                <span className="hidden md:inline">Test Alert</span>
+                {isSendingTestPush ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#7ecab0]" />
+                ) : (
+                  <BellRing className="w-3.5 h-3.5 text-[#7ecab0]" />
+                )}
+                <span className="hidden md:inline">Test Push</span>
               </button>
             )}
 
@@ -910,6 +971,20 @@ export default function ClinicalAdminPortal() {
             >
               <TrendingUp className="w-3.5 h-3.5" />
               <span>Practice Analytics</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("devices");
+                loadDevices();
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === "devices"
+                  ? "bg-[#7ecab0] text-[#071a14] shadow-md shadow-[#7ecab0]/20"
+                  : "bg-white/[0.04] text-white/60 hover:text-white border border-white/10"
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>Push Devices ({devices.length})</span>
             </button>
           </div>
 
@@ -1204,6 +1279,180 @@ export default function ClinicalAdminPortal() {
 
         {/* ── TAB 4: BLOCKED DATES ── */}
         {activeTab === "blocked" && <BlockedDatesTab />}
+
+        {/* ── TAB 5: PUSH DEVICES & SCREEN-OFF ALERTS ── */}
+        {activeTab === "devices" && (
+          <div className="space-y-6">
+            {/* Status & Overview */}
+            <div className="bg-[#0a241c]/70 border border-white/10 rounded-2xl p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+                <div>
+                  <h2 className="font-instrument text-2xl text-white mb-1">
+                    Screen-Off Push Notifications
+                  </h2>
+                  <p className="text-xs text-white/60 font-sans max-w-xl">
+                    When clients book, push notifications wake your phone with high urgency WebPush headers even when the screen is off and browser is closed.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendServerTestPush}
+                    disabled={isSendingTestPush}
+                    className="h-11 px-4 rounded-xl bg-[#7ecab0] hover:bg-[#9de4cd] text-[#071a14] text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg shadow-[#7ecab0]/20 disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSendingTestPush ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                    <span>Send Test Notification</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Banner */}
+              <div className="mt-6">
+                {notifState === "granted" ? (
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
+                        Push Notifications Active on This Device
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-white/50 font-sans">
+                      Service Worker: /firebase-messaging-sw.js active
+                    </span>
+                  </div>
+                ) : notifState === "denied" ? (
+                  <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                    <div className="flex items-center gap-2 text-rose-300 text-xs font-bold uppercase tracking-wider mb-1">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>Notifications Blocked by Browser</span>
+                    </div>
+                    <p className="text-xs text-white/70 font-sans">
+                      Browser notifications are blocked. Tap the 🔒 lock or settings icon in your mobile browser address bar, set Notifications to &quot;Allow&quot;, then reload this page.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                      <div className="flex items-center gap-2 text-amber-300 text-xs font-bold uppercase tracking-wider mb-1">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Notifications Not Enabled Yet</span>
+                      </div>
+                      <p className="text-xs text-white/70 font-sans">
+                        Tap &quot;Enable Notifications&quot; to allow this device to receive incoming client bookings.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleEnableNotifications}
+                      className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black text-xs font-bold uppercase tracking-wider transition-all"
+                    >
+                      Enable Notifications
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Test Push Feedback */}
+              {testPushFeedback && (
+                <div
+                  className={`mt-4 p-4 rounded-xl border text-xs font-sans ${
+                    testPushFeedback.success
+                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-200"
+                      : "bg-rose-500/10 border-rose-500/20 text-rose-200"
+                  }`}
+                >
+                  <p className="font-semibold mb-2">{testPushFeedback.message}</p>
+                  {testPushFeedback.results.length > 0 && (
+                    <div className="space-y-1.5 pt-2 border-t border-white/10">
+                      {testPushFeedback.results.map((r, i) => (
+                        <div key={i} className="flex items-center justify-between text-[11px]">
+                          <span className="text-white/70 truncate max-w-[250px]">
+                            {r.userAgent || r.tokenSnippet}
+                          </span>
+                          <span
+                            className={`font-mono px-2 py-0.5 rounded text-[10px] ${
+                              r.status === "sent"
+                                ? "bg-emerald-400/20 text-emerald-300"
+                                : "bg-rose-400/20 text-rose-300"
+                            }`}
+                          >
+                            {r.status === "sent" ? "SENT" : `FAILED: ${r.errorCode || "error"}`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Registered Devices List */}
+            <div className="bg-[#0a241c]/70 border border-white/10 rounded-2xl p-6 sm:p-8">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-instrument text-xl text-white">Registered Admin Devices</h3>
+                  <p className="text-xs text-white/50 font-sans">
+                    Devices stored in the adminDevices collection that receive real-time push dispatches.
+                  </p>
+                </div>
+                <button
+                  onClick={loadDevices}
+                  disabled={isLoadingDevices}
+                  className="p-2 rounded-xl bg-white/[0.04] border border-white/10 text-white/60 hover:text-white transition-all"
+                  title="Refresh device list"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoadingDevices ? "animate-spin" : ""}`} />
+                </button>
+              </div>
+
+              {devices.length === 0 ? (
+                <div className="py-10 text-center text-xs text-white/40">
+                  No devices registered yet. Open this page on your phone and tap &quot;Enable Notifications&quot;.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {devices.map((dev) => (
+                    <div
+                      key={dev.id}
+                      className="p-4 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center text-[#7ecab0] shrink-0 mt-0.5">
+                          <Smartphone className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-white font-medium truncate max-w-sm">
+                            {dev.userAgent}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1 text-[10px] text-white/40 font-mono">
+                            <span>Token: {dev.tokenSnippet}</span>
+                            <span>•</span>
+                            <span>
+                              Last seen: {dev.lastSeenAt ? new Date(dev.lastSeenAt).toLocaleString("en-KE") : "Recently"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleDeleteDevice(dev.id)}
+                        className="px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-medium border border-rose-500/20 self-start sm:self-center transition-all flex items-center gap-1"
+                        title="Unregister device"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* ── CLIENT DOSSIER & CLINICAL NOTES SLIDE-OVER MODAL ── */}

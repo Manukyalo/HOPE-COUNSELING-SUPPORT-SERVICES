@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { cancelBookingByToken } from "@/lib/booking-engine";
+import { notifyAdminCancellation } from "@/lib/notifications";
 import { Booking } from "@/types/booking";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +83,11 @@ export async function POST(req: NextRequest) {
 
     if (action === "cancel") {
       const cancelledBooking = await cancelBookingByToken(token);
+      try {
+        await notifyAdminCancellation(cancelledBooking);
+      } catch (err) {
+        console.error("[api/booking/manage] Cancellation notification error:", err);
+      }
       return NextResponse.json({
         success: true,
         message: "Your appointment has been cancelled successfully.",

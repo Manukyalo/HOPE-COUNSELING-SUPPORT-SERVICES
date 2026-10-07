@@ -168,7 +168,7 @@ export async function sendSessionReminderSms(
 
 /**
  * Sends a real-time Web Push / FCM notification to all registered admin devices.
- * Uses Firebase Cloud Messaging Admin SDK.
+ * Uses Firebase Cloud Messaging Admin SDK with high-urgency WebPush headers.
  */
 export async function notifyAdminDevices(booking: Booking): Promise<boolean> {
   if (!hasAdminCredentials()) {
@@ -184,47 +184,181 @@ export async function notifyAdminDevices(booking: Booking): Promise<boolean> {
       return false;
     }
 
-    const tokens = snap.docs.map((d) => d.data().token).filter(Boolean);
+    const tokens: string[] = [];
+    const docIds: string[] = [];
+    snap.docs.forEach((d) => {
+      const t = d.data().token;
+      if (typeof t === "string" && t.length > 0) {
+        tokens.push(t);
+        docIds.push(d.id);
+      }
+    });
+
     if (tokens.length === 0) return false;
 
     const messaging = getAdminMessaging();
     const clientName = booking.client?.name || booking.clientName || "Client";
     const serviceName = booking.service || booking.sessionType || "Counseling Session";
-    const timeFormatted = booking.timeFormatted || booking.time;
+    const timeFormatted = booking.timeFormatted || booking.time || "Scheduled Time";
+    const bookingDate = booking.date || "Scheduled Date";
+
+    const title = `🌸 New Booking: ${clientName}`;
+    const bodyText = `New booking: ${clientName} - ${serviceName} - ${bookingDate} ${timeFormatted}`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://hope-counseling-support-services.vercel.app";
+    const adminUrl = `${appUrl.replace(/\/$/, "")}/admin`;
 
     const response = await messaging.sendEachForMulticast({
       tokens,
       notification: {
-        title: `🌸 New Booking: ${clientName}`,
-        body: `${serviceName} on ${booking.date} at ${timeFormatted} (EAT)`,
+        title,
+        body: bodyText,
       },
       data: {
         bookingId: booking.id,
         referenceCode: booking.referenceCode || booking.id,
         clientName,
         clientPhone: booking.client?.phone || booking.clientPhone || "",
-        date: booking.date,
+        date: bookingDate,
         time: timeFormatted,
         service: serviceName,
         url: "/admin",
       },
+      webpush: {
+        headers: {
+          Urgency: "high",
+          TTL: "86400",
+        },
+        notification: {
+          title,
+          body: bodyText,
+          icon: "/icons/icon-192.png",
+          badge: "/icons/icon-192.png",
+          tag: "new-booking",
+          requireInteraction: true,
+        },
+        fcmOptions: {
+          link: adminUrl,
+        },
+      },
     });
 
-    // Cleanup stale tokens if any failed
+    console.log(`[PUSH] Multicast sent. Success: ${response.successCount}, Failure: ${response.failureCount}`);
+
+    // Prune ONLY tokens that are unregistered or invalid-argument
     if (response.failureCount > 0) {
       const deletePromises: Promise<FirebaseFirestore.WriteResult>[] = [];
       response.responses.forEach((resp, idx) => {
-        if (!resp.success && resp.error?.code === "messaging/registration-token-not-registered") {
-          const docId = snap.docs[idx].id;
-          deletePromises.push(db.collection("adminDevices").doc(docId).delete());
+        if (!resp.success) {
+          const errCode = resp.error?.code || "unknown";
+          console.error(
+            `[PUSH] Failed token [${docIds[idx]}]: ${errCode} - ${resp.error?.message}`
+          );
+          if (
+            errCode === "messaging/registration-token-not-registered" ||
+            errCode === "messaging/invalid-argument"
+          ) {
+            deletePromises.push(db.collection("adminDevices").doc(docIds[idx]).delete());
+          }
         }
       });
-      await Promise.allSettled(deletePromises);
+      if (deletePromises.length > 0) {
+        await Promise.allSettled(deletePromises);
+        console.log(`[PUSH] Pruned ${deletePromises.length} invalid/unregistered device token(s).`);
+      }
     }
 
-    return true;
+    return response.successCount > 0;
   } catch (err) {
     console.error("[PUSH] Error sending push notification to admin devices:", err);
     return false;
   }
 }
+
+/**
+ * Sends client cancellation push notification to all registered admin devices.
+ */
+export async function notifyAdminCancellation(booking: Booking): Promise<boolean> {
+  if (!hasAdminCredentials()) return false;
+
+  try {
+    const db = getAdminDb();
+    const snap = await db.collection("adminDevices").get();
+    if (snap.empty) return false;
+
+    const tokens: string[] = [];
+    const docIds: string[] = [];
+    snap.docs.forEach((d) => {
+      const t = d.data().token;
+      if (typeof t === "string" && t.length > 0) {
+        tokens.push(t);
+        docIds.push(d.id);
+      }
+    });
+
+    if (tokens.length === 0) return false;
+
+    const messaging = getAdminMessaging();
+    const clientName = booking.client?.name || booking.clientName || "Client";
+    const serviceName = booking.service || booking.sessionType || "Session";
+    const bookingDate = booking.date || "";
+    const timeFormatted = booking.timeFormatted || booking.time || "";
+
+    const title = `⚠️ Booking Cancelled: ${clientName}`;
+    const bodyText = `Booking cancelled by client: ${clientName} - ${serviceName} - ${bookingDate} ${timeFormatted}`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://hope-counseling-support-services.vercel.app";
+    const adminUrl = `${appUrl.replace(/\/$/, "")}/admin`;
+
+    const response = await messaging.sendEachForMulticast({
+      tokens,
+      notification: {
+        title,
+        body: bodyText,
+      },
+      data: {
+        bookingId: booking.id,
+        status: "cancelled",
+        url: "/admin",
+      },
+      webpush: {
+        headers: {
+          Urgency: "high",
+          TTL: "86400",
+        },
+        notification: {
+          title,
+          body: bodyText,
+          icon: "/icons/icon-192.png",
+          badge: "/icons/icon-192.png",
+          tag: `cancel-${booking.id}`,
+          requireInteraction: true,
+        },
+        fcmOptions: {
+          link: adminUrl,
+        },
+      },
+    });
+
+    if (response.failureCount > 0) {
+      const deletePromises: Promise<FirebaseFirestore.WriteResult>[] = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          const errCode = resp.error?.code || "unknown";
+          console.error(`[PUSH:CANCEL] Failed token [${docIds[idx]}]: ${errCode}`);
+          if (
+            errCode === "messaging/registration-token-not-registered" ||
+            errCode === "messaging/invalid-argument"
+          ) {
+            deletePromises.push(db.collection("adminDevices").doc(docIds[idx]).delete());
+          }
+        }
+      });
+      await Promise.allSettled(deletePromises);
+    }
+
+    return response.successCount > 0;
+  } catch (err) {
+    console.error("[PUSH:CANCEL] Error sending cancellation push:", err);
+    return false;
+  }
+}
+

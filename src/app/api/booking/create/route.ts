@@ -123,14 +123,16 @@ export async function POST(req: NextRequest) {
       throw err;
     }
 
-    // 4. Background Notifications (Non-blocking)
-    Promise.allSettled([
-      sendClientConfirmationSms(booking),
-      notifyCounselorNewBooking(booking),
-      notifyAdminDevices(booking),
-    ]).catch((err) => {
-      console.error("[api/booking/create] Notification trigger error:", err);
-    });
+    // 4. Notifications — MUST be awaited before returning response on Vercel Serverless
+    try {
+      await Promise.allSettled([
+        sendClientConfirmationSms(booking),
+        notifyCounselorNewBooking(booking),
+        notifyAdminDevices(booking),
+      ]);
+    } catch (notifErr) {
+      console.error("[api/booking/create] Notification trigger error:", notifErr);
+    }
 
     const host =
       req.headers.get("x-forwarded-host") ||
