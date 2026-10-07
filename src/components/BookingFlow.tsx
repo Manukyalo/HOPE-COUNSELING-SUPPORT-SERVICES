@@ -92,8 +92,8 @@ export default function BookingFlow() {
       const monthStr2 = `${nextY}-${String(nextM).padStart(2, "0")}`;
 
       const [res1, res2] = await Promise.all([
-        fetch(`/api/booking/availability?month=${monthStr1}`),
-        fetch(`/api/booking/availability?month=${monthStr2}`),
+        fetch(`/api/booking/availability?month=${monthStr1}`, { cache: "no-store" }),
+        fetch(`/api/booking/availability?month=${monthStr2}`, { cache: "no-store" }),
       ]);
 
       if (!res1.ok || !res2.ok) {
@@ -156,7 +156,7 @@ export default function BookingFlow() {
     setStep(2);
 
     try {
-      const res = await fetch(`/api/booking/availability?date=${dateStr}`);
+      const res = await fetch(`/api/booking/availability?date=${dateStr}`, { cache: "no-store" });
       const data = await res.json();
       if (res.ok && data.slots) {
         setDaySlots(data.slots);
@@ -186,15 +186,20 @@ export default function BookingFlow() {
     notes?: string;
     website_hp?: string;
   }) => {
-    if (!selectedSlot || !selectedDateStr) return;
+    if (!selectedSlot || !selectedDateStr || submitting) return;
 
     setSubmitting(true);
     setBookingError(null);
 
     try {
+      const idempotencyKey = `book_${selectedSlot.slotId}_${Date.now()}`;
       const res = await fetch("/api/booking/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
+        },
+        cache: "no-store",
         body: JSON.stringify({
           slotId: selectedSlot.slotId,
           startUtc: selectedSlot.startUtc,

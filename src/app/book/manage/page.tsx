@@ -32,7 +32,9 @@ function ManageBookingContent() {
 
     async function fetchDetails() {
       try {
-        const res = await fetch(`/api/booking/manage?action=${action}&token=${token}`);
+        const res = await fetch(`/api/booking/manage?action=${action}&token=${token}`, {
+          cache: "no-store",
+        });
         const data = await res.json();
         if (!res.ok) {
           setError(data.error || "Unable to find this booking session.");
