@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // Keeps firebase-admin (and its CJS deps like jwks-rsa) out of the
+    // Next.js server bundle so our jose@4 override is honoured at runtime.
+    serverComponentsExternalPackages: ['firebase-admin', 'firebase-admin/app'],
+  },
   // Disable browser source maps in production to prevent leaking clinical client logic/secrets
   productionBrowserSourceMaps: false,
   images: {
