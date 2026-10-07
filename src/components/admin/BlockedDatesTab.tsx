@@ -231,7 +231,7 @@ export default function BlockedDatesTab() {
 
                 <button
                   type="button"
-                  onClick={() => handleDelete(b.id)}
+                  onClick={() => handleDelete(b.id!)}
                   title="Remove Block"
                   className="p-2 rounded-xl bg-white/[0.04] hover:bg-red-500/20 text-white/40 hover:text-red-300 border border-white/5 transition-colors"
                 >

@@ -9,14 +9,23 @@ export async function sendClientConfirmationSms(booking: Booking): Promise<boole
   const apiKey = process.env.AFRICASTALKING_API_KEY;
   const senderId = process.env.AFRICASTALKING_SENDER_ID;
 
+  const clientPhone = booking.client?.phone || booking.clientPhone;
+  const clientName = booking.client?.name || booking.clientName || "Client";
+  const timeFormatted = booking.timeFormatted || booking.time;
+
+  if (!clientPhone) {
+    console.warn(`[SMS] Cannot send confirmation SMS: no phone number for booking ${booking.id}`);
+    return false;
+  }
+
   if (!username || !apiKey) {
     console.log(
-      `[SMS:DEV] Africa's Talking not configured. SMS to ${booking.clientPhone}: "Hello ${booking.clientName}, your appointment with Hope Counseling is confirmed for ${booking.date} at ${booking.timeFormatted} (EAT). Ref: ${booking.id}. Confidentiality is respected."`
+      `[SMS:DEV] Africa's Talking not configured. SMS to ${clientPhone}: "Hello ${clientName}, your appointment with Hope Counseling is confirmed for ${booking.date} at ${timeFormatted} (EAT). Ref: ${booking.referenceCode || booking.id}. Confidentiality is respected."`
     );
     return true;
   }
 
-  const message = `Hello ${booking.clientName}, your appointment with Hope Counseling is confirmed for ${booking.date} at ${booking.timeFormatted} (EAT). Ref: ${booking.id}. Please reach us if you need to adjust your time.`;
+  const message = `Hello ${clientName}, your appointment with Hope Counseling is confirmed for ${booking.date} at ${timeFormatted} (EAT). Ref: ${booking.referenceCode || booking.id}. Please reach us if you need to adjust your time.`;
 
   try {
     const url =
@@ -26,7 +35,7 @@ export async function sendClientConfirmationSms(booking: Booking): Promise<boole
 
     const bodyParams = new URLSearchParams();
     bodyParams.append("username", username);
-    bodyParams.append("to", booking.clientPhone);
+    bodyParams.append("to", clientPhone);
     bodyParams.append("message", message);
     if (senderId && username !== "sandbox") {
       bodyParams.append("from", senderId);
@@ -63,7 +72,12 @@ export async function notifyCounselorNewBooking(booking: Booking): Promise<boole
   const username = process.env.AFRICASTALKING_USERNAME;
   const apiKey = process.env.AFRICASTALKING_API_KEY;
 
-  const adminMsg = `[New Booking] ${booking.clientName} booked ${booking.sessionType} (${booking.deliveryMode}) for ${booking.date} at ${booking.timeFormatted} EAT. Ref: ${booking.id}.`;
+  const clientName = booking.client?.name || booking.clientName || "Client";
+  const sessionType = booking.sessionType || booking.service || "Counseling";
+  const deliveryMode = booking.deliveryMode || "in-person";
+  const timeFormatted = booking.timeFormatted || booking.time;
+
+  const adminMsg = `[New Booking] ${clientName} booked ${sessionType} (${deliveryMode}) for ${booking.date} at ${timeFormatted} EAT. Ref: ${booking.referenceCode || booking.id}.`;
 
   if (!username || !apiKey) {
     console.log(`[SMS:ADMIN:DEV] ${adminPhone}: ${adminMsg}`);
@@ -107,11 +121,19 @@ export async function sendSessionReminderSms(
   const username = process.env.AFRICASTALKING_USERNAME;
   const apiKey = process.env.AFRICASTALKING_API_KEY;
 
+  const clientPhone = booking.client?.phone || booking.clientPhone;
+  const timeFormatted = booking.timeFormatted || booking.time;
+
+  if (!clientPhone) {
+    console.warn(`[SMS] Cannot send reminder SMS: no phone number for booking ${booking.id}`);
+    return false;
+  }
+
   const timingText = type === "24h" ? "tomorrow" : "in 2 hours";
-  const message = `Reminder: Your Hope Counseling session is scheduled for ${timingText} at ${booking.timeFormatted} EAT (Ref: ${booking.id}). We look forward to holding space for you.`;
+  const message = `Reminder: Your Hope Counseling session is scheduled for ${timingText} at ${timeFormatted} EAT (Ref: ${booking.referenceCode || booking.id}). We look forward to holding space for you.`;
 
   if (!username || !apiKey) {
-    console.log(`[SMS:REMINDER:DEV] To ${booking.clientPhone}: ${message}`);
+    console.log(`[SMS:REMINDER:DEV] To ${clientPhone}: ${message}`);
     return true;
   }
 
@@ -123,7 +145,7 @@ export async function sendSessionReminderSms(
 
     const bodyParams = new URLSearchParams();
     bodyParams.append("username", username);
-    bodyParams.append("to", booking.clientPhone);
+    bodyParams.append("to", clientPhone);
     bodyParams.append("message", message);
 
     const res = await fetch(url, {

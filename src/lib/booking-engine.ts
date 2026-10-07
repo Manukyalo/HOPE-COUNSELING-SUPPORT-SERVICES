@@ -478,24 +478,36 @@ export async function bookSlotTransaction(params: {
       updatedAt: nowIso,
     });
 
-    // Create booking record
+    // Create booking record per Phase 1 schema
     const bookingRecord: Booking = {
       id: bookingId,
+      referenceCode: bookingId,
+      service: service.name,
       slotId: params.slotId,
       counselorId: rules.counselorId,
       startUtc: params.startUtc,
       endUtc,
       date: dateEat,
+      time: timeFormatted,
       timeFormatted,
+      client: {
+        name: params.clientName.trim(),
+        phone: normalizedPhone,
+        email: params.clientEmail.trim().toLowerCase(),
+        notes: params.notes?.trim() || "",
+      },
+      // Flat compat aliases (kept so Firestore reads back cleanly on older queries)
       clientName: params.clientName.trim(),
       clientEmail: params.clientEmail.trim().toLowerCase(),
       clientPhone: normalizedPhone,
+      notes: params.notes?.trim() || "",
       sessionType: params.sessionType,
       deliveryMode: params.deliveryMode,
-      notes: params.notes?.trim() || "",
       price: service.price,
       currency: "KES",
       status: "confirmed",
+      source: "web",
+      adminSeen: false,
       cancelToken,
       rescheduleToken,
       tokenExpiresAt,
@@ -526,21 +538,32 @@ export async function bookSlotTransaction(params: {
 
   return {
     id: bookingId,
+    referenceCode: bookingId,
+    service: service.name,
     slotId: params.slotId,
     counselorId: rules.counselorId,
     startUtc: params.startUtc,
     endUtc,
     date: dateEat,
+    time: timeFormatted,
     timeFormatted,
+    client: {
+      name: params.clientName.trim(),
+      phone: normalizedPhone,
+      email: params.clientEmail.trim().toLowerCase(),
+      notes: params.notes?.trim() || "",
+    },
     clientName: params.clientName.trim(),
     clientEmail: params.clientEmail.trim().toLowerCase(),
     clientPhone: normalizedPhone,
+    notes: params.notes?.trim() || "",
     sessionType: params.sessionType,
     deliveryMode: params.deliveryMode,
-    notes: params.notes?.trim() || "",
     price: service.price,
     currency: "KES",
     status: "confirmed",
+    source: "web",
+    adminSeen: false,
     cancelToken,
     rescheduleToken,
     tokenExpiresAt,
@@ -605,7 +628,8 @@ export async function cancelBookingByToken(token: string): Promise<Booking> {
  * Generates an iCalendar (.ics) string for the session in EAT
  */
 export function generateIcsContent(booking: Booking): string {
-  const service = SERVICE_DETAILS[booking.sessionType] || SERVICE_DETAILS.individual;
+  const sessionType = booking.sessionType ?? "individual";
+  const service = SERVICE_DETAILS[sessionType] ?? SERVICE_DETAILS.individual;
 
   // Format UTC datetime: YYYYMMDDTHHmmssZ
   const formatIcsDate = (isoStr: string) =>

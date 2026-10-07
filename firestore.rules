@@ -1,13 +1,39 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // SECURITY & PRIVACY ENFORCEMENT:
-    // All client booking writes and reads, admin operations, and availability calculations
-    // are strictly executed server-side via the Firebase Admin SDK inside Next.js API routes.
-    // The browser client SDK is completely denied read and write access to all collections
-    // to guarantee zero exposure of client PII, booking details, or scheduling rules.
+    // DENY ALL by default: Public clients have NO direct read/write access.
+    // Public booking creation and availability calculation run strictly server-side
+    // via Next.js API routes with Firebase Admin SDK credentials.
     match /{document=**} {
       allow read, write: if false;
+    }
+
+    // Bookings collection:
+    // Only authenticated admins (via Firebase Auth) may listen (onSnapshot) or update status.
+    // Public clients cannot read or write.
+    match /bookings/{bookingId} {
+      allow read, update: if request.auth != null;
+      allow create, delete: if false; // Created and deleted solely by server Admin SDK
+    }
+
+    // Settings collection (settings/availability):
+    // Only authenticated admins may read or update.
+    match /settings/{settingId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Slot Locks collection (slotLocks/{date_time}):
+    // Atomic locks are exclusively managed by server Admin SDK in Firestore transactions.
+    // Authenticated admin can read lock statuses.
+    match /slotLocks/{lockId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Admin Devices collection (adminDevices/{deviceId}):
+    // Push notification device tokens for authenticated admins.
+    match /adminDevices/{deviceId} {
+      allow read, write: if request.auth != null;
     }
   }
 }

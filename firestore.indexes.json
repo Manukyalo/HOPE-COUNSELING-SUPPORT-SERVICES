@@ -9,8 +9,8 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "startUtc",
-          "order": "ASCENDING"
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
         }
       ]
     },
@@ -23,8 +23,26 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "time",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "time",
+          "order": "ASCENDING"
         }
       ]
     }

@@ -72,12 +72,15 @@ export const SERVICE_DETAILS: Record<
 
 export const DEFAULT_AVAILABILITY_RULES: AvailabilityRules = {
   counselorId: "hope_primary",
+  workingDays: [1, 2, 3, 4, 5, 6],
+  sessionStartHour: "09:00",
+  sessionEndHour: "17:00",
   sessionDurationMinutes: 50,
   bufferMinutes: 10,
-  sessionsPerSlot: 1,
-  minAdvanceHours: 12, // Bookable from tomorrow / at least 12h advance
-  bookingWindowDays: 60, // Bookable up to 60 days ahead
-  timezone: TIMEZONE_EAT,
+  minAdvanceHours: 12, // Require at least 12 hours advance notice
+  blockedDates: [],
+  bookingWindowDays: 60,
+  maxBookingsPerSlot: 1,
   weeklySchedule: {
     // 0: Sunday (Closed)
     0: { enabled: false, start: "09:00", end: "17:00" },

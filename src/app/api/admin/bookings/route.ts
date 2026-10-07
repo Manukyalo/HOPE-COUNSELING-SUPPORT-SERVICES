@@ -39,13 +39,18 @@ export async function GET(req: NextRequest) {
     let bookings: Booking[] = snap.docs.map((doc: QueryDocumentSnapshot) => doc.data() as Booking);
 
     if (search) {
-      bookings = bookings.filter(
-        (b: Booking) =>
-          b.clientName.toLowerCase().includes(search) ||
-          b.clientEmail.toLowerCase().includes(search) ||
-          b.clientPhone.includes(search) ||
-          b.id.toLowerCase().includes(search)
-      );
+      bookings = bookings.filter((b: Booking) => {
+        const name = (b.client?.name || b.clientName || "").toLowerCase();
+        const email = (b.client?.email || b.clientEmail || "").toLowerCase();
+        const phone = b.client?.phone || b.clientPhone || "";
+        const ref = (b.referenceCode || b.id || "").toLowerCase();
+        return (
+          name.includes(search) ||
+          email.includes(search) ||
+          phone.includes(search) ||
+          ref.includes(search)
+        );
+      });
     }
 
     return NextResponse.json({ success: true, bookings });

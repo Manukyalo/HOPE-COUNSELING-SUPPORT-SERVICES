@@ -26,13 +26,21 @@ export default function BookingConfirmationStep({
   const booking = result.booking;
   if (!booking) return null;
 
+  const displayTime = booking.time;
+  const clientName = booking.client?.name;
+  const clientPhone = booking.client?.phone;
+
   // Generate Google Calendar Link
-  const gCalTitle = encodeURIComponent(`Hope Counseling Session (${booking.sessionType})`);
+  const gCalTitle = encodeURIComponent(
+    `Hope Counseling Session (${booking.sessionType ?? booking.service})`
+  );
   const gCalDetails = encodeURIComponent(
-    `Confidential therapy appointment with Hope Counseling Support Services.\nReference: ${booking.id}\nMode: ${booking.deliveryMode}`
+    `Confidential therapy appointment with Hope Counseling Support Services.\nReference: ${booking.referenceCode}\nMode: ${booking.deliveryMode ?? "in_person"}`
   );
   const gCalLocation = encodeURIComponent(
-    booking.deliveryMode === "online" ? "Google Meet" : "Hope Counseling Clinic, Nairobi, Kenya"
+    booking.deliveryMode === "online"
+      ? "Google Meet"
+      : "Hope Counseling Clinic, Nairobi, Kenya"
   );
   const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${gCalTitle}&details=${gCalDetails}&location=${gCalLocation}`;
 
@@ -61,7 +69,7 @@ export default function BookingConfirmationStep({
               Booking Reference
             </span>
             <span className="font-mono text-lg font-bold text-[#0d2b22] tracking-wider">
-              {booking.id}
+              {booking.referenceCode}
             </span>
           </div>
           <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold">
@@ -82,14 +90,14 @@ export default function BookingConfirmationStep({
               <Clock className="w-3.5 h-3.5 text-[#7ecab0]" /> Time
             </span>
             <span className="font-sans font-semibold text-[#0d2b22] text-sm">
-              {booking.timeFormatted} (East Africa Time)
+              {displayTime} (East Africa Time)
             </span>
           </div>
 
           <div className="space-y-1">
             <span className="text-[#888] font-sans">Client</span>
             <span className="font-sans font-semibold text-[#0d2b22] block">
-              {booking.clientName}
+              {clientName}
             </span>
           </div>
 
@@ -101,12 +109,20 @@ export default function BookingConfirmationStep({
           </div>
         </div>
 
-        <div className="pt-3 border-t border-black/[0.05] flex items-center justify-between text-xs">
-          <span className="text-[#888] font-sans">Session Fee</span>
-          <span className="font-sans font-bold text-sm text-[#0d2b22]">
-            KSh {booking.price.toLocaleString()} ({booking.currency})
-          </span>
-        </div>
+        {booking.price != null && (
+          <div className="pt-3 border-t border-black/[0.05] flex items-center justify-between text-xs">
+            <span className="text-[#888] font-sans">Session Fee</span>
+            <span className="font-sans font-bold text-sm text-[#0d2b22]">
+              KSh {booking.price.toLocaleString()} ({booking.currency ?? "KES"})
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Security note */}
+      <div className="flex items-center justify-center gap-2 text-xs text-[#888]">
+        <ShieldCheck className="w-4 h-4 text-[#7ecab0]" />
+        <span className="font-sans">Your session details are kept strictly confidential.</span>
       </div>
 
       {/* Calendar Export Options */}
@@ -114,7 +130,7 @@ export default function BookingConfirmationStep({
         {result.calendarIcsUrl && (
           <a
             href={result.calendarIcsUrl}
-            download={`hope-counseling-${booking.id}.ics`}
+            download={`hope-counseling-${booking.referenceCode}.ics`}
             className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#0d2b22] text-[#7ecab0] hover:bg-[#1a4a38] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-sm flex items-center justify-center gap-2"
           >
             <Download className="w-4 h-4" />
@@ -137,7 +153,7 @@ export default function BookingConfirmationStep({
       <div className="p-4 rounded-xl bg-[#f9f7f4] border border-black/5 text-xs text-[#666] space-y-3">
         <p className="font-sans">
           A confirmation SMS has been dispatched to{" "}
-          <strong className="text-[#0d2b22]">{booking.clientPhone}</strong>. Need to adjust your booking?
+          <strong className="text-[#0d2b22]">{clientPhone}</strong>. Need to adjust your booking?
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4 pt-1 font-sans">
