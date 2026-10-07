@@ -18,7 +18,10 @@ export async function GET(req: NextRequest) {
         );
       }
       const slots = await getDaySlots(date);
-      return NextResponse.json({ success: true, date, slots });
+      return NextResponse.json(
+        { success: true, date, slots },
+        { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate" } }
+      );
     }
 
     if (month) {
@@ -29,7 +32,10 @@ export async function GET(req: NextRequest) {
         );
       }
       const { availability, isConfigured } = await getMonthAvailability(month);
-      return NextResponse.json({ success: true, month, availability, isConfigured });
+      return NextResponse.json(
+        { success: true, month, availability, isConfigured },
+        { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate" } }
+      );
     }
 
     // Default: return current and next month availability
@@ -43,14 +49,17 @@ export async function GET(req: NextRequest) {
       getMonthAvailability(nextMonth),
     ]);
 
-    return NextResponse.json({
-      success: true,
-      isConfigured: currentMonthData.isConfigured || nextMonthData.isConfigured,
-      months: {
-        [currentMonth]: currentMonthData.availability,
-        [nextMonth]: nextMonthData.availability,
+    return NextResponse.json(
+      {
+        success: true,
+        isConfigured: currentMonthData.isConfigured || nextMonthData.isConfigured,
+        months: {
+          [currentMonth]: currentMonthData.availability,
+          [nextMonth]: nextMonthData.availability,
+        },
       },
-    });
+      { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate" } }
+    );
   } catch (err: unknown) {
     const error = err as Error & { code?: string };
     console.error("[api/booking/availability] Server error during availability calculation:", {

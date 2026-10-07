@@ -1,4 +1,5 @@
 import { Booking } from "@/types/booking";
+import { getAdminDb, getAdminMessaging, hasAdminCredentials } from "@/lib/firebaseAdmin";
 
 /**
  * Sends discreet confirmation SMS to the client via Africa's Talking.
@@ -161,6 +162,69 @@ export async function sendSessionReminderSms(
     return res.ok;
   } catch (e) {
     console.error(`[SMS:REMINDER:${type}] Failed to send reminder:`, e);
+    return false;
+  }
+}
+
+/**
+ * Sends a real-time Web Push / FCM notification to all registered admin devices.
+ * Uses Firebase Cloud Messaging Admin SDK.
+ */
+export async function notifyAdminDevices(booking: Booking): Promise<boolean> {
+  if (!hasAdminCredentials()) {
+    console.log("[PUSH:DEV] Firebase Admin not configured. Skipping FCM push notification.");
+    return false;
+  }
+
+  try {
+    const db = getAdminDb();
+    const snap = await db.collection("adminDevices").get();
+    if (snap.empty) {
+      console.log("[PUSH] No admin devices registered in adminDevices collection.");
+      return false;
+    }
+
+    const tokens = snap.docs.map((d) => d.data().token).filter(Boolean);
+    if (tokens.length === 0) return false;
+
+    const messaging = getAdminMessaging();
+    const clientName = booking.client?.name || booking.clientName || "Client";
+    const serviceName = booking.service || booking.sessionType || "Counseling Session";
+    const timeFormatted = booking.timeFormatted || booking.time;
+
+    const response = await messaging.sendEachForMulticast({
+      tokens,
+      notification: {
+        title: `🌸 New Booking: ${clientName}`,
+        body: `${serviceName} on ${booking.date} at ${timeFormatted} (EAT)`,
+      },
+      data: {
+        bookingId: booking.id,
+        referenceCode: booking.referenceCode || booking.id,
+        clientName,
+        clientPhone: booking.client?.phone || booking.clientPhone || "",
+        date: booking.date,
+        time: timeFormatted,
+        service: serviceName,
+        url: "/admin",
+      },
+    });
+
+    // Cleanup stale tokens if any failed
+    if (response.failureCount > 0) {
+      const deletePromises: Promise<FirebaseFirestore.WriteResult>[] = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success && resp.error?.code === "messaging/registration-token-not-registered") {
+          const docId = snap.docs[idx].id;
+          deletePromises.push(db.collection("adminDevices").doc(docId).delete());
+        }
+      });
+      await Promise.allSettled(deletePromises);
+    }
+
+    return true;
+  } catch (err) {
+    console.error("[PUSH] Error sending push notification to admin devices:", err);
     return false;
   }
 }

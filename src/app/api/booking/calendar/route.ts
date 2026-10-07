@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const ref = searchParams.get("ref");
 
-    if (!ref || !/^HC-[A-Z0-9]+$/i.test(ref)) {
+    if (!ref || !/^HCS?-[A-Z0-9]+$/i.test(ref)) {
       return new NextResponse("Invalid booking reference", { status: 400 });
     }
 

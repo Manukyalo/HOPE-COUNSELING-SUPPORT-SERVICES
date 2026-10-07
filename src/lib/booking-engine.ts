@@ -81,6 +81,10 @@ export async function getAvailabilityRules(): Promise<AvailabilityRules> {
   }
   try {
     const db = getAdminDb();
+    const settingsSnap = await db.collection("settings").doc("availability").get();
+    if (settingsSnap.exists) {
+      return { ...DEFAULT_AVAILABILITY_RULES, ...(settingsSnap.data() as AvailabilityRules) };
+    }
     const docSnap = await db.collection(RULES_COLLECTION).doc("primary").get();
     if (docSnap.exists) {
       return { ...DEFAULT_AVAILABILITY_RULES, ...(docSnap.data() as AvailabilityRules) };
@@ -441,7 +445,9 @@ export async function bookSlotTransaction(params: {
   const dateEat = formatToEatDateString(startDate);
   const timeFormatted = formatToEatTimeString(startDate);
 
+  const slotKey = `${dateEat}_${timeFormatted}`;
   const slotDocRef = db.collection(SLOTS_COLLECTION).doc(params.slotId);
+  const slotLockDocRef = db.collection("slotLocks").doc(slotKey);
   const bookingDocRef = db.collection(BOOKINGS_COLLECTION).doc(bookingId);
   const cancelTokenRef = db.collection(TOKENS_COLLECTION).doc(`cancel_${cancelToken}`);
   const rescheduleTokenRef = db.collection(TOKENS_COLLECTION).doc(`reschedule_${rescheduleToken}`);
@@ -451,6 +457,7 @@ export async function bookSlotTransaction(params: {
   // Run atomic Firestore transaction
   await db.runTransaction(async (transaction: Transaction) => {
     const slotDoc = (await transaction.get(slotDocRef)) as DocumentSnapshot<DocumentData>;
+    const slotLockDoc = (await transaction.get(slotLockDocRef)) as DocumentSnapshot<DocumentData>;
 
     if (slotDoc.exists) {
       const slotData = slotDoc.data();
@@ -466,6 +473,10 @@ export async function bookSlotTransaction(params: {
       }
     }
 
+    if (slotLockDoc.exists) {
+      throw new Error("SLOT_TAKEN: That slot was just taken, please pick another.");
+    }
+
     // Lock slot
     transaction.set(slotDocRef, {
       slotId: params.slotId,
@@ -476,6 +487,15 @@ export async function bookSlotTransaction(params: {
       status: "active",
       createdAt: nowIso,
       updatedAt: nowIso,
+    });
+
+    transaction.set(slotLockDocRef, {
+      slotKey,
+      bookingId,
+      date: dateEat,
+      time: timeFormatted,
+      startUtc: params.startUtc,
+      createdAt: nowIso,
     });
 
     // Create booking record per Phase 1 schema
@@ -606,9 +626,12 @@ export async function cancelBookingByToken(token: string): Promise<Booking> {
     }
 
     const slotDocRef = db.collection(SLOTS_COLLECTION).doc(booking.slotId);
+    const slotKey = `${booking.date}_${booking.time || booking.timeFormatted}`;
+    const slotLockDocRef = db.collection("slotLocks").doc(slotKey);
 
-    // Release slot
+    // Release slot & atomic lock
     transaction.delete(slotDocRef);
+    transaction.delete(slotLockDocRef);
 
     // Mark cancelled
     const nowIso = new Date().toISOString();

@@ -55,7 +55,10 @@ export async function POST(req: NextRequest) {
         ...rules,
         updatedAt: new Date().toISOString(),
       };
-      await db.collection("availabilityRules").doc("primary").set(updatedRules, { merge: true });
+      await Promise.all([
+        db.collection("settings").doc("availability").set(updatedRules, { merge: true }),
+        db.collection("availabilityRules").doc("primary").set(updatedRules, { merge: true }),
+      ]);
       return NextResponse.json({ success: true, rules: updatedRules });
     }
 

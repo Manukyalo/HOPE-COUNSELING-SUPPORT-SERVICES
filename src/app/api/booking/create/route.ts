@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { bookSlotTransaction } from "@/lib/booking-engine";
-import { notifyCounselorNewBooking, sendClientConfirmationSms } from "@/lib/notifications";
+import {
+  notifyCounselorNewBooking,
+  sendClientConfirmationSms,
+  notifyAdminDevices,
+} from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -123,6 +127,7 @@ export async function POST(req: NextRequest) {
     Promise.allSettled([
       sendClientConfirmationSms(booking),
       notifyCounselorNewBooking(booking),
+      notifyAdminDevices(booking),
     ]).catch((err) => {
       console.error("[api/booking/create] Notification trigger error:", err);
     });
@@ -136,29 +141,36 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      bookingRef: booking.id,
+      bookingRef: booking.referenceCode || booking.id,
       booking: {
         id: booking.id,
+        referenceCode: booking.referenceCode || booking.id,
+        service: booking.service,
         date: booking.date,
-        timeFormatted: booking.timeFormatted,
+        time: booking.time,
+        timeFormatted: booking.timeFormatted || booking.time,
         sessionType: booking.sessionType,
         deliveryMode: booking.deliveryMode,
         price: booking.price,
         currency: booking.currency,
-        clientName: booking.clientName,
-        clientEmail: booking.clientEmail,
-        clientPhone: booking.clientPhone,
+        client: booking.client,
+        clientName: booking.client?.name || booking.clientName,
+        clientEmail: booking.client?.email || booking.clientEmail,
+        clientPhone: booking.client?.phone || booking.clientPhone,
+        notes: booking.notes || booking.client?.notes,
+        startUtc: booking.startUtc,
+        endUtc: booking.endUtc,
       },
       cancelUrl: `${baseUrl}/book/manage?action=cancel&token=${booking.cancelToken}`,
       rescheduleUrl: `${baseUrl}/book/manage?action=reschedule&token=${booking.rescheduleToken}`,
-      calendarIcsUrl: `${baseUrl}/api/booking/calendar?ref=${booking.id}`,
+      calendarIcsUrl: `${baseUrl}/api/booking/calendar?ref=${booking.referenceCode || booking.id}`,
     });
   } catch (err: unknown) {
     const error = err as Error;
     console.error("[api/booking/create] Server error:", error);
     return NextResponse.json(
       {
-        error: "Unable to complete booking. Please try again or reach out on WhatsApp.",
+        error: "Unable to complete booking. Please try again or contact support.",
         code: "INTERNAL_ERROR",
       },
       { status: 500 }
