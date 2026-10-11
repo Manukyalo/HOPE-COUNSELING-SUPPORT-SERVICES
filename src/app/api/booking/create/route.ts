@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { bookSlotTransaction } from "@/lib/booking-engine";
+import { notifyAdminDevices } from "@/lib/notifications";
 import {
-  notifyCounselorNewBooking,
-  sendClientConfirmationSms,
-  notifyAdminDevices,
-} from "@/lib/notifications";
+  sendWhatsAppText,
+  buildClientConfirmationMessage,
+  buildAdminNewBookingMessage,
+  normalizePhoneKE,
+} from "@/lib/whatsapp";
+import { getAdminDb, hasAdminCredentials } from "@/lib/firebaseAdmin";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -123,15 +126,60 @@ export async function POST(req: NextRequest) {
       throw err;
     }
 
-    // 4. Notifications — MUST be awaited before returning response on Vercel Serverless
+    // 4. Notifications — MUST be awaited before returning response on Vercel Serverless.
+    // WaAPI results are persisted to Firestore for admin visibility.
+    // A WA failure NEVER fails the booking — we catch and log each channel independently.
+    let waClientStatus: "sent" | "failed" | "skipped" = "skipped";
+    let waClientError: string | undefined;
+
     try {
-      await Promise.allSettled([
-        sendClientConfirmationSms(booking),
-        notifyCounselorNewBooking(booking),
+      const clientPhone = booking.client?.phone || booking.clientPhone;
+      const adminPhone = normalizePhoneKE("0701279231");
+
+      const clientMsg = buildClientConfirmationMessage(booking);
+      const adminMsg = buildAdminNewBookingMessage(booking);
+
+      const [clientWa, adminWa, _fcm] = await Promise.allSettled([
+        clientPhone ? sendWhatsAppText(clientPhone, clientMsg) : Promise.resolve({ ok: false as const, reason: "no phone" }),
+        sendWhatsAppText(adminPhone, adminMsg),
         notifyAdminDevices(booking),
       ]);
+
+      // Evaluate client WA outcome
+      const clientResult = clientWa.status === "fulfilled" ? clientWa.value : { ok: false as const, reason: String((clientWa as PromiseRejectedResult).reason) };
+      if (clientResult.ok) {
+        waClientStatus = "sent";
+      } else {
+        waClientStatus = "failed";
+        waClientError = clientResult.reason;
+        console.error("[WA:CLIENT] Failed for booking", booking.id, ":", clientResult.reason);
+      }
+
+      // Log admin WA outcome (no booking impact)
+      if (adminWa.status === "fulfilled" && !adminWa.value.ok) {
+        console.error("[WA:ADMIN] Failed for booking", booking.id, ":", adminWa.value.reason);
+      } else if (adminWa.status === "rejected") {
+        console.error("[WA:ADMIN] Exception for booking", booking.id, ":", adminWa.reason);
+      }
     } catch (notifErr) {
-      console.error("[api/booking/create] Notification trigger error:", notifErr);
+      waClientStatus = "failed";
+      waClientError = notifErr instanceof Error ? notifErr.message : String(notifErr);
+      console.error("[api/booking/create] Notification block error:", notifErr);
+    }
+
+    // Persist WA delivery status to Firestore (fire-and-forget is safe here — we've already finished awaiting)
+    if (hasAdminCredentials()) {
+      const waUpdate: Record<string, unknown> = {
+        waStatus: waClientStatus,
+        waSentAt: waClientStatus === "sent" ? new Date().toISOString() : null,
+      };
+      if (waClientError) waUpdate.waError = waClientError;
+
+      getAdminDb()
+        .collection("bookings")
+        .doc(booking.id)
+        .update(waUpdate)
+        .catch((e: Error) => console.error("[WA] Failed persisting waStatus:", e));
     }
 
     const host =
@@ -163,6 +211,7 @@ export async function POST(req: NextRequest) {
         startUtc: booking.startUtc,
         endUtc: booking.endUtc,
       },
+      waStatus: waClientStatus,
       cancelUrl: `${baseUrl}/book/manage?action=cancel&token=${booking.cancelToken}`,
       rescheduleUrl: `${baseUrl}/book/manage?action=reschedule&token=${booking.rescheduleToken}`,
       calendarIcsUrl: `${baseUrl}/api/booking/calendar?ref=${booking.referenceCode || booking.id}`,

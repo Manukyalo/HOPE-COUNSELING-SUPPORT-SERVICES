@@ -182,6 +182,14 @@ export default function ClinicalAdminPortal() {
     results: TestPushResult[];
   } | null>(null);
 
+  // WaAPI State
+  const [waApiStatus, setWaApiStatus] = useState<"unknown" | "connected" | "disconnected">("unknown");
+  const [waApiStatusReason, setWaApiStatusReason] = useState<string | undefined>(undefined);
+  const [isCheckingWaApi, setIsCheckingWaApi] = useState(false);
+  const [isSendingWaTest, setIsSendingWaTest] = useState(false);
+  const [waTestFeedback, setWaTestFeedback] = useState<{ ok: boolean; message: string } | null>(null);
+  const [resendingWaFor, setResendingWaFor] = useState<string | null>(null);
+
   // ── Auth initialization ─────────────────────────────────────────────────────
   useEffect(() => {
     const unsub = onPractitionerAuthStateChanged(async (firebaseUser) => {
@@ -412,6 +420,72 @@ export default function ClinicalAdminPortal() {
     if (outcome === "accepted") {
       setIsStandalone(true);
       setInstallPrompt(null);
+    }
+  };
+
+  // ── WaAPI handlers ─────────────────────────────────────────────────────────
+  const handleCheckWaApiStatus = async () => {
+    setIsCheckingWaApi(true);
+    setWaApiStatusReason(undefined);
+    try {
+      const res = await fetch("/api/whatsapp/status");
+      const data = await res.json();
+      if (data.connected) {
+        setWaApiStatus("connected");
+      } else {
+        setWaApiStatus("disconnected");
+        setWaApiStatusReason(data.reason || "Unknown");
+      }
+    } catch (err) {
+      setWaApiStatus("disconnected");
+      setWaApiStatusReason(err instanceof Error ? err.message : "Network error");
+    } finally {
+      setIsCheckingWaApi(false);
+    }
+  };
+
+  const handleWaTestMessage = async () => {
+    setIsSendingWaTest(true);
+    setWaTestFeedback(null);
+    try {
+      const res = await fetch("/api/whatsapp/test", { method: "POST" });
+      const data = await res.json();
+      setWaTestFeedback(
+        res.ok
+          ? { ok: true, message: "Test message sent to 0701279231 ✅" }
+          : { ok: false, message: data.error || "Send failed" }
+      );
+    } catch (err) {
+      setWaTestFeedback({ ok: false, message: err instanceof Error ? err.message : "Network error" });
+    } finally {
+      setIsSendingWaTest(false);
+    }
+  };
+
+  const handleResendWa = async (bookingId: string) => {
+    setResendingWaFor(bookingId);
+    try {
+      const res = await fetch("/api/whatsapp/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === bookingId
+              ? { ...s, waStatus: "sent", waSentAt: new Date().toISOString(), waError: undefined }
+              : s
+          )
+        );
+      } else {
+        alert(`Resend failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (err) {
+      alert(`Resend failed: ${err instanceof Error ? err.message : "Network error"}`);
+    } finally {
+      setResendingWaFor(null);
     }
   };
 
@@ -1090,6 +1164,17 @@ export default function ClinicalAdminPortal() {
                               {session.deliveryMode === "online" ? "Online Video" : "In-Person Clinic"}
                             </span>
                           )}
+                          {/* WhatsApp delivery status badge */}
+                          {session.waStatus === "sent" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" title={`WA sent ${session.waSentAt ? new Date(session.waSentAt).toLocaleString() : ""}`}>
+                              <MessageSquare className="w-2.5 h-2.5" />WA Sent
+                            </span>
+                          )}
+                          {session.waStatus === "failed" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-300 border border-rose-500/20" title={session.waError || "WA failed"}>
+                              <MessageSquare className="w-2.5 h-2.5" />WA Failed
+                            </span>
+                          )}
                           <span className="text-[11px] text-white/40 font-sans ml-auto md:ml-0">
                             {formatDate(session.createdAt)}
                           </span>
@@ -1163,6 +1248,24 @@ export default function ClinicalAdminPortal() {
                           <MessageSquare className="w-3.5 h-3.5" />
                           <span>WhatsApp</span>
                         </a>
+
+                        {/* Resend WA confirmation if failed/skipped */}
+                        {(session.waStatus === "failed" || session.waStatus === "skipped") && (
+                          <button
+                            type="button"
+                            onClick={() => handleResendWa(session.id)}
+                            disabled={resendingWaFor === session.id}
+                            title="Re-send WhatsApp confirmation to client"
+                            className="h-9 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-300 text-xs font-medium transition-all flex items-center gap-1.5 disabled:opacity-50"
+                          >
+                            {resendingWaFor === session.id ? (
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Send className="w-3 h-3" />
+                            )}
+                            <span className="hidden sm:inline">Resend WA</span>
+                          </button>
+                        )}
 
                         {/* Open Profile Modal */}
                         <button
@@ -1450,6 +1553,83 @@ export default function ClinicalAdminPortal() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* ── WaAPI Status & Test ── */}
+            <div className="bg-[#0a241c]/70 border border-white/10 rounded-2xl p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+                <div>
+                  <h3 className="font-instrument text-xl text-white mb-1">WhatsApp Notifications (WaAPI)</h3>
+                  <p className="text-xs text-white/50 font-sans max-w-xl">
+                    Automatic WhatsApp confirmations are sent to clients and the admin number (0701 279 231) after every booking. Check that your WaAPI instance is connected.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={handleCheckWaApiStatus}
+                    disabled={isCheckingWaApi}
+                    className="h-10 px-4 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-medium transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isCheckingWaApi ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#7ecab0]" />
+                    ) : (
+                      <Activity className="w-3.5 h-3.5 text-[#7ecab0]" />
+                    )}
+                    <span>Check Status</span>
+                  </button>
+                  <button
+                    onClick={handleWaTestMessage}
+                    disabled={isSendingWaTest}
+                    className="h-10 px-4 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 text-xs font-medium transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isSendingWaTest ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <MessageSquare className="w-3.5 h-3.5" />
+                    )}
+                    <span>Send Test WA</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {waApiStatus === "connected" && (
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
+                      WaAPI Instance Connected — Sending Active
+                    </span>
+                  </div>
+                )}
+                {waApiStatus === "disconnected" && (
+                  <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 space-y-1.5">
+                    <div className="flex items-center gap-2 text-rose-300 text-xs font-bold uppercase tracking-wider">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>WaAPI Disconnected — WhatsApp Messages Will Fail</span>
+                    </div>
+                    {waApiStatusReason && (
+                      <p className="text-[11px] text-white/60 font-mono pl-6">{waApiStatusReason}</p>
+                    )}
+                    <p className="text-xs text-white/70 font-sans pl-6">
+                      Log in to{" "}
+                      <a href="https://waapi.app" target="_blank" rel="noopener noreferrer" className="text-[#7ecab0] underline hover:no-underline">
+                        waapi.app
+                      </a>{" "}
+                      and scan the QR code to reconnect your instance.
+                    </p>
+                  </div>
+                )}
+                {waApiStatus === "unknown" && (
+                  <p className="text-xs text-white/40 font-sans">
+                    Press &quot;Check Status&quot; to verify the WaAPI instance connection.
+                  </p>
+                )}
+                {waTestFeedback && (
+                  <div className={`p-3.5 rounded-xl border text-xs font-sans ${waTestFeedback.ok ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-200" : "bg-rose-500/10 border-rose-500/20 text-rose-200"}`}>
+                    {waTestFeedback.message}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

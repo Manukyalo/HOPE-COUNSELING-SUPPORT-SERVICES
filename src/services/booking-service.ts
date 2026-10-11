@@ -29,6 +29,10 @@ export interface BookingSession {
   notes?: string;
   createdAt: string;
   updatedAt?: string;
+  /** WhatsApp delivery status for client confirmation */
+  waStatus?: "sent" | "failed" | "skipped";
+  waError?: string;
+  waSentAt?: string | null;
 }
 
 const LOCAL_STORAGE_KEY = "hope_admin_bookings";
@@ -89,6 +93,9 @@ function normalizeSession(b: Record<string, unknown>): BookingSession {
     notes,
     createdAt: (b.createdAt as string) || new Date().toISOString(),
     updatedAt: (b.updatedAt as string) || undefined,
+    waStatus: (b.waStatus as "sent" | "failed" | "skipped" | undefined) || undefined,
+    waError: (b.waError as string | undefined) || undefined,
+    waSentAt: (b.waSentAt as string | null | undefined) || undefined,
   };
 }
 
