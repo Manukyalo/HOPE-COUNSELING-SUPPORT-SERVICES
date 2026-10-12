@@ -1528,10 +1528,17 @@ export default function ClinicalAdminPortal() {
                           <Smartphone className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs text-white font-medium truncate max-w-sm">
-                            {dev.userAgent}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1 text-[10px] text-white/40 font-mono">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-xs text-white font-medium truncate max-w-sm">
+                              {dev.userAgent}
+                            </p>
+                            {dev.adminEmail && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[#7ecab0]/15 text-[#7ecab0] border border-[#7ecab0]/20">
+                                {dev.adminEmail}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px] text-white/40 font-mono">
                             <span>Token: {dev.tokenSnippet}</span>
                             <span>•</span>
                             <span>
